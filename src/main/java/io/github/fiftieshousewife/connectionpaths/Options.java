@@ -22,6 +22,9 @@ public class Options {
     /** The jars (or class folders) the code compiles against: from the build, or listed by a person. */
     @Singular("classpathEntry")
     List<Path> classpath;
+    /** Folders whose properties, YAML and XML files are read for the settings that addresses name. */
+    @Singular("settingsFolder")
+    List<Path> settings;
     Path rules;
     @Builder.Default
     int maxImplementations = DEFAULT_MAX_IMPLEMENTATIONS;

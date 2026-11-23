@@ -19,8 +19,7 @@ and its output must be text an AI assistant can read.
 * **Joern**: method-level graphs from source, but Scala, and about 90 MB of libraries or a 1.8 GB distribution
 * **CodeQL**: precise without a build, but free only for open-source code
 * **Tools that read compiled classes** (java-callgraph, SootUp, WALA): need the code compiled first
-* **A class-level graph from searches**: on Openfire it marked 84% of tests, because logging and settings classes
-  join everything up
+* **A class-level graph from searches**: marks most tests, because logging and settings classes join everything up
 
 ## Decision Outcome
 
@@ -28,10 +27,9 @@ Chosen in discussion: JavaParser, in a jar that runs on Java 17. The classpath c
 resolves dependencies (`dependency:build-classpath`, or `tools/print-classpath.gradle`); building without running tests
 is allowed before a repo's safety gate. Where there is no classpath, it still runs and reports what it couldn't resolve.
 
-On Openfire 4.6.0's `xmppserver` module it took 20 seconds and resolved 99.6% of calls with the module's jars, 62%
-without them. Three rules came from what Openfire showed: methods are known by their parameter types (a test of
-`read(Reader)` was wrongly joined to `read(URL)`); calls through the JDK's own types are not followed; and dispatch
-points with more than three implementations are reported, not followed.
+Three rules keep the graph from joining everything up: a method is known by its type, name and parameter types, so
+`read(Reader)` and `read(URL)` are different methods; calls through the JDK's own types are not followed; and calls
+through a type with more than three implementations are dispatch points, reported and not followed.
 
 ### Consequences
 

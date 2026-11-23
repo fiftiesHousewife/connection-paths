@@ -28,8 +28,10 @@ final class CallGraph {
     CallGraph(final SourceModel model, final int maxImplementations) {
         model.getCalls().forEach((caller, callees) -> callees.forEach(callee -> addCall(model, caller, callee)));
         overriddenBy(model).forEach((overridden, implementations) -> {
-            if (implementations.size() > maxImplementations) {
-                notFollowed.put(implementations.get(0).inType(typeOf(overridden)).toString(), implementations.size());
+            // Test doubles in the test source don't make a call a dispatch point: only production code counts.
+            final long inProduction = implementations.stream().filter(m -> !model.isTestType(m.type())).count();
+            if (inProduction > maxImplementations) {
+                notFollowed.put(implementations.get(0).inType(typeOf(overridden)).toString(), (int) inProduction);
             } else {
                 implementations.forEach(m -> overrides.computeIfAbsent(m, k -> new ArrayList<>()).add(overridden));
             }
@@ -38,6 +40,11 @@ final class CallGraph {
 
     private void addCall(final SourceModel model, final MethodKey caller, final MethodKey callee) {
         callers.computeIfAbsent(callee, k -> new TreeSet<>()).add(caller);
+        // Using a type for the first time runs its static initialisers; any use might be the first.
+        final MethodKey statics = MethodKey.staticsOf(callee.type());
+        if (!statics.equals(callee) && !model.getCalls().getOrDefault(statics, Set.of()).isEmpty()) {
+            callers.computeIfAbsent(statics, k -> new TreeSet<>()).add(caller);
+        }
         callersByOverrideKey.computeIfAbsent(callee.overrideKey(callee.type()), k -> new TreeSet<>()).add(caller);
         // A constructor the source doesn't declare still runs the type's field initialisers.
         if (callee.isConstructor() && !model.getDeclared().contains(callee)) {
@@ -49,7 +56,7 @@ final class CallGraph {
     private static Map<String, List<MethodKey>> overriddenBy(final SourceModel model) {
         final Map<String, List<MethodKey>> result = new TreeMap<>();
         for (final MethodKey method : new TreeSet<>(model.getDeclared())) {
-            if (method.isConstructor() || MethodKey.FIELDS.equals(method.name())) {
+            if (method.isConstructor() || method.isInitialisers()) {
                 continue;
             }
             for (final String ancestor : model.ancestors(method.type())) {

@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # The release workflow runs this first, and publishes only if it passes.
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Run all checks
+        run: ./gradlew check allInOneJar
+      - name: Keep the reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: build/reports/
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: connection-paths-jar
+          path: build/libs/connection-paths.jar
+          if-no-files-found: error
+
+  runs-on-java-17:
+    # The jar is built with Java 25 for Java 17: this runs it on Java 17, on the example repo.
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/download-artifact@v4
+        with:
+          name: connection-paths-jar
+      - name: Run it on the example repo
+        run: |
+          java -jar connection-paths.jar \
+            --main src/test/resources/example/src/main/java \
+            --test src/test/resources/example/src/test/java \
+            --out example.json
+          test -s example.json

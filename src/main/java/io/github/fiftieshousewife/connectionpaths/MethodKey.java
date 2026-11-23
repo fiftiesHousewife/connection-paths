@@ -2,16 +2,26 @@ package io.github.fiftieshousewife.connectionpaths;
 
 /**
  * A method or constructor: the type that declares it, its name, and its parameter types as simple names without
- * generics ({@code URL,String}). Constructors are named {@code <init>}; a type's field initialisers and initialiser
- * blocks are {@code <fields>}.
+ * generics ({@code URL,String}). Constructors are named {@code <init>}; a type's instance field initialisers and
+ * initialiser blocks are {@code <fields>}, and its static ones, with its enum constants, are {@code <statics>}.
  */
 public record MethodKey(String type, String name, String parameters) implements Comparable<MethodKey> {
 
     static final String CONSTRUCTOR = "<init>";
     static final String FIELDS = "<fields>";
+    static final String STATICS = "<statics>";
 
     static MethodKey fieldsOf(final String type) {
         return new MethodKey(type, FIELDS, "");
+    }
+
+    static MethodKey staticsOf(final String type) {
+        return new MethodKey(type, STATICS, "");
+    }
+
+    /** Whether this stands for a type's initialisers rather than a method the source declares by name. */
+    boolean isInitialisers() {
+        return FIELDS.equals(name) || STATICS.equals(name);
     }
 
     MethodKey inType(final String otherType) {

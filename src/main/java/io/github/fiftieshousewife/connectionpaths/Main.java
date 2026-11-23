@@ -1,7 +1,9 @@
 package io.github.fiftieshousewife.connectionpaths;
 
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 
 /** The command line: reads the source folders, writes the facts file, and prints a short summary. */
@@ -34,11 +36,19 @@ public final class Main {
             log.error("{}\n\n{}", e.getMessage(), OptionsParser.USAGE);
             return WRONG_ARGUMENTS;
         }
+        if (Stream.concat(options.getMainSources().stream(), options.getTestSources().stream())
+            .noneMatch(Files::isDirectory)) {
+            log.error("None of the source folders exists: {} {}", options.getMainSources(), options.getTestSources());
+            return WRONG_ARGUMENTS;
+        }
         try {
             final Facts facts = ConnectionPaths.find(options);
             ConnectionPaths.write(facts, options.getOut());
             summarise(facts, options);
             return OK;
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            return WRONG_ARGUMENTS;
         } catch (UncheckedIOException e) {
             log.error(e.getMessage());
             return FAILED;

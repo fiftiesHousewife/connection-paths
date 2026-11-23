@@ -5,6 +5,8 @@ import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -24,10 +26,12 @@ public final class ConnectionPaths {
     public static Facts find(final Options options) {
         final TypeSolvers.Setup setup = TypeSolvers.create(options);
         final ConnectionRules rules = ConnectionRules.load(options.extraRules());
-        final SourceModel model = new SourceReader(setup.solver(), rules)
-            .read(options.getMainSources(), options.getTestSources());
+        final List<Path> mainSources = new ArrayList<>(options.getMainSources());
+        mainSources.addAll(setup.siblingSources());
+        final SourceModel model = new SourceReader(setup.solver(), rules).read(mainSources, options.getTestSources());
         final CallGraph graph = new CallGraph(model, options.getMaxImplementations());
-        return new FactsBuilder(model, graph).build(version(), setup.notes());
+        final SettingsFiles settings = SettingsFiles.read(options.getSettings());
+        return new FactsBuilder(model, graph, settings).build(version(), setup.notes());
     }
 
     static void write(final Facts facts, final Path out) {

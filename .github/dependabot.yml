@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://json.schemastore.org/dependabot-2.0.json
+# Proposes updates to the build's libraries and plugins, and to the pipeline's actions, by pull request.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      gradle:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

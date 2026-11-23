@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<app>
+    <database>
+        <serverURL>jdbc:postgresql://ledger-db.internal/ledger</serverURL>
+    </database>
+</app>

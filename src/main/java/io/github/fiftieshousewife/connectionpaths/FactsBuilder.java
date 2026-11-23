@@ -15,10 +15,12 @@ final class FactsBuilder {
 
     private final SourceModel model;
     private final CallGraph graph;
+    private final SettingsFiles settings;
 
-    FactsBuilder(final SourceModel model, final CallGraph graph) {
+    FactsBuilder(final SourceModel model, final CallGraph graph, final SettingsFiles settings) {
         this.model = model;
         this.graph = graph;
+        this.settings = settings;
     }
 
     Facts build(final String toolVersion, final List<String> classpathNotes) {
@@ -26,11 +28,14 @@ final class FactsBuilder {
         model.getPoints().forEach(p -> startsByKind.computeIfAbsent(p.kind(), k -> new TreeSet<>()).add(p.method()));
         final Map<String, Map<MethodKey, MethodKey>> reachedByKind = new TreeMap<>();
         startsByKind.forEach((kind, starts) -> reachedByKind.put(kind, graph.reachBack(starts)));
-        final List<Facts.TestReach> tests = testsReaching(reachedByKind);
+        final List<Facts.Point> points = points();
+        final SystemsBuilder.Result systems = new SystemsBuilder(model, graph).build(points);
+        final List<Facts.TestReach> tests = testsReaching(reachedByKind, systems.byTest());
         return Facts.builder()
             .toolVersion(toolVersion)
             .summary(summary(tests.size()))
-            .connectionPoints(points())
+            .connectionPoints(points)
+            .systems(systems.systems())
             .tests(tests)
             .notResolved(model.getUnresolved().top(REASONS_REPORTED))
             .dispatchPointsNotFollowed(graph.getNotFollowed().entrySet().stream()
@@ -43,7 +48,7 @@ final class FactsBuilder {
         return Facts.Summary.builder()
             .files(model.getCounts().files)
             .filesNotParsed(model.getCounts().filesNotParsed)
-            .methods(model.getDeclared().size())
+            .methods((int) model.getDeclared().stream().filter(m -> !m.isInitialisers()).count())
             .callsResolved(model.getCounts().callsResolved)
             .callsNotResolved(model.getUnresolved().getTotal())
             .tests(model.getTests().size())
@@ -55,18 +60,35 @@ final class FactsBuilder {
         return model.getPoints().stream()
             .sorted((a, b) -> (a.method() + a.call()).compareTo(b.method() + b.call()))
             .map(p -> {
-                final SourceModel.Location at = model.locationOf(p.method());
+                final SourceModel.Location at = model.locationOf(p);
+                final Address address = settings.withValue(model.addressOf(p));
                 return Facts.Point.builder().kind(p.kind()).call(p.call()).method(p.method().toString())
-                    .file(at.file()).line(at.line()).build();
+                    .file(at.file()).line(at.line()).address(address).local(localBecause(p, address)).build();
             })
             .toList();
     }
 
-    private List<Facts.TestReach> testsReaching(final Map<String, Map<MethodKey, MethodKey>> reachedByKind) {
+    /**
+     * Why a point stays on this machine, if it does. A point whose address is a parameter no code in the source passes
+     * can't be followed further, and is left to a person, as local.
+     */
+    private String localBecause(final SourceModel.ConnectionPoint point, final Address address) {
+        final Optional<String> local = Locality.of(address, point.kind());
+        if (local.isPresent()) {
+            return local.get();
+        }
+        final boolean parameterNobodyPasses = Address.PARAMETER.equals(address.getSource())
+            && graph.reachBack(Set.of(point.method())).size() == 1;
+        return parameterNobodyPasses ? "its address is a parameter no code in the source passes" : null;
+    }
+
+    private List<Facts.TestReach> testsReaching(final Map<String, Map<MethodKey, MethodKey>> reachedByKind,
+                                                final Map<MethodKey, List<String>> systemsByTest) {
         final List<Facts.TestReach> tests = new ArrayList<>();
         model.getTests().forEach((test, at) -> {
             final Facts.TestReach.TestReachBuilder entry = Facts.TestReach.builder()
-                .test(test.type() + "." + test.name()).file(at.file()).line(at.line());
+                .test(TestChains.nameOf(test)).file(at.file()).line(at.line())
+                .systems(systemsByTest.getOrDefault(test, List.of()));
             boolean any = false;
             for (final Map.Entry<String, Map<MethodKey, MethodKey>> kind : reachedByKind.entrySet()) {
                 final Optional<Facts.Reach> reach = reach(test, kind.getKey(), kind.getValue());
@@ -82,17 +104,7 @@ final class FactsBuilder {
 
     /** How a test reaches a kind of connection: through its own body first, otherwise through its set-up. */
     private Optional<Facts.Reach> reach(final MethodKey test, final String kind, final Map<MethodKey, MethodKey> next) {
-        if (next.containsKey(test)) {
-            return Optional.of(reachOf(kind, CallGraph.chain(test, next), false));
-        }
-        return model.setUpOf(test.type()).stream()
-            .filter(next::containsKey)
-            .findFirst()
-            .map(setUp -> {
-                final List<MethodKey> chain = new ArrayList<>(List.of(test));
-                chain.addAll(CallGraph.chain(setUp, next));
-                return reachOf(kind, chain, true);
-            });
+        return TestChains.of(model, test, next).map(c -> reachOf(kind, c.steps(), c.throughSetUp()));
     }
 
     private static Facts.Reach reachOf(final String kind, final List<MethodKey> chain, final boolean throughSetUp) {

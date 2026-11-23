@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import lombok.Builder;
 import lombok.Singular;
@@ -13,7 +14,7 @@ import lombok.Value;
 @Builder
 public class Facts {
 
-    static final String SCHEMA = "connection-paths/1";
+    static final String SCHEMA = "connection-paths/2";
 
     @Builder.Default
     String schema = SCHEMA;
@@ -21,6 +22,8 @@ public class Facts {
     Summary summary;
     @Singular
     List<Point> connectionPoints;
+    @Singular
+    List<ExternalSystem> systems;
     @Singular
     List<TestReach> tests;
     @Singular("notResolved")
@@ -52,6 +55,41 @@ public class Facts {
         String method;
         String file;
         int line;
+        /** Where the address the call connects to comes from, as far as the source shows. */
+        Address address;
+        /** Why the connection stays on this machine, if it does: then it is part of no system. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        String local;
+    }
+
+    /**
+     * Something outside the program that tests may reach: the connection points that go to one host, or failing
+     * that one setting, variable or JNDI name, or failing that one class.
+     */
+    @Value
+    @Builder
+    public static class ExternalSystem {
+        String name;
+        /** host, setting, environment-variable, system-property, jndi-name or class. */
+        String namedBy;
+        @Singular
+        List<String> kinds;
+        /** The address of its first connection point. */
+        Address address;
+        /** The methods that open or use the connection. */
+        @Singular
+        List<String> points;
+        /**
+         * Systems reached through the same interface or superclass method: implementations a program chooses between,
+         * so a test reaches one of them, not all.
+         */
+        @Singular
+        List<String> alternatives;
+        /** How many tests may reach it. */
+        int tests;
+        /** The calls every one of those tests goes through on its way to the system, nearest the test first. */
+        @Singular("sharedStep")
+        List<String> sharedChain;
     }
 
     /** A test that may reach one or more kinds of connection. */
@@ -63,6 +101,9 @@ public class Facts {
         int line;
         @Singular("reach")
         List<Reach> reaches;
+        /** The systems it may reach. */
+        @Singular
+        List<String> systems;
     }
 
     /** One kind of connection a test may reach, and one chain of calls showing how. */

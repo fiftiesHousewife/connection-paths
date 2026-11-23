@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /** Reads the command line into {@link Options}. */
 public final class OptionsParser {
@@ -17,7 +18,8 @@ public final class OptionsParser {
 
         java -jar connection-paths.jar [--module <dir>]... [--main <dir>]... [--test <dir>]...
                                        [--classpath <jars, separated by {separator}> | --classpath @<file>]
-                                       [--rules <file>] [--max-implementations <n>] [--out <file>]
+                                       [--settings <dir>]... [--rules <file>] [--max-implementations <n>]
+                                       [--out <file>]
 
           --module <dir>            a module: reads <dir>/src/main/java and <dir>/src/test/java
           --main <dir>              a folder of production source
@@ -25,12 +27,16 @@ public final class OptionsParser {
           --classpath               the jars the code compiles against; @<file> reads them from a file, one a line
                                     or separated by {separator}
                                     (Maven: mvn dependency:build-classpath -Dmdep.outputFile=<file>)
+          --settings <dir>          a folder whose properties, YAML and XML files hold settings that addresses
+                                    name (a --module's own folder is read already)
           --rules <file>            more connection rules, in the form of the built-in connection-rules.txt
           --max-implementations <n> calls through a type with more implementations are reported, not followed
                                     (default {max})
           --out <file>              where to write the facts (default connection-paths.json)
         """.replace("{separator}", File.pathSeparator)
         .replace("{max}", String.valueOf(Options.DEFAULT_MAX_IMPLEMENTATIONS));
+
+    private static final Set<String> FOLDER_FLAGS = Set.of("--module", "--main", "--test", "--settings");
 
     private OptionsParser() {
     }
@@ -53,11 +59,11 @@ public final class OptionsParser {
     }
 
     private static void apply(final Options.OptionsBuilder options, final String flag, final String value) {
+        if (FOLDER_FLAGS.contains(flag)) {
+            folder(options, flag, Path.of(value));
+            return;
+        }
         switch (flag) {
-            case "--module" -> options.mainSource(Path.of(value, "src", "main", "java"))
-                .testSource(Path.of(value, "src", "test", "java"));
-            case "--main" -> options.mainSource(Path.of(value));
-            case "--test" -> options.testSource(Path.of(value));
             case "--classpath" -> classpath(value).forEach(options::classpathEntry);
             case "--rules" -> options.rules(Path.of(value));
             case "--max-implementations" -> options.maxImplementations(positive(flag, value));
@@ -66,9 +72,21 @@ public final class OptionsParser {
         }
     }
 
+    private static void folder(final Options.OptionsBuilder options, final String flag, final Path folder) {
+        switch (flag) {
+            case "--module" -> options.mainSource(folder.resolve(Path.of("src", "main", "java")))
+                .testSource(folder.resolve(Path.of("src", "test", "java")))
+                .settingsFolder(folder);
+            case "--main" -> options.mainSource(folder);
+            case "--test" -> options.testSource(folder);
+            default -> options.settingsFolder(folder);
+        }
+    }
+
     static List<Path> classpath(final String value) {
         final String text = value.startsWith("@") ? read(Path.of(value.substring(1))) : value;
-        return Arrays.stream(text.split("[\\r\\n" + File.pathSeparator + "]+"))
+        // A file written on Windows may start with a byte order mark.
+        return Arrays.stream(text.replace("\uFEFF", "").split("[\\r\\n" + File.pathSeparator + "]+"))
             .map(String::strip)
             .filter(entry -> !entry.isEmpty())
             .map(Path::of)

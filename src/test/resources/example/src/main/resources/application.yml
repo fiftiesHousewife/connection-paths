@@ -1,0 +1,3 @@
+warehouse:
+  # Filled in for each place it runs.
+  url: https://YOUR-WAREHOUSE/api

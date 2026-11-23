@@ -3,6 +3,7 @@ package io.github.fiftieshousewife.connectionpaths;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +18,15 @@ import org.junit.jupiter.api.io.TempDir;
 class TypeSolversTest {
 
     @Test
+    void resolvesTheJdkButNotTheLibrariesThisToolRunsWith(@TempDir final Path dir) {
+        final CombinedTypeSolver solver = TypeSolvers.create(Options.builder().mainSource(dir).build()).solver();
+        assertAll(
+            () -> assertThat(solver.tryToSolveType("java.sql.DriverManager").isSolved()).isTrue(),
+            () -> assertThat(solver.tryToSolveType("org.xml.sax.SAXException").isSolved()).isTrue(),
+            () -> assertThat(solver.tryToSolveType("org.slf4j.Logger").isSolved()).isFalse());
+    }
+
+    @Test
     void notesClasspathEntriesItCannotUse(@TempDir final Path dir) throws IOException {
         final Path notAJar = Files.writeString(dir.resolve("broken.jar"), "not a zip");
         final Options options = Options.builder()
@@ -29,6 +39,21 @@ class TypeSolversTest {
             note -> assertThat(note).startsWith("not found: "),
             note -> assertThat(note).startsWith("a class folder, not read"),
             note -> assertThat(note).startsWith("could not read: broken.jar"));
+    }
+
+    @Test
+    void readsASiblingModulesClassFolderFromItsSource(@TempDir final Path dir) throws IOException {
+        final Path source = Files.createDirectories(dir.resolve("i18n/src/main/java"));
+        final Path classes = Files.createDirectories(dir.resolve("i18n/target/classes"));
+        final Path gradleClasses = Files.createDirectories(dir.resolve("util/build/classes/java/main"));
+        final Options options = Options.builder().mainSource(dir.resolve("app"))
+            .classpathEntry(classes).classpathEntry(gradleClasses).build();
+        final TypeSolvers.Setup setup = TypeSolvers.create(options);
+        assertAll(
+            () -> assertThat(setup.siblingSources()).containsExactly(source.toAbsolutePath().normalize()),
+            () -> assertThat(setup.notes()).satisfiesExactly(
+                note -> assertThat(note).startsWith("a class folder, read from its module's source instead"),
+                note -> assertThat(note).startsWith("a class folder, not read")));
     }
 
     @Test

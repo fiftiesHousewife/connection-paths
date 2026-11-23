@@ -46,6 +46,12 @@ class OptionsParserTest {
     }
 
     @Test
+    void ignoresAByteOrderMarkAtTheStartOfTheClasspathFile(@TempDir final Path dir) throws IOException {
+        final Path file = Files.writeString(dir.resolve("cp.txt"), "\uFEFFa.jar\r\nb.jar\r\n");
+        assertThat(OptionsParser.classpath("@" + file)).containsExactly(Path.of("a.jar"), Path.of("b.jar"));
+    }
+
+    @Test
     void explainsWrongArguments() {
         assertAll(
             () -> assertThatThrownBy(() -> OptionsParser.parse(List.of("--rules", "r.txt")))

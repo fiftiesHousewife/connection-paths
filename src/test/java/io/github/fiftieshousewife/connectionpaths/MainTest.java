@@ -19,8 +19,8 @@ class MainTest {
         final String json = Files.readString(out);
         assertAll(
             () -> assertThat(status).isEqualTo(Main.OK),
-            () -> assertThat(json).contains("\"schema\" : \"connection-paths/1\""),
-            () -> assertThat(json).contains("\"tests_reaching\" : 6"),
+            () -> assertThat(json).contains("\"schema\" : \"connection-paths/2\""),
+            () -> assertThat(json).contains("\"tests_reaching\" : 17"),
             () -> assertThat(json).contains("\"through_set_up\" : true"),
             () -> assertThat(json).contains("\"dispatch_points_not_followed\""));
     }
@@ -44,7 +44,22 @@ class MainTest {
     @Test
     void aMissingFolderIsSkipped(@TempDir final Path dir) {
         final Path out = dir.resolve("facts.json");
-        assertThat(Main.run(List.of("--main", dir.resolve("nothing").toString(), "--out", out.toString())))
+        assertThat(Main.run(List.of("--main", dir.resolve("nothing").toString(),
+            "--main", "src/test/resources/example/src/main/java", "--out", out.toString())))
             .isEqualTo(Main.OK);
+    }
+
+    @Test
+    void noFolderThatExistsIsWrong(@TempDir final Path dir) {
+        assertThat(Main.run(List.of("--main", dir.resolve("nothing").toString())))
+            .isEqualTo(Main.WRONG_ARGUMENTS);
+    }
+
+    @Test
+    void aBadRulesFileIsWrong(@TempDir final Path dir) throws IOException {
+        final Path rules = Files.writeString(dir.resolve("rules.txt"), "not a rule");
+        assertThat(Main.run(List.of("--main", "src/test/resources/example/src/main/java", "--rules", rules.toString(),
+            "--out", dir.resolve("facts.json").toString())))
+            .isEqualTo(Main.WRONG_ARGUMENTS);
     }
 }

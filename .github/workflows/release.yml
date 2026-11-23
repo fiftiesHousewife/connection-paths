@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# Publishes a release when a version tag (v1.2.3) is pushed, and only if every check passes first.
+#
+# Publishes io.github.fiftieshousewife.connectionpaths:connection-paths to Maven Central, with the runnable jar beside
+# it (classifier "all"), and makes a GitHub release with the runnable jar and its software bill of materials. Needs
+# these repository secrets:
+#   CENTRAL_PORTAL_USERNAME, CENTRAL_PORTAL_PASSWORD  a Central Portal user token
+#   SIGNING_KEY, SIGNING_KEY_PASSWORD                 an ASCII-armoured PGP private key, and its passphrase
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: ./.github/workflows/build.yml
+
+  publish:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ github.ref_name }}
+      ORG_GRADLE_PROJECT_centralPortalUsername: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
+      ORG_GRADLE_PROJECT_centralPortalPassword: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+      ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Check the tag is a version and every secret is set
+        run: |
+          case "${VERSION#v}" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "The tag $VERSION isn't a version such as v1.2.3"; exit 1 ;;
+          esac
+          for name in ORG_GRADLE_PROJECT_centralPortalUsername ORG_GRADLE_PROJECT_centralPortalPassword \
+                      ORG_GRADLE_PROJECT_signingInMemoryKey; do
+            if [ -z "${!name}" ]; then echo "The secret behind $name isn't set"; exit 1; fi
+          done
+      - name: Publish to Maven Central
+        run: ./gradlew -Pversion="${VERSION#v}" allInOneJar nmcpPublishAggregationToCentralPortal
+      - name: Make the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-assets
+          cp build/libs/connection-paths.jar release-assets/
+          cp build/reports/cyclonedx-direct/bom.json release-assets/connection-paths-cyclonedx.json
+          {
+            echo "Published to Maven Central as io.github.fiftieshousewife.connectionpaths:connection-paths:${VERSION#v};"
+            echo "the runnable jar is beside it with the classifier \"all\", and attached here as connection-paths.jar,"
+            echo "with its software bill of materials (CycloneDX)."
+          } > release-notes.md
+          gh release create "$VERSION" --title "$VERSION" --notes-file release-notes.md --verify-tag release-assets/*

@@ -12,8 +12,34 @@ database jakarta.persistence.EntityManager#*
 database org.hibernate.SharedSessionContract#*
 database org.hibernate.SessionFactory#openSession
 database org.apache.ibatis.session.SqlSession#*
+database java.sql.Driver#connect
+database com.zaxxer.hikari.HikariDataSource#<init>
+database org.springframework.jdbc.core.simple.JdbcClient#*
+database javax.persistence.Persistence#createEntityManagerFactory
+database jakarta.persistence.Persistence#createEntityManagerFactory
+database javax.persistence.EntityManagerFactory#createEntityManager
+database jakarta.persistence.EntityManagerFactory#createEntityManager
+# Spring Data repositories are interfaces with no implementation in the source, so the rule names their supertype.
+database org.springframework.data.repository.Repository#*
+database org.jooq.DSLContext#*
+database org.jdbi.v3.core.Jdbi#open
+database org.jdbi.v3.core.Jdbi#withHandle
+database org.jdbi.v3.core.Jdbi#useHandle
+database org.jdbi.v3.core.Jdbi#inTransaction
+database org.jdbi.v3.core.Jdbi#useTransaction
+database org.jdbi.v3.core.Jdbi#withExtension
+database org.jdbi.v3.core.Jdbi#useExtension
+database com.mongodb.client.MongoClients#create
+database com.mongodb.client.MongoCollection#*
+database org.springframework.data.mongodb.core.MongoOperations#*
+database redis.clients.jedis.Jedis#<init>
+database redis.clients.jedis.JedisPool#getResource
+database io.lettuce.core.RedisClient#connect
+database org.springframework.data.redis.core.RedisOperations#*
+database com.datastax.oss.driver.api.core.session.SessionBuilder#build
+database com.datastax.oss.driver.api.core.session.SessionBuilder#buildAsync
 
-http java.net.HttpURLConnection#connect
+http java.net.HttpURLConnection#getResponseCode
 http java.net.http.HttpClient#send
 http java.net.http.HttpClient#sendAsync
 http org.apache.http.client.HttpClient#execute
@@ -22,10 +48,30 @@ http org.springframework.web.client.RestOperations#*
 http org.springframework.web.reactive.function.client.WebClient#*
 http okhttp3.Call#execute
 http okhttp3.Call#enqueue
+http org.apache.hc.client5.http.async.HttpAsyncClient#execute
+http org.springframework.web.client.RestClient.RequestHeadersSpec#retrieve
+http org.springframework.web.client.RestClient.RequestHeadersSpec#exchange
+http javax.ws.rs.client.SyncInvoker#*
+http jakarta.ws.rs.client.SyncInvoker#*
+http retrofit2.Call#execute
+http retrofit2.Call#enqueue
+http org.elasticsearch.client.RestClient#performRequest
+http co.elastic.clients.elasticsearch.ElasticsearchClient#*
+http io.grpc.ManagedChannelBuilder#build
+# Cloud services' clients: AWS (version 2, then the builder of version 1) and Google Cloud.
+http software.amazon.awssdk.core.SdkClient#*
+http com.amazonaws.client.builder.AwsSyncClientBuilder#build
+http com.google.cloud.Service#*
+http com.amazonaws.AmazonWebServiceClient#*
 
 mail javax.mail.Transport#send
 mail jakarta.mail.Transport#send
 mail org.springframework.mail.MailSender#send
+mail javax.mail.Transport#sendMessage
+mail jakarta.mail.Transport#sendMessage
+mail javax.mail.Service#connect
+mail jakarta.mail.Service#connect
+mail org.apache.commons.mail.Email#send
 
 directory javax.naming.directory.InitialDirContext#<init>
 directory javax.naming.ldap.InitialLdapContext#<init>
@@ -40,6 +86,10 @@ queue org.springframework.amqp.core.AmqpTemplate#*
 queue com.rabbitmq.client.ConnectionFactory#newConnection
 queue org.apache.kafka.clients.producer.KafkaProducer#<init>
 queue org.apache.kafka.clients.consumer.KafkaConsumer#<init>
+queue org.apache.kafka.clients.admin.Admin#create
+queue org.springframework.kafka.core.KafkaOperations#*
+queue javax.jms.ConnectionFactory#createContext
+queue jakarta.jms.ConnectionFactory#createContext
 
 socket java.net.Socket#<init>
 socket java.net.Socket#connect
@@ -47,10 +97,20 @@ socket javax.net.SocketFactory#createSocket
 socket java.nio.channels.SocketChannel#open
 socket java.nio.channels.SocketChannel#connect
 socket java.net.DatagramSocket#send
+# FTP, SMTP, Telnet and the like through Apache Commons Net; SSH through JSch.
+socket org.apache.commons.net.SocketClient#connect
+socket com.jcraft.jsch.Session#connect
+socket io.netty.bootstrap.Bootstrap#connect
+# Listening for connections needs a free port.
+socket java.net.ServerSocket#<init>
+socket com.sun.net.httpserver.HttpServer#create
 
 # A URL may be a file, a jar or a classpath resource as well as a remote server: a person or measurement decides.
 url java.net.URL#openConnection
 url java.net.URL#openStream
+url java.net.URLConnection#connect
+url java.net.URLConnection#getInputStream
+url java.net.URLConnection#getOutputStream
 
 host-lookup java.net.InetAddress#getByName
 host-lookup java.net.InetAddress#getAllByName

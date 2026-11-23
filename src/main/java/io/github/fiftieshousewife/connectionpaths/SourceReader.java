@@ -6,11 +6,13 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.CompactConstructorDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.InitializerDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.RecordDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -34,17 +37,22 @@ final class SourceReader {
 
     private static final Set<String> TEST_ANNOTATIONS =
         Set.of("Test", "ParameterizedTest", "RepeatedTest", "TestFactory", "TestTemplate");
-    private static final Set<String> SET_UP_ANNOTATIONS = Set.of("Before", "BeforeEach", "BeforeClass", "BeforeAll");
+    /** Methods that run with a test, before or after it: JUnit 4 and 5, and TestNG. */
+    private static final Set<String> SET_UP_ANNOTATIONS = Set.of("Before", "BeforeEach", "BeforeClass", "BeforeAll",
+        "After", "AfterEach", "AfterClass", "AfterAll", "BeforeMethod", "BeforeTest", "BeforeSuite", "BeforeGroups",
+        "AfterMethod", "AfterTest", "AfterSuite", "AfterGroups");
     /** Classes whose public no-argument test...() methods are tests without an annotation (JUnit 3, Spring's). */
     private static final Set<String> JUNIT3_BASES = Set.of("TestCase", "AbstractDependencyInjectionSpringContextTests",
         "AbstractTransactionalSpringContextTests", "AbstractTransactionalDataSourceSpringContextTests",
         "AbstractJpaTests", "AbstractSpringContextTests");
-    private static final Set<String> JUNIT3_SET_UP = Set.of("setUp", "onSetUp", "onSetUpInTransaction");
+    private static final Set<String> JUNIT3_SET_UP = Set.of("setUp", "onSetUp", "onSetUpInTransaction", "tearDown",
+        "onTearDown", "onTearDownInTransaction");
 
     private final SourceModel model = new SourceModel();
     private final JavaParser parser;
     private final CallResolver calls;
     private final Map<MethodKey, SourceModel.Location> junit3Candidates = new HashMap<>();
+    private final Map<String, String> superclasses = new HashMap<>();
 
     SourceReader(final CombinedTypeSolver solver, final ConnectionRules rules) {
         this.parser = new JavaParser(new ParserConfiguration()
@@ -60,6 +68,12 @@ final class SourceReader {
             if (model.ancestors(method.type()).stream().anyMatch(SourceReader::isJunit3Base)) {
                 model.test(method, at);
             }
+        });
+        superclasses.forEach((type, superclass) -> {
+            // Creating an object first runs its superclass's constructor (super() unless it says otherwise), and so
+            // the superclass's field initialisers.
+            model.call(MethodKey.fieldsOf(type), new MethodKey(superclass, MethodKey.CONSTRUCTOR, ""));
+            model.call(MethodKey.fieldsOf(type), MethodKey.fieldsOf(superclass));
         });
         return model;
     }
@@ -78,7 +92,8 @@ final class SourceReader {
             final ParseResult<CompilationUnit> result = parse(file);
             if (!result.isSuccessful() || result.getResult().isEmpty()) {
                 model.getCounts().filesNotParsed++;
-                log.debug("Not parsed: {} {}", file, result.getProblems());
+                log.warn("Not parsed, so left out: {} ({})", file,
+                result.getProblems().isEmpty() ? "no result" : result.getProblems().get(0).getVerboseMessage());
                 continue;
             }
             final String name = file.toString().replace('\\', '/');
@@ -108,11 +123,36 @@ final class SourceReader {
             return;
         }
         supertypes(type).forEach(parent -> model.supertype(name, parent));
-        final MethodKey fields = MethodKey.fieldsOf(name);
-        model.declare(fields, location(type, file));
-        for (final BodyDeclaration<?> member : type.getMembers()) {
-            readMember(member, new Owner(name, file, tests));
+        superclass(type).ifPresent(parent -> superclasses.put(name, parent));
+        if (tests) {
+            model.testType(name);
+            nestedTestClass(type).ifPresent(outer -> model.nestedIn(name, outer));
         }
+        model.declare(MethodKey.fieldsOf(name), location(type, file));
+        model.declare(MethodKey.staticsOf(name), location(type, file));
+        final Owner owner = new Owner(name, file, tests);
+        if (type instanceof EnumDeclaration declaration) {
+            declaration.getEntries().forEach(entry -> calls.collect(MethodKey.staticsOf(name), entry, file));
+        }
+        for (final BodyDeclaration<?> member : type.getMembers()) {
+            readMember(member, owner);
+        }
+    }
+
+    private static Optional<String> superclass(final TypeDeclaration<?> type) {
+        if (type instanceof ClassOrInterfaceDeclaration declaration && !declaration.isInterface()) {
+            return declaration.getExtendedTypes().stream().findFirst().map(SourceReader::qualifiedName);
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<String> nestedTestClass(final TypeDeclaration<?> type) {
+        if (!type.isAnnotationPresent("Nested")) {
+            return Optional.empty();
+        }
+        return type.getParentNode()
+            .filter(TypeDeclaration.class::isInstance)
+            .flatMap(parent -> ((TypeDeclaration<?>) parent).getFullyQualifiedName());
     }
 
     /** The type a member belongs to, its file, and whether it is test source. */
@@ -123,14 +163,32 @@ final class SourceReader {
         if (member instanceof MethodDeclaration method) {
             readMethod(method, owner);
         } else if (member instanceof ConstructorDeclaration constructor) {
-            final MethodKey key =
-                new MethodKey(owner.type(), MethodKey.CONSTRUCTOR, Signatures.of(constructor.getParameters()));
-            model.declare(key, location(constructor, owner.file()));
-            model.call(key, MethodKey.fieldsOf(owner.type()));
-            calls.collect(key, constructor, owner.file());
+            readConstructor(constructor, Signatures.of(constructor.getParameters()), owner);
+        } else if (member instanceof CompactConstructorDeclaration compact
+            && compact.getParentNode().orElse(null) instanceof RecordDeclaration record) {
+            readConstructor(compact, Signatures.of(record.getParameters()), owner);
         } else if (member instanceof FieldDeclaration || member instanceof InitializerDeclaration) {
-            calls.collect(MethodKey.fieldsOf(owner.type()), member, owner.file());
+            calls.collect(initialisersOf(member, owner.type()), member, owner.file());
         }
+    }
+
+    private void readConstructor(final BodyDeclaration<?> constructor, final String parameters, final Owner owner) {
+        final MethodKey key = new MethodKey(owner.type(), MethodKey.CONSTRUCTOR, parameters);
+        model.declare(key, location(constructor, owner.file()));
+        model.call(key, MethodKey.fieldsOf(owner.type()));
+        calls.collect(key, constructor, owner.file());
+        if (owner.tests()) {
+            model.setUp(owner.type(), key);
+        }
+    }
+
+    /** Static fields and blocks, and every field of an interface, run once with the type; the rest with each object. */
+    private static MethodKey initialisersOf(final BodyDeclaration<?> member, final String type) {
+        final boolean inInterface = member.getParentNode().orElse(null) instanceof ClassOrInterfaceDeclaration parent
+            && parent.isInterface();
+        final boolean isStatic = member instanceof FieldDeclaration field ? field.isStatic() || inInterface
+            : ((InitializerDeclaration) member).isStatic();
+        return isStatic ? MethodKey.staticsOf(type) : MethodKey.fieldsOf(type);
     }
 
     private void readMethod(final MethodDeclaration method, final Owner owner) {
@@ -165,6 +223,8 @@ final class SourceReader {
             declared.addAll(declaration.getExtendedTypes());
             declared.addAll(declaration.getImplementedTypes());
         } else if (type instanceof EnumDeclaration declaration) {
+            declared.addAll(declaration.getImplementedTypes());
+        } else if (type instanceof RecordDeclaration declaration) {
             declared.addAll(declaration.getImplementedTypes());
         }
         return declared.stream().map(SourceReader::qualifiedName).toList();

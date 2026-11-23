@@ -4,6 +4,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
+import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
@@ -17,13 +18,15 @@ import java.util.function.Supplier;
 
 /**
  * Resolves the calls in a member's body, and records each as an edge, a connection point or an unresolved call.
- * Calls in lambdas, anonymous classes and local classes belong to the member that holds them.
+ * Calls in lambdas, anonymous classes and local classes belong to the member that holds them. A call being stubbed or
+ * verified on a mock ({@code when(store.all())}, {@code verify(store).all()}) isn't a call, and is left out.
  */
 final class CallResolver {
 
     private final SourceModel model;
     private final ConnectionRules rules;
     private final Map<String, Set<String>> supertypesOf = new HashMap<>();
+    private final AddressTracer addresses = new AddressTracer();
 
     CallResolver(final SourceModel model, final ConnectionRules rules) {
         this.model = model;
@@ -32,6 +35,11 @@ final class CallResolver {
 
     void collect(final MethodKey caller, final Node body, final String file) {
         for (final MethodCallExpr call : body.findAll(MethodCallExpr.class)) {
+            if (!Mocks.isStubbedOrVerified(call)) {
+                record(caller, () -> call.resolve(), new Site(call, file));
+            }
+        }
+        for (final ExplicitConstructorInvocationStmt call : body.findAll(ExplicitConstructorInvocationStmt.class)) {
             record(caller, () -> call.resolve(), new Site(call, file));
         }
         for (final ObjectCreationExpr create : body.findAll(ObjectCreationExpr.class)) {
@@ -64,7 +72,8 @@ final class CallResolver {
         model.call(caller, callee);
         model.getCounts().callsResolved++;
         rules.match(callee, supertypes(resolved.declaringType()))
-            .ifPresent(rule -> model.point(new SourceModel.ConnectionPoint(rule.kind(), rule.toString(), caller)));
+            .ifPresent(rule -> model.point(new SourceModel.ConnectionPoint(rule.kind(), rule.toString(), caller),
+                site.location(), addresses.trace(site.node(), rule.kind())));
     }
 
     static MethodKey keyOf(final ResolvedMethodLikeDeclaration resolved) {

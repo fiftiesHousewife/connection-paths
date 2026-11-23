@@ -1,9 +1,9 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -11,7 +11,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -21,26 +23,74 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 final class TypeSolvers {
 
-    /** The solver, and what happened to each classpath entry that wasn't read as it was. */
-    record Setup(CombinedTypeSolver solver, List<String> notes) {
+    /**
+     * The solver; what happened to each classpath entry that wasn't read as it was; and the source folders of sibling
+     * modules whose compiled classes were on the classpath, which are read as production source.
+     */
+    record Setup(CombinedTypeSolver solver, List<String> notes, List<Path> siblingSources) {
         Setup {
             notes = List.copyOf(notes);
+            siblingSources = List.copyOf(siblingSources);
         }
     }
+
+    /** Where a module's compiled classes are, relative to the module, and where its source is. */
+    private static final List<List<String>> CLASS_FOLDERS = List.of(
+        List.of("target", "classes"), List.of("build", "classes", "java", "main"));
 
     private TypeSolvers() {
     }
 
     static Setup create(final Options options) {
-        final CombinedTypeSolver solver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
+        // The JDK's own modules only, through the platform class loader: the libraries this tool runs with must not
+        // stand in for the ones the code is built with.
+        final CombinedTypeSolver solver =
+            new CombinedTypeSolver(new ClassLoaderTypeSolver(ClassLoader.getPlatformClassLoader()));
         final List<Path> sources = new ArrayList<>(options.getMainSources());
         sources.addAll(options.getTestSources());
         sources.stream().filter(Files::isDirectory).forEach(dir -> solver.add(new JavaParserTypeSolver(dir)));
         final List<String> notes = new ArrayList<>();
+        final List<Path> siblings = new ArrayList<>();
         for (final Path entry : options.getClasspath()) {
-            add(solver, entry, notes);
+            final Optional<Path> source = Files.isDirectory(entry) ? sourceOf(entry) : Optional.empty();
+            final boolean alreadyRead = source.isPresent() && sources.stream()
+                .anyMatch(dir -> dir.toAbsolutePath().normalize().equals(source.get()));
+            if (source.isPresent() && !alreadyRead) {
+                solver.add(new JavaParserTypeSolver(source.get()));
+                siblings.add(source.get());
+                notes.add("a class folder, read from its module's source instead: " + entry);
+            } else if (source.isEmpty()) {
+                add(solver, entry, notes);
+            }
         }
-        return new Setup(solver, notes);
+        return new Setup(solver, notes, siblings);
+    }
+
+    /** The source of a module whose compiled classes are in this folder, if it is in the usual place. */
+    static Optional<Path> sourceOf(final Path classes) {
+        final Path folder = classes.toAbsolutePath().normalize();
+        for (final List<String> layout : CLASS_FOLDERS) {
+            if (endsWith(folder, layout)) {
+                final String up = String.join("/", Collections.nCopies(layout.size(), ".."));
+                final Path module = folder.resolve(up).normalize();
+                final Path source = module.resolve("src").resolve("main").resolve("java");
+                return Files.isDirectory(source) ? Optional.of(source) : Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static boolean endsWith(final Path folder, final List<String> layout) {
+        final int names = folder.getNameCount();
+        if (names <= layout.size()) {
+            return false;
+        }
+        for (int i = 0; i < layout.size(); i++) {
+            if (!folder.getName(names - layout.size() + i).toString().equals(layout.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void add(final CombinedTypeSolver solver, final Path entry, final List<String> notes) {

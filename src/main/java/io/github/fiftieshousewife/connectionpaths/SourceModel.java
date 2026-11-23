@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -27,6 +28,10 @@ final class SourceModel {
     private final Map<MethodKey, Location> tests = new TreeMap<>();
     private final Map<String, Set<MethodKey>> setUps = new HashMap<>();
     private final Set<ConnectionPoint> points = new LinkedHashSet<>();
+    private final Map<ConnectionPoint, Location> pointLocations = new HashMap<>();
+    private final Map<ConnectionPoint, Address> pointAddresses = new HashMap<>();
+    private final Set<String> testTypes = new HashSet<>();
+    private final Map<String, String> enclosing = new HashMap<>();
     private final Unresolved unresolved = new Unresolved();
     private final Counts counts = new Counts();
 
@@ -59,8 +64,24 @@ final class SourceModel {
         setUps.computeIfAbsent(type, k -> new HashSet<>()).add(method);
     }
 
-    void point(final ConnectionPoint point) {
+    /** A connection point, at the first call in its method that makes it one. */
+    void point(final ConnectionPoint point, final Location at, final Address address) {
         points.add(point);
+        pointLocations.putIfAbsent(point, at);
+        pointAddresses.putIfAbsent(point, address);
+    }
+
+    void testType(final String type) {
+        testTypes.add(type);
+    }
+
+    boolean isTestType(final String type) {
+        return testTypes.contains(type);
+    }
+
+    /** A nested test class runs inside an instance of the class around it, with that class's set-up. */
+    void nestedIn(final String inner, final String outer) {
+        enclosing.put(inner, outer);
     }
 
     /** Every supertype of a type, following the supertypes recorded for the types in the source. */
@@ -76,13 +97,20 @@ final class SourceModel {
         return seen;
     }
 
-    /** A test's set-up: its class's and superclasses' set-up methods and field initialisers. */
+    /**
+     * What runs with each test besides the test itself: its class's and superclasses' set-up and tear-down methods,
+     * constructors and initialisers, and those of the classes a nested test class sits in.
+     */
     Set<MethodKey> setUpOf(final String testClass) {
-        final Set<MethodKey> all = new TreeSet<>(setUps.getOrDefault(testClass, Set.of()));
-        all.add(MethodKey.fieldsOf(testClass));
-        for (final String ancestor : ancestors(testClass)) {
-            all.addAll(setUps.getOrDefault(ancestor, Set.of()));
-            all.add(MethodKey.fieldsOf(ancestor));
+        final Set<MethodKey> all = new TreeSet<>();
+        for (String type = testClass; type != null; type = enclosing.get(type)) {
+            final Set<String> withAncestors = new LinkedHashSet<>(List.of(type));
+            withAncestors.addAll(ancestors(type));
+            for (final String each : withAncestors) {
+                all.addAll(setUps.getOrDefault(each, Set.of()));
+                all.add(MethodKey.fieldsOf(each));
+                all.add(MethodKey.staticsOf(each));
+            }
         }
         all.retainAll(declared);
         return all;
@@ -102,6 +130,14 @@ final class SourceModel {
 
     Location locationOf(final MethodKey method) {
         return locations.get(method);
+    }
+
+    Location locationOf(final ConnectionPoint point) {
+        return pointLocations.get(point);
+    }
+
+    Address addressOf(final ConnectionPoint point) {
+        return pointAddresses.get(point);
     }
 
     Set<ConnectionPoint> getPoints() {

@@ -3,10 +3,11 @@
 
 plugins {
     id("io.github.fiftieshousewife.java-conventions")
+    id("io.github.fiftieshousewife.publishing")
     application
 }
 
-version = "0.1.0"
+// The version is in gradle.properties; a release sets it from its tag with -Pversion.
 
 dependencies {
     implementation(libs.javaparser.symbol.solver)
@@ -36,6 +37,36 @@ val allInOne = tasks.register<Jar>("allInOneJar") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 tasks.assemble { dependsOn(allInOne) }
+
+// Published as io.github.fiftieshousewife.connectionpaths:connection-paths: the library jar with its POM, and the
+// runnable jar beside it with the classifier "all", for networks that only reach a package repository.
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifactId = "connection-paths"
+            from(components["java"])
+            artifact(allInOne) { classifier = "all" }
+            pom {
+                name = "connection-paths"
+                description = "Finds where Java code opens external connections, and which tests reach them, from source."
+            }
+        }
+    }
+}
+
+// Maven Central, through its Central Portal. Needs centralPortalUsername and centralPortalPassword (a Central Portal
+// user token), as Gradle properties or ORG_GRADLE_PROJECT_ environment variables.
+apply(plugin = "com.gradleup.nmcp.aggregation")
+configure<nmcp.NmcpAggregationExtension> {
+    centralPortal {
+        username = providers.gradleProperty("centralPortalUsername")
+        password = providers.gradleProperty("centralPortalPassword")
+        publishingType = "AUTOMATIC"
+    }
+}
+dependencies {
+    "nmcpAggregation"(project(":"))
+}
 
 tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
     excludeFilter = layout.projectDirectory.file("config/quality/spotbugs/exclude.xml")

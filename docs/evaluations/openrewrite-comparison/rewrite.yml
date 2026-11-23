@@ -1,0 +1,9 @@
+# For comparing OpenRewrite's call graph with connection-paths on this module. Search only: changes nothing.
+type: specs.openrewrite.org/v1beta/recipe
+name: com.example.CallGraphComparison
+displayName: Call graph and class hierarchy, for comparison
+description: Every call, JDK calls included, and every class's supertypes, as data tables.
+recipeList:
+  - org.openrewrite.FindCallGraph:
+      includeStdLib: true
+  - org.openrewrite.java.search.FindClassHierarchy

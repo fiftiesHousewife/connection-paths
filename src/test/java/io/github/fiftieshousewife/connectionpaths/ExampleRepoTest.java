@@ -1,52 +1,75 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.CONFIG_TEST;
+import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.DB_MANAGER_TEST;
+import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.FACTS;
+import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.ORDERS_TEST;
+import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.REACHING;
+import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.STORES_TEST;
+import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.onlyReach;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /** The example repo in src/test/resources/example has known answers; each test checks one of them. */
 class ExampleRepoTest {
 
-    private static final String ORDERS_TEST = "com.example.orders.OrderServiceTest";
-    private static Facts facts;
-    private static Map<String, Facts.TestReach> reaching;
-
-    @BeforeAll
-    static void readTheExample() {
-        facts = ConnectionPaths.find(Options.builder()
-            .mainSource(Path.of("src/test/resources/example/src/main/java"))
-            .testSource(Path.of("src/test/resources/example/src/test/java"))
-            .build());
-        reaching = facts.getTests().stream().collect(Collectors.toMap(Facts.TestReach::getTest, t -> t));
-    }
-
     @Test
     void findsEachConnectionPointWithItsKind() {
-        assertThat(facts.getConnectionPoints())
+        assertThat(FACTS.getConnectionPoints())
             .extracting(Facts.Point::getMethod, Facts.Point::getKind)
             .containsExactlyInAnyOrder(
-                org.assertj.core.groups.Tuple.tuple("com.example.db.Database#open()", "database"),
-                org.assertj.core.groups.Tuple.tuple("com.example.events.AuditListener#changed(String)", "socket"),
-                org.assertj.core.groups.Tuple.tuple("com.example.report.ReportClient#fetch()", "url"),
-                org.assertj.core.groups.Tuple.tuple("com.example.tools.Shell#list()", "process"),
-                org.assertj.core.groups.Tuple.tuple("com.example.docs.DocumentReader#read(URL)", "url"));
+                tuple("com.example.db.Database#open()", "database"),
+                tuple("com.example.events.AuditListener#changed(String)", "socket"),
+                tuple("com.example.report.ReportClient#fetch()", "url"),
+                tuple("com.example.tools.Shell#list()", "process"),
+                tuple("com.example.docs.DocumentReader#read(URL)", "url"),
+                tuple("com.example.mail.SmtpMailer#send(String)", "mail"),
+                tuple("com.example.mail.SmtpMailer#send(String)", "mail"),
+                tuple("com.example.mail.MailLogin#check(String,String)", "mail"),
+                tuple("com.example.addresses.CrmClient#open()", "socket"),
+                tuple("com.example.addresses.LedgerStore#open()", "database"),
+                tuple("com.example.addresses.OrdersLookup#connect(InitialContext)",
+                    "database"),
+                tuple("com.example.addresses.PaymentsClient#balances()", "url"),
+                tuple("com.example.addresses.PoolFactory#connect(SimpleDataSource)",
+                    "database"),
+                tuple("com.example.addresses.RegionClient#prices(String)", "url"),
+                tuple("com.example.addresses.WarehouseClient#stock()", "url"),
+                tuple("com.example.alt.DefaultProvider#getConnection()", "database"),
+                tuple("com.example.alt.JndiProvider#getConnection()", "database"),
+                tuple("com.example.alt.EmbeddedProvider#getConnection()", "database"),
+                tuple("com.example.alt.LocalThings#readBundledFile()", "url"),
+                tuple("com.example.alt.LocalThings#talkToTheAgentOnThisMachine()",
+                    "socket"),
+                tuple("com.example.alt.LocalThings#readOwnJar()", "url"),
+                tuple("com.example.addresses.DirectoryClient#users()", "http"),
+                tuple("com.example.addresses.Notifier.Sender#open()", "socket"),
+                tuple("com.example.addresses.SecureChannel#open()", "socket"));
     }
 
     @Test
     void listsOnlyTheTestsThatMayReachAConnection() {
-        assertThat(reaching.keySet()).containsExactlyInAnyOrder(
+        assertThat(REACHING.keySet()).containsExactlyInAnyOrder(
             ORDERS_TEST + ".countsOrders",
             "com.example.report.ReportJobTest.runsTheReport",
             "com.example.ledger.LedgerTest.countsEntries",
             "com.example.tools.ShellTest.lists",
             "com.example.legacy.AuditTest.testAudits",
-            "com.example.orders.ArchiverTest.archives");
+            "com.example.orders.ArchiverTest.archives",
+            STORES_TEST + ".namesTheStore",
+            STORES_TEST + ".sizesTheCache",
+            CONFIG_TEST + ".readsASetting",
+            CONFIG_TEST + ".sizesThePool",
+            "com.example.greet.GreetingsTest.says",
+            "com.example.ledger.LedgerNestedTest.WhenEmpty.hasNoEntries",
+            "com.example.ledger.LedgerTestNgTest.countsEntries",
+            "com.example.ledger.LedgerCleanupTest.startsClean",
+            "com.example.mail.SmtpMailerTest.sends",
+            "com.example.mail.MailLoginTest.checksAUser",
+            DB_MANAGER_TEST);
     }
 
     @Test
@@ -88,14 +111,14 @@ class ExampleRepoTest {
     @Test
     void reportsADispatchPointWithManyImplementationsInsteadOfFollowingIt() {
         assertAll(
-            () -> assertThat(facts.getDispatchPointsNotFollowed())
+            () -> assertThat(FACTS.getDispatchPointsNotFollowed())
                 .containsExactly(new Facts.Dispatch("com.example.events.Listener#changed(String)", 4)),
-            () -> assertThat(reaching).doesNotContainKey("com.example.events.EventsTest.firesToEveryListener"));
+            () -> assertThat(REACHING).doesNotContainKey("com.example.events.EventsTest.firesToEveryListener"));
     }
 
     @Test
     void tellsOverloadsApartByTheirParameterTypes() {
-        assertThat(reaching).doesNotContainKey("com.example.docs.DocumentReaderTest.readsText");
+        assertThat(REACHING).doesNotContainKey("com.example.docs.DocumentReaderTest.readsText");
     }
 
     @Test
@@ -110,30 +133,24 @@ class ExampleRepoTest {
 
     @Test
     void doesNotFollowCallsThroughTheJdksOwnTypes() {
-        assertThat(reaching).doesNotContainKey("com.example.util.NamesTest.joinsNames");
+        assertThat(REACHING).doesNotContainKey("com.example.util.NamesTest.joinsNames");
     }
 
     @Test
     void reportsCallsItCannotResolveByReason() {
         assertAll(
-            () -> assertThat(facts.getSummary().getCallsNotResolved()).isPositive(),
-            () -> assertThat(facts.getNotResolved()).extracting(Unresolved.Reason::reason)
+            () -> assertThat(FACTS.getSummary().getCallsNotResolved()).isPositive(),
+            () -> assertThat(FACTS.getNotResolved()).extracting(Unresolved.Reason::reason)
                 .anyMatch(reason -> reason.contains("Post")));
     }
 
     @Test
     void summarisesWhatItRead() {
-        final Facts.Summary summary = facts.getSummary();
+        final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(31),
+            () -> assertThat(summary.getFiles()).isEqualTo(78),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
-            () -> assertThat(summary.getTests()).isEqualTo(10),
-            () -> assertThat(summary.getTestsReaching()).isEqualTo(6));
-    }
-
-    private static Facts.Reach onlyReach(final String test) {
-        final List<Facts.Reach> reaches = reaching.get(test).getReaches();
-        assertThat(reaches).hasSize(1);
-        return reaches.get(0);
+            () -> assertThat(summary.getTests()).isEqualTo(22),
+            () -> assertThat(summary.getTestsReaching()).isEqualTo(17));
     }
 }
