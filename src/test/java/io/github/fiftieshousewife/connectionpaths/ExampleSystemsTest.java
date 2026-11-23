@@ -51,4 +51,11 @@ class ExampleSystemsTest {
                 .containsExactly("com.example.alt.DbManager#connect()",
                     "com.example.alt.DefaultProvider#getConnection()"));
     }
+
+    @Test
+    void doesNotNameASystemAfterAStandInHostSuchAsUndefined() {
+        assertAll(
+            () -> assertThat(system("com.example.addresses.Fetcher").getNamedBy()).isEqualTo("class"),
+            () -> assertThat(system("com.example.addresses.Fetcher").getAddress().isPlaceholder()).isTrue());
+    }
 }

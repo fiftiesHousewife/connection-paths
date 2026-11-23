@@ -47,7 +47,8 @@ class ExampleRepoTest {
                 tuple("com.example.alt.LocalThings#readOwnJar()", "url"),
                 tuple("com.example.addresses.DirectoryClient#users()", "http"),
                 tuple("com.example.addresses.Notifier.Sender#open()", "socket"),
-                tuple("com.example.addresses.SecureChannel#open()", "socket"));
+                tuple("com.example.addresses.SecureChannel#open()", "socket"),
+                tuple("com.example.addresses.Fetcher#fetch()", "url"));
     }
 
     @Test
@@ -148,7 +149,7 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(78),
+            () -> assertThat(summary.getFiles()).isEqualTo(79),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
             () -> assertThat(summary.getTests()).isEqualTo(22),
             () -> assertThat(summary.getTestsReaching()).isEqualTo(17));

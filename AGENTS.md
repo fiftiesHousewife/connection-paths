@@ -15,6 +15,7 @@ follows: no repurposed words, no dates in text, things referred to by name.
 | `src/test/resources/example/` | An example repo with known answers; `ExampleRepoTest` checks each one |
 | `tools/print-classpath.gradle` | Writes a Gradle build's classpath for `--classpath` |
 | [`docs/decisions/`](docs/decisions/README.md) | This repo's decisions, in MADR form |
+| [`docs/backlog.md`](docs/backlog.md) | What it doesn't do yet, most useful first |
 | [`docs/evaluations/`](docs/evaluations/) | Comparisons with other tools that decisions rest on, with what's needed to run them again |
 | `build-logic/`, `config/quality/` | The same Gradle conventions and quality rules as under-test; `io.github.fiftieshousewife.publishing` is how it is published |
 | [`.github/workflows/`](.github/workflows/) | Build: `./gradlew check` on every pull request, and the jar run on Java 17. Release: a tag such as `v1.2.3` publishes to Maven Central and GitHub |

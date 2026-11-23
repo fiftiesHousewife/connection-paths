@@ -62,4 +62,13 @@ class MainTest {
             "--out", dir.resolve("facts.json").toString())))
             .isEqualTo(Main.WRONG_ARGUMENTS);
     }
+
+    @Test
+    void writesTheSameFactsEveryTime(@TempDir final Path dir) throws IOException {
+        final Path first = dir.resolve("first.json");
+        final Path second = dir.resolve("second.json");
+        Main.run(List.of("--module", "src/test/resources/example", "--out", first.toString()));
+        Main.run(List.of("--module", "src/test/resources/example", "--out", second.toString()));
+        assertThat(Files.readString(second)).isEqualTo(Files.readString(first));
+    }
 }

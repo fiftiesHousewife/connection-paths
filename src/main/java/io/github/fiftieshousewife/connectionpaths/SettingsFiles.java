@@ -32,8 +32,8 @@ final class SettingsFiles {
     private static final Set<String> EXTENSIONS = Set.of("properties", "yml", "yaml", "xml");
     private static final long LARGEST = 1_000_000;
     /** Capitals for YOUR-, CHANGE-ME, TODO and XXX, so ordinary words don't count; any case for the rest. */
-    private static final Pattern PLACEHOLDER = Pattern.compile(
-        ".*(YOUR[-_]|<[^>]+>|\\$\\{|CHANGE[-_ ]?ME|TODO|XXX|(?i:example\\.(com|org|net)|changeme|placeholder)).*");
+    private static final Pattern PLACEHOLDER = Pattern.compile(".*(YOUR[-_]|<[^>]+>|\\$\\{|CHANGE[-_ ]?ME|TODO|XXX"
+        + "|(?i:example\\.(com|org|net)|changeme|placeholder|//(undefined|unset|invalid)\\b)).*");
 
     private final Map<String, Setting> settings = new TreeMap<>();
 
@@ -55,7 +55,10 @@ final class SettingsFiles {
         return settings.size();
     }
 
-    /** Whether a value looks like one a person is meant to fill in: YOUR-..., CHANGE-ME, ${...}, example.com. */
+    /**
+     * Whether a value looks like one a person is meant to fill in, or a stand-in until one is: YOUR-..., CHANGE-ME,
+     * ${...}, example.com, http://undefined/.
+     */
     static boolean isPlaceholder(final String value) {
         return value != null && PLACEHOLDER.matcher(value).matches();
     }

@@ -79,6 +79,7 @@ class SettingsFilesTest {
             () -> assertThat(SettingsFiles.isPlaceholder("${DB_URL}")).isTrue(),
             () -> assertThat(SettingsFiles.isPlaceholder("CHANGE-ME")).isTrue(),
             () -> assertThat(SettingsFiles.isPlaceholder("smtp.Example.com")).isTrue(),
+            () -> assertThat(SettingsFiles.isPlaceholder("http://undefined/")).isTrue(),
             () -> assertThat(SettingsFiles.isPlaceholder("Your order")).isFalse(),
             () -> assertThat(SettingsFiles.isPlaceholder("db.internal")).isFalse(),
             () -> assertThat(SettingsFiles.isPlaceholder(null)).isFalse());

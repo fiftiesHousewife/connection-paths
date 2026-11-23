@@ -112,7 +112,8 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 * A test is listed if it may reach a connection. "May": measurement, the first run of the tests, confirms or clears
   each one.
 
-It does not follow reflection, beans wired only in Spring XML, or code loaded by name at run time.
+It does not follow reflection, beans wired only in Spring XML, or code loaded by name at run time. What it doesn't
+do yet is in the [backlog](docs/backlog.md).
 
 ## Building
 
