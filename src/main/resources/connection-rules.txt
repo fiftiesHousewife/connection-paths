@@ -1,0 +1,59 @@
+# The calls that open, or use, a connection to something outside the program.
+# One rule a line: <kind> <type>#<method>. A method of * means every method but the constructor.
+# A rule matches a call to that type or to any type that extends or implements it; a rule naming the exact type wins
+# over one that matches through a supertype. Lines starting with # are comments.
+
+database java.sql.DriverManager#getConnection
+database javax.sql.DataSource#getConnection
+database org.springframework.jdbc.core.JdbcOperations#*
+database org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations#*
+database javax.persistence.EntityManager#*
+database jakarta.persistence.EntityManager#*
+database org.hibernate.SharedSessionContract#*
+database org.hibernate.SessionFactory#openSession
+database org.apache.ibatis.session.SqlSession#*
+
+http java.net.HttpURLConnection#connect
+http java.net.http.HttpClient#send
+http java.net.http.HttpClient#sendAsync
+http org.apache.http.client.HttpClient#execute
+http org.apache.hc.client5.http.classic.HttpClient#execute
+http org.springframework.web.client.RestOperations#*
+http org.springframework.web.reactive.function.client.WebClient#*
+http okhttp3.Call#execute
+http okhttp3.Call#enqueue
+
+mail javax.mail.Transport#send
+mail jakarta.mail.Transport#send
+mail org.springframework.mail.MailSender#send
+
+directory javax.naming.directory.InitialDirContext#<init>
+directory javax.naming.ldap.InitialLdapContext#<init>
+directory org.springframework.ldap.core.LdapOperations#*
+
+jndi javax.naming.InitialContext#<init>
+
+queue javax.jms.ConnectionFactory#createConnection
+queue jakarta.jms.ConnectionFactory#createConnection
+queue org.springframework.jms.core.JmsOperations#*
+queue org.springframework.amqp.core.AmqpTemplate#*
+queue com.rabbitmq.client.ConnectionFactory#newConnection
+queue org.apache.kafka.clients.producer.KafkaProducer#<init>
+queue org.apache.kafka.clients.consumer.KafkaConsumer#<init>
+
+socket java.net.Socket#<init>
+socket java.net.Socket#connect
+socket javax.net.SocketFactory#createSocket
+socket java.nio.channels.SocketChannel#open
+socket java.nio.channels.SocketChannel#connect
+socket java.net.DatagramSocket#send
+
+# A URL may be a file, a jar or a classpath resource as well as a remote server: a person or measurement decides.
+url java.net.URL#openConnection
+url java.net.URL#openStream
+
+host-lookup java.net.InetAddress#getByName
+host-lookup java.net.InetAddress#getAllByName
+
+process java.lang.ProcessBuilder#start
+process java.lang.Runtime#exec

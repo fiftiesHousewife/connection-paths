@@ -1,0 +1,118 @@
+package io.github.fiftieshousewife.connectionpaths;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+/** Everything read from the source: methods, the calls each makes, types' supertypes, tests, and connection points. */
+final class SourceModel {
+
+    /** A place in a source file. */
+    record Location(String file, int line) {
+    }
+
+    /** A method that makes a call the rules say opens or uses a connection. */
+    record ConnectionPoint(String kind, String call, MethodKey method) {
+    }
+
+    private final Set<MethodKey> declared = new HashSet<>();
+    private final Map<MethodKey, Set<MethodKey>> calls = new HashMap<>();
+    private final Map<String, Set<String>> parents = new HashMap<>();
+    private final Map<MethodKey, Location> locations = new HashMap<>();
+    private final Map<MethodKey, Location> tests = new TreeMap<>();
+    private final Map<String, Set<MethodKey>> setUps = new HashMap<>();
+    private final Set<ConnectionPoint> points = new LinkedHashSet<>();
+    private final Unresolved unresolved = new Unresolved();
+    private final Counts counts = new Counts();
+
+    /** How much was read. */
+    static final class Counts {
+        int files;
+        int filesNotParsed;
+        int callsResolved;
+    }
+
+    void declare(final MethodKey method, final Location at) {
+        declared.add(method);
+        locations.putIfAbsent(method, at);
+        calls.computeIfAbsent(method, k -> new HashSet<>());
+    }
+
+    void call(final MethodKey caller, final MethodKey callee) {
+        calls.computeIfAbsent(caller, k -> new HashSet<>()).add(callee);
+    }
+
+    void supertype(final String type, final String parent) {
+        parents.computeIfAbsent(type, k -> new HashSet<>()).add(parent);
+    }
+
+    void test(final MethodKey test, final Location at) {
+        tests.put(test, at);
+    }
+
+    void setUp(final String type, final MethodKey method) {
+        setUps.computeIfAbsent(type, k -> new HashSet<>()).add(method);
+    }
+
+    void point(final ConnectionPoint point) {
+        points.add(point);
+    }
+
+    /** Every supertype of a type, following the supertypes recorded for the types in the source. */
+    Set<String> ancestors(final String type) {
+        final Set<String> seen = new LinkedHashSet<>();
+        final java.util.ArrayDeque<String> queue = new java.util.ArrayDeque<>(parents.getOrDefault(type, Set.of()));
+        while (!queue.isEmpty()) {
+            final String next = queue.pop();
+            if (seen.add(next)) {
+                queue.addAll(parents.getOrDefault(next, Set.of()));
+            }
+        }
+        return seen;
+    }
+
+    /** A test's set-up: its class's and superclasses' set-up methods and field initialisers. */
+    Set<MethodKey> setUpOf(final String testClass) {
+        final Set<MethodKey> all = new TreeSet<>(setUps.getOrDefault(testClass, Set.of()));
+        all.add(MethodKey.fieldsOf(testClass));
+        for (final String ancestor : ancestors(testClass)) {
+            all.addAll(setUps.getOrDefault(ancestor, Set.of()));
+            all.add(MethodKey.fieldsOf(ancestor));
+        }
+        all.retainAll(declared);
+        return all;
+    }
+
+    Set<MethodKey> getDeclared() {
+        return Collections.unmodifiableSet(declared);
+    }
+
+    Map<MethodKey, Set<MethodKey>> getCalls() {
+        return Collections.unmodifiableMap(calls);
+    }
+
+    Map<MethodKey, Location> getTests() {
+        return Collections.unmodifiableMap(tests);
+    }
+
+    Location locationOf(final MethodKey method) {
+        return locations.get(method);
+    }
+
+    Set<ConnectionPoint> getPoints() {
+        return Collections.unmodifiableSet(points);
+    }
+
+    Unresolved getUnresolved() {
+        return unresolved;
+    }
+
+    Counts getCounts() {
+        return counts;
+    }
+}
