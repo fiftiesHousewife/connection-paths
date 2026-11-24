@@ -5,7 +5,7 @@ import java.net.URL;
 import org.springframework.beans.factory.annotation.Value;
 
 // Feeds whose addresses are settings: one with a default in the code, one a file fills from an environment variable,
-// and one a file fills from an environment variable with a default.
+// one a file fills from an environment variable with a default, and one only a profile's file sets.
 public class PriceFeeds {
     @Value("${pricing.url:https://pricing.internal/api}")
     private String pricing;
@@ -15,6 +15,9 @@ public class PriceFeeds {
 
     @Value("${payments.url}")
     private String payments;
+
+    @Value("${rates.url}")
+    private String rates;
 
     public void prices() throws IOException {
         new URL(pricing).openConnection();
@@ -26,5 +29,9 @@ public class PriceFeeds {
 
     public void payments() throws IOException {
         new URL(payments).openConnection();
+    }
+
+    public void rates() throws IOException {
+        new URL(rates).openConnection();
     }
 }

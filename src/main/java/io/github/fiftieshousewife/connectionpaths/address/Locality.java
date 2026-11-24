@@ -25,7 +25,7 @@ public final class Locality {
         rule("jdbc:derby:(?!//).*", "a Derby database in a file or in memory"),
         rule("jdbc:sqlite:.*", "an SQLite database in a file"),
         rule("(file|jar|classpath):.*", "a file, a jar or a classpath resource"),
-        rule("([a-z][a-z0-9+.-]*:(//)?)?([^@/]*@)?(localhost|127\\.0\\.0\\.1|\\[?::1]?|0\\.0\\.0\\.0)([:/].*)?",
+        rule("(jdbc:)?([a-z][a-z0-9+.-]*:(//)?)?([^@/]*@)?(localhost|127\\.0\\.0\\.1|\\[?::1]?|0\\.0\\.0\\.0)([:/].*)?",
             "this machine"));
 
     private static final Map<String, String> LOCAL_SOURCES = Map.of(Address.CLASSPATH_RESOURCE, "a classpath resource",

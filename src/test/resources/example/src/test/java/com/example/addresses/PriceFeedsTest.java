@@ -20,4 +20,9 @@ class PriceFeedsTest {
     void readsPayments() throws IOException {
         feeds.payments();
     }
+
+    @Test
+    void readsRates() throws IOException {
+        feeds.rates();
+    }
 }

@@ -20,6 +20,7 @@ com.example.alt.EmbeddedProvider#getConnection() database
 com.example.alt.LocalThings#readBundledFile() url
 com.example.alt.LocalThings#talkToTheAgentOnThisMachine() socket
 com.example.alt.LocalThings#readOwnJar() url
+com.example.alt.LocalThings#openTheDatabaseOnThisMachine() database
 com.example.addresses.DirectoryClient#users() http
 com.example.addresses.Notifier.Sender#open() socket
 com.example.addresses.SecureChannel#open() socket
@@ -66,3 +67,4 @@ com.example.addresses.PriceFeeds#prices() url
 com.example.addresses.PriceFeeds#stock() url
 com.example.addresses.PriceFeeds#payments() url
 com.example.pages.PageClient#get(String) url
+com.example.addresses.PriceFeeds#rates() url

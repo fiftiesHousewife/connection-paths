@@ -78,6 +78,11 @@ class ExampleAddressesTest {
     }
 
     @Test
+    void leavesOutASettingOnlyAProfilesFileGives() {
+        assertThat(addressOf("com.example.addresses.PriceFeeds#rates()").getSettingValue()).isNull();
+    }
+
+    @Test
     void readsAConfigurationPropertiesFieldAsTheSettingItsPrefixAndNameGiveMatchedLoosely() {
         final Address replica = addressOf("com.example.addresses.OrdersReplica#open()");
         assertAll(
@@ -107,6 +112,7 @@ class ExampleAddressesTest {
                 tuple("com.example.alt.LocalThings#talkToTheAgentOnThisMachine()",
                     "this machine"),
                 tuple("com.example.alt.LocalThings#readOwnJar()", "a classpath resource"),
+                tuple("com.example.alt.LocalThings#openTheDatabaseOnThisMachine()", "this machine"),
                 tuple("com.example.addresses.ListenAddress#toListenOn()",
                     "an address of this machine, to listen on"),
                 tuple("com.example.lookups.Peers#gateway()", "a numeric address, which nothing looks up"),

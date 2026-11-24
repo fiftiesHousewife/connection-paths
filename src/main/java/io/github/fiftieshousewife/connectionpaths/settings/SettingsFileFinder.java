@@ -12,8 +12,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 // The properties, YAML and XML files under some folders that may hold settings, outside build output and tool files,
-// and no larger than a megabyte, in the order their settings are kept: production before test, a file without a
-// Spring profile (application.yml) before one with (application-dev.yml), then by name.
+// and no larger than a megabyte, in the order their settings are kept: production before test, then by name. A file
+// for one Spring profile (application-dev.yml) is left out: its settings hold only where that profile is active.
 final class SettingsFileFinder {
 
     private static final Set<String> SKIPPED_FOLDERS =
@@ -28,16 +28,15 @@ final class SettingsFileFinder {
 
     static List<Path> filesIn(final List<Path> folders) {
         return folders.stream().filter(Files::isDirectory).flatMap(SettingsFileFinder::settingsFilesIn)
-            .sorted(Comparator.comparing(SettingsFileFinder::isTestSettings)
-                .thenComparing(SettingsFileFinder::isProfileFile).thenComparing(Comparator.naturalOrder()))
+            .filter(file -> !isProfileFile(file))
+            .sorted(Comparator.comparing(SettingsFileFinder::isTestSettings).thenComparing(Comparator.naturalOrder()))
             .toList();
     }
 
     // The files a test finds on its classpath, test resources before main ones.
     static List<Path> testClasspathFilesIn(final List<Path> folders) {
         return filesIn(folders).stream().filter(SettingsFileFinder::isOnTheTestClasspath)
-            .sorted(Comparator.comparing((Path file) -> !isTestSettings(file))
-                .thenComparing(SettingsFileFinder::isProfileFile).thenComparing(Comparator.naturalOrder()))
+            .sorted(Comparator.comparing((Path file) -> !isTestSettings(file)).thenComparing(Comparator.naturalOrder()))
             .toList();
     }
 

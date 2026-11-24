@@ -83,9 +83,9 @@ class ExampleTestSettingsTest {
 
     @Test
     void takesASettingsDefaultWhereNoFileSetsItAndAnEnvironmentVariableAsKnownOnlyAtRunTime() {
-        assertThat(java.util.stream.Stream.of("readsPrices", "readsStock", "readsPayments")
+        assertThat(java.util.stream.Stream.of("readsPrices", "readsStock", "readsPayments", "readsRates")
             .map(test -> reachOf("com.example.addresses.PriceFeedsTest." + test, "url").getAddressForTests()))
-            .containsExactly("host", "run-time", "local");
+            .containsExactly("host", "run-time", "local", "none");
     }
 
     @Test

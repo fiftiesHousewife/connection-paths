@@ -57,3 +57,4 @@ com.example.addresses.PriceFeedsTest.readsPrices
 com.example.addresses.PriceFeedsTest.readsStock
 com.example.addresses.PriceFeedsTest.readsPayments
 com.example.pages.PageClientTest.fetchesThePageItIsGiven
+com.example.addresses.PriceFeedsTest.readsRates
