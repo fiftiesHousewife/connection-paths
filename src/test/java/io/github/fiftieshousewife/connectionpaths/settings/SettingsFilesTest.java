@@ -25,6 +25,19 @@ class SettingsFilesTest {
     }
 
     @Test
+    void readsContinuedLinesAndEscapesAsJavaDoes(@TempDir final Path dir) throws IOException {
+        Files.writeString(dir.resolve("a.properties"),
+            "db.url=jdbc:postgresql://orders.internal:5432/\\\n    orders\nmy\\:key=v\nname=caf\\u00e9\n");
+        final SettingsFiles settings = SettingsFiles.read(List.of(dir));
+        assertAll(
+            () -> assertThat(settings.get("db.url"))
+                .contains(new SettingsFiles.Setting("jdbc:postgresql://orders.internal:5432/orders",
+                    file(dir, "a.properties"), 1)),
+            () -> assertThat(settings.get("my:key").map(SettingsFiles.Setting::line)).contains(3),
+            () -> assertThat(settings.get("name").map(SettingsFiles.Setting::value)).contains("caf\u00e9"));
+    }
+
+    @Test
     void flattensYamlMappingsAndLeavesListsOut(@TempDir final Path dir) throws IOException {
         Files.writeString(dir.resolve("a.yml"), """
             spring:
