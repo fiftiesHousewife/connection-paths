@@ -56,3 +56,4 @@ com.example.pages.LocalPagesTest.fetchesEachPageByItsPlaceInAList
 com.example.addresses.PriceFeedsTest.readsPrices
 com.example.addresses.PriceFeedsTest.readsStock
 com.example.addresses.PriceFeedsTest.readsPayments
+com.example.pages.PageClientTest.fetchesThePageItIsGiven

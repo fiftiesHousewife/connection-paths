@@ -65,3 +65,4 @@ com.example.lookups.TimeClient#ask(InetAddress,int) socket
 com.example.addresses.PriceFeeds#prices() url
 com.example.addresses.PriceFeeds#stock() url
 com.example.addresses.PriceFeeds#payments() url
+com.example.pages.PageClient#get(String) url

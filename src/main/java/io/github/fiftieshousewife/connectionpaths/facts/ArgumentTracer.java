@@ -2,14 +2,17 @@ package io.github.fiftieshousewife.connectionpaths.facts;
 
 import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.address.AddressTracer;
+import io.github.fiftieshousewife.connectionpaths.source.CallResolver;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import io.github.fiftieshousewife.connectionpaths.source.syntax.Signatures;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithArguments;
 import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt;
+import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -54,8 +57,8 @@ final class ArgumentTracer {
     }
 
     // The calls in a body that may be to the callee: by name and number of arguments, or for a constructor, by its
-    // class's name, or super(...) and this(...).
-    private static Stream<NodeWithArguments<?>> callsIn(final Node body, final MethodKey callee) {
+    // class's name, or super(...) and this(...); and, where the call resolves, to the callee or a method it overrides.
+    private Stream<NodeWithArguments<?>> callsIn(final Node body, final MethodKey callee) {
         final String simpleType = callee.type().substring(callee.type().lastIndexOf('.') + 1);
         final List<NodeWithArguments<?>> calls = callee.isConstructor()
             ? Stream.concat(body.findAll(ObjectCreationExpr.class,
@@ -64,7 +67,32 @@ final class ArgumentTracer {
                 .<NodeWithArguments<?>>map(c -> (NodeWithArguments<?>) c).toList()
             : body.findAll(MethodCallExpr.class, c -> c.getNameAsString().equals(callee.name())).stream()
                 .<NodeWithArguments<?>>map(c -> c).toList();
-        return calls.stream().filter(call -> call.getArguments().size() == callee.parameterCount());
+        return calls.stream().filter(call -> call.getArguments().size() == callee.parameterCount())
+            .filter(call -> resolvedKey(call).map(key -> key.equals(callee) || overrides(callee, key)).orElse(true));
+    }
+
+    private boolean overrides(final MethodKey method, final MethodKey overridden) {
+        return method.name().equals(overridden.name())
+            && model.types().ancestors(method.type()).contains(overridden.type())
+            && Signatures.couldBeTheSame(overridden.parameters(), method.parameters());
+    }
+
+    // The symbol solver reports anything it can't follow as an exception, of many kinds, and sometimes overflows.
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.AvoidCatchingThrowable"})
+    private static Optional<MethodKey> resolvedKey(final NodeWithArguments<?> call) {
+        try {
+            return Optional.of(CallResolver.keyOf(resolve(call)));
+        } catch (RuntimeException | StackOverflowError e) {
+            return Optional.empty();
+        }
+    }
+
+    private static ResolvedMethodLikeDeclaration resolve(final NodeWithArguments<?> call) {
+        if (call instanceof MethodCallExpr method) {
+            return method.resolve();
+        }
+        return call instanceof ObjectCreationExpr creation ? creation.resolve()
+            : ((ExplicitConstructorInvocationStmt) call).resolve();
     }
 
     static Optional<String> parameterOf(final Address address) {

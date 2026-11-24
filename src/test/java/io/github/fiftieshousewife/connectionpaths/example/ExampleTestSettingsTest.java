@@ -89,6 +89,12 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void takesTheArgumentOfTheCallIntoTheChainNotOfAnotherCallOfTheSameName() {
+        assertThat(reachOf("com.example.pages.PageClientTest.fetchesThePageItIsGiven", "url").getAddressForTests())
+            .isEqualTo("local");
+    }
+
+    @Test
     void takesAnInternationalHostNameAsAHost() {
         assertThat(reachOf("com.example.pages.PageRequestTest.fetchesAPageWithAnInternationalName", "url")
             .getAddressForTests()).isEqualTo("host");

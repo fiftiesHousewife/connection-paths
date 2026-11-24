@@ -109,7 +109,8 @@ public final class CallResolver {
         }
     }
 
-    static MethodKey keyOf(final ResolvedMethodLikeDeclaration resolved) {
+    /** The method a resolved call is to. */
+    public static MethodKey keyOf(final ResolvedMethodLikeDeclaration resolved) {
         final boolean constructor = resolved instanceof ResolvedConstructorDeclaration;
         return new MethodKey(resolved.declaringType().getQualifiedName(),
             constructor ? MethodKey.CONSTRUCTOR : resolved.getName(), Signatures.of(resolved));
