@@ -31,7 +31,8 @@ final class CallTracer {
         if (NOT_ADDRESSES.contains(call.getNameAsString())) {
             return Address.builtBy(AddressText.shorten(call));
         }
-        return named(call).or(() -> returned(call, trace)).or(() -> fromParts(call, trace))
+        return named(call).or(() -> InetAddresses.of(call)).or(() -> returned(call, trace))
+            .or(() -> fromParts(call, trace))
             .orElse(Address.builtBy(AddressText.shorten(call)));
     }
 

@@ -62,6 +62,18 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void takesANumericAddressMadeFromItsBytesAsWhereItSays() {
+        assertThat(reachOf("com.example.lookups.TimeClientTest.asksAServerAtANumericAddress", "socket")
+            .getAddressForTests()).isEqualTo("local");
+    }
+
+    @Test
+    void takesTheLoopbackAddressAsThisMachine() {
+        assertThat(reachOf("com.example.lookups.TimeClientTest.asksTheLoopbackAddress", "socket")
+            .getAddressForTests()).isEqualTo("local");
+    }
+
+    @Test
     void takesAnInternationalHostNameAsAHost() {
         assertThat(reachOf("com.example.pages.PageRequestTest.fetchesAPageWithAnInternationalName", "url")
             .getAddressForTests()).isEqualTo("host");
