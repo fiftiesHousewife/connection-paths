@@ -42,23 +42,6 @@ class TypeSolversTest {
     }
 
     @Test
-    void readsASiblingModulesClassFolderFromItsSource(@TempDir final Path dir) throws IOException {
-        final Path source = Files.createDirectories(dir.resolve("i18n/src/main/java"));
-        final Path classes = Files.createDirectories(dir.resolve("i18n/target/classes"));
-        final Path gradleClasses = Files.createDirectories(dir.resolve("util/build/classes/java/main"));
-        final Path other = Files.createDirectories(dir.resolve("generated"));
-        final Options options = Options.builder().mainSource(dir.resolve("app"))
-            .classpathEntry(classes).classpathEntry(gradleClasses).classpathEntry(other).build();
-        final TypeSolvers.Setup setup = TypeSolvers.create(options);
-        assertAll(
-            () -> assertThat(setup.siblingSources()).containsExactly(source.toAbsolutePath().normalize()),
-            () -> assertThat(setup.notes()).satisfiesExactly(
-                note -> assertThat(note).startsWith("a class folder, read from its module's source instead"),
-                note -> assertThat(note).startsWith("a class folder of a module with no Java source"),
-                note -> assertThat(note).startsWith("a class folder, not read")));
-    }
-
-    @Test
     void readsAJarWhoseModuleInfoItCannotParse(@TempDir final Path dir) throws IOException {
         final Path jar = jar(dir.resolve("odd.jar"), "module-info.class", "readme.txt");
         final Options options = Options.builder().mainSource(dir).classpathEntry(jar).build();

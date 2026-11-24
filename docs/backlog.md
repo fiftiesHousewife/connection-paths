@@ -24,8 +24,7 @@ ways of building it gets a [decision record](decisions/README.md).
 ## How it is run
 
 6. **A classpath step as a tool.** A small script, for Windows and Unix, that picks the repo's wrapper (run with
-    `sh` if it has lost its execute bit), else the Maven or Gradle the organisation names; adds `-pl <module> -am
-    -DskipTests compile` for a module with siblings; and says which artifact and repository failed if one can't be
+    `sh` if it has lost its execute bit), else the Maven or Gradle the organisation names, and says which artifact and repository failed if one can't be
     downloaded.
 7. **Newer and older Java.** The parser reads Java 21; set the level from the build, so Java 22 and later syntax
     parse, and so old code that names something `_` does.

@@ -11,32 +11,22 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import lombok.extern.slf4j.Slf4j;
 
-/** Builds the symbol solver: the JDK, the source folders, then the classpath's jars and class folders. */
+/** Builds the symbol solver: the JDK, the source folders, then the classpath's jars. */
 @Slf4j
 final class TypeSolvers {
 
-    /**
-     * The solver; what happened to each classpath entry that wasn't read as it was; and the source folders of sibling
-     * modules whose compiled classes were on the classpath, which are read as production source.
-     */
-    record Setup(CombinedTypeSolver solver, List<String> notes, List<Path> siblingSources) {
+    /** The solver, and what happened to each classpath entry that wasn't read as it was. */
+    record Setup(CombinedTypeSolver solver, List<String> notes) {
         Setup {
             notes = List.copyOf(notes);
-            siblingSources = List.copyOf(siblingSources);
         }
     }
-
-    /** Where a module's compiled classes are, relative to the module, and where its source is. */
-    private static final List<List<String>> CLASS_FOLDERS = List.of(
-        List.of("target", "classes"), List.of("build", "classes", "java", "main"));
 
     private TypeSolvers() {
     }
@@ -50,57 +40,12 @@ final class TypeSolvers {
         sources.addAll(options.getTestSources());
         sources.stream().filter(Files::isDirectory).forEach(dir -> solver.add(new JavaParserTypeSolver(dir)));
         final List<String> notes = new ArrayList<>();
-        final List<Path> siblings = new ArrayList<>();
-        for (final Path entry : options.getClasspath()) {
-            final Optional<Path> source = Files.isDirectory(entry) ? sourceOf(entry) : Optional.empty();
-            final boolean alreadyRead = source.isPresent() && sources.stream()
-                .anyMatch(dir -> dir.toAbsolutePath().normalize().equals(source.get()));
-            if (source.isPresent() && !alreadyRead) {
-                solver.add(new JavaParserTypeSolver(source.get()));
-                siblings.add(source.get());
-                notes.add("a class folder, read from its module's source instead: " + entry);
-            } else if (source.isEmpty()) {
-                add(solver, entry, notes);
-            }
-        }
-        return new Setup(solver, notes, siblings);
-    }
-
-    /** The source of a module whose compiled classes are in this folder, if it is in the usual place. */
-    static Optional<Path> sourceOf(final Path classes) {
-        return expectedSourceOf(classes).filter(Files::isDirectory);
-    }
-
-    /** Where a module's source would be, if this is a module's class folder in the usual layout. */
-    private static Optional<Path> expectedSourceOf(final Path classes) {
-        final Path folder = classes.toAbsolutePath().normalize();
-        for (final List<String> layout : CLASS_FOLDERS) {
-            if (endsWith(folder, layout)) {
-                final String up = String.join("/", Collections.nCopies(layout.size(), ".."));
-                return Optional.of(folder.resolve(up).normalize().resolve("src").resolve("main").resolve("java"));
-            }
-        }
-        return Optional.empty();
-    }
-
-    private static boolean endsWith(final Path folder, final List<String> layout) {
-        final int names = folder.getNameCount();
-        if (names <= layout.size()) {
-            return false;
-        }
-        for (int i = 0; i < layout.size(); i++) {
-            if (!folder.getName(names - layout.size() + i).toString().equals(layout.get(i))) {
-                return false;
-            }
-        }
-        return true;
+        options.getClasspath().forEach(entry -> add(solver, entry, notes));
+        return new Setup(solver, notes);
     }
 
     private static void add(final CombinedTypeSolver solver, final Path entry, final List<String> notes) {
-        if (Files.isDirectory(entry) && expectedSourceOf(entry).isPresent()) {
-            notes.add("a class folder of a module with no Java source, such as one holding only resources, "
-                + "so nothing to read: " + entry);
-        } else if (Files.isDirectory(entry)) {
+        if (Files.isDirectory(entry)) {
             notes.add("a class folder, not read (give the module's source with --main instead): " + entry);
         } else if (!Files.isRegularFile(entry)) {
             notes.add("not found: " + entry);

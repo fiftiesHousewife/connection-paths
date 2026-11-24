@@ -39,7 +39,6 @@ anything:
 |---|---|
 | Maven | `mvn -q dependency:build-classpath -Dmdep.outputFile=classpath.txt` |
 | Gradle | `gradle -q --init-script tools/print-classpath.gradle connectionPathsClasspath` (prints where it wrote the file) |
-| Maven, a module with sibling modules | `mvn -q -pl <module> -am -DskipTests compile dependency:build-classpath -Dmdep.outputFile=classpath.txt`: the siblings are built, not published, so the classpath can't be resolved without them |
 
 The classpath from the build is better than one read from the build files by hand, which misses jars that come in
 through other jars. If the build can't give one:
@@ -120,7 +119,6 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   system; so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen
   on (`network.interface`) is local too. Systems reached through the same interface method are alternatives.
   See [the decision](docs/decisions/0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md).
-* A sibling module's class folder on the classpath (`../i18n/target/classes`) is read from its source.
 * A test that starts a framework is listed by the annotation that starts it, on its class, a superclass or a class
   around it. See [the decision](docs/decisions/0009-tests-that-start-a-framework-are-listed-by-their-annotation-apart-from-the-tests-that-reach-a-connection.md).
 * A test is listed if it may reach a connection. "May": measurement, the first run of the tests, confirms or clears
