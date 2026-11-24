@@ -61,8 +61,10 @@ public final class AddressTracer {
         final Optional<Address> fromArgument = AddressText.firstArgument(call).map(a -> expression(a, new Trace()));
         final Optional<Address> fromScope = AddressText.scopeOf(call).map(s -> expression(s, new Trace()));
         final boolean command = "process".equals(kind);
-        return fromArgument.filter(a -> command || AddressText.isAnAddress(a))
-            .or(() -> fromScope)
+        // A path such as /owners/1 is relative to the server what the call is made on was given, if that says one.
+        final Optional<Address> argument = fromArgument.filter(a -> command || AddressText.isAnAddress(a));
+        return argument.filter(a -> !AddressText.isRelativePath(a))
+            .or(() -> fromScope.filter(AddressText::saysSomething)).or(() -> argument).or(() -> fromScope)
             .orElse(Address.builtBy(AddressText.shorten(call)));
     }
 

@@ -20,10 +20,10 @@ class MainTest {
         assertAll(
             () -> assertThat(status).isEqualTo(Main.OK),
             () -> assertThat(json).contains("\"schema\" : \"external-calls/1\""),
-            () -> assertThat(json).contains("\"tests_reaching\" : 36"),
+            () -> assertThat(json).contains("\"tests_reaching\" : 37"),
             () -> assertThat(json).contains("\"through_set_up\" : true"),
             () -> assertThat(json).doesNotContain("\"named\"", "\"literal\" :"),
-            () -> assertThat(json).contains("\"tests_starting_a_framework\" : 3"),
+            () -> assertThat(json).contains("\"tests_starting_a_framework\" : 4"),
             () -> assertThat(json).contains("\"tests_starting_a_framework\" : ["),
             () -> assertThat(json).contains("\"dispatch_points_not_followed\""));
     }

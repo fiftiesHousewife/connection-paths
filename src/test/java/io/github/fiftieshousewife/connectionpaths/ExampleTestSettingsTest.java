@@ -37,6 +37,12 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void sendsARelativePathToTheAppATestServesOnAPort() {
+        assertThat(reachOf("com.example.boot.OrdersOverHttpTest.showsAnOrder", "http").getAddressForTests())
+            .isEqualTo("local");
+    }
+
+    @Test
     void takesASettingOnlyTheMainResourcesGiveAsTheTestsToo() {
         assertThat(onlyReach("com.example.clients.ShopTest.countsOrders").getAddressForTests()).isEqualTo("host");
     }

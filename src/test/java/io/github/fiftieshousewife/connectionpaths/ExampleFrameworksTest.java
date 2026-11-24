@@ -21,11 +21,13 @@ class ExampleFrameworksTest {
                 tuple("com.example.boot.LegacyContextTest.loadsTheContext",
                     "@RunWith(SpringJUnit4ClassRunner.class)", "com.example.boot.LegacyContextTest"),
                 tuple("com.example.boot.OrdersApplicationTest.startsUp", "@SpringBootTest",
-                    "com.example.boot.OrdersApplicationTest"));
+                    "com.example.boot.OrdersApplicationTest"),
+                tuple("com.example.boot.OrdersOverHttpTest.showsAnOrder",
+                    "@SpringBootTest(webEnvironment = RANDOM_PORT)", "com.example.boot.OrdersOverHttpTest"));
     }
 
     @Test
     void countsThemInTheSummary() {
-        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(3);
+        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(4);
     }
 }

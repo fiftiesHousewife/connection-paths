@@ -3,6 +3,7 @@ package io.github.fiftieshousewife.connectionpaths.source;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ClassExpr;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,6 +19,7 @@ public final class Frameworks {
         "DataLdapTest", "DataR2dbcTest", "WebMvcTest", "WebFluxTest", "RestClientTest", "GraphQlTest",
         "ContextConfiguration", "SpringJUnitConfig", "SpringJUnitWebConfig", "WebAppConfiguration", "Testcontainers",
         "QuarkusTest", "QuarkusIntegrationTest", "QuarkusMainTest", "MicronautTest");
+    private static final List<String> PORTS = List.of("RANDOM_PORT", "DEFINED_PORT");
     private static final Set<String> RUN_WITH = Set.of("RunWith", "ExtendWith");
     private static final Set<String> RUNNERS = Set.of("SpringRunner", "SpringJUnit4ClassRunner", "SpringExtension",
         "QuarkusTestExtension", "MicronautJunit5Extension", "Arquillian", "ArquillianExtension");
@@ -25,7 +27,8 @@ public final class Frameworks {
     private Frameworks() {
     }
 
-    // The annotation on a type that starts a framework, as written: @SpringBootTest.
+    // The annotation on a type that starts a framework, as written: @SpringBootTest, with the port it serves the
+    // application on, if any: @SpringBootTest(webEnvironment = RANDOM_PORT).
     static Optional<String> startedBy(final TypeDeclaration<?> type) {
         return type.getAnnotations().stream().map(Frameworks::started).flatMap(Optional::stream).findFirst();
     }
@@ -33,10 +36,20 @@ public final class Frameworks {
     private static Optional<String> started(final AnnotationExpr annotation) {
         final String name = annotation.getName().getIdentifier();
         if (STARTERS.contains(name)) {
-            return Optional.of("@" + name);
+            return Optional.of("@" + name + onAPort(annotation));
         }
         return RUN_WITH.contains(name) ? runnerIn(annotation).map(runner -> "@" + name + "(" + runner + ".class)")
             : Optional.empty();
+    }
+
+    private static String onAPort(final AnnotationExpr annotation) {
+        return PORTS.stream().filter(port -> annotation.toString().contains(port)).findFirst()
+            .map(port -> "(webEnvironment = " + port + ")").orElse("");
+    }
+
+    /** Whether an annotation that starts a framework serves the application on a port of this machine. */
+    public static boolean servesOnAPort(final String annotation) {
+        return PORTS.stream().anyMatch(annotation::contains);
     }
 
     private static Optional<String> runnerIn(final AnnotationExpr annotation) {

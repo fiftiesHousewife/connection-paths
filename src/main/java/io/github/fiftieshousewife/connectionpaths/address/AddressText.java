@@ -24,13 +24,18 @@ final class AddressText {
         return !Address.BUILT_AT_RUN_TIME.equals(address.getSource());
     }
 
-    // A literal counts only if it looks like an address, so a message or a query isn't taken for one.
+    // A literal counts only if it looks like an address, so a message or a query isn't taken for one; a path such as
+    // /owners/1 does, as a request relative to the server its client was given.
     static boolean isAnAddress(final Address address) {
-        if (!address.isLiteral()) {
+        if (!address.isLiteral() || isRelativePath(address)) {
             return true;
         }
         final String text = address.getValue().replace(Address.UNKNOWN_PART, "x");
         return SCHEME.matcher(text).matches() || isHost(hostPart(text));
+    }
+
+    static boolean isRelativePath(final Address address) {
+        return address.isRelativePath();
     }
 
     // The text before any port or path.

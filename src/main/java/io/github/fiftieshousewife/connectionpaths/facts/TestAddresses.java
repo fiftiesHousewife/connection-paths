@@ -4,7 +4,9 @@ import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.address.Locality;
 import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
+import io.github.fiftieshousewife.connectionpaths.source.Frameworks;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import io.github.fiftieshousewife.connectionpaths.source.TestModel;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,10 +23,12 @@ final class TestAddresses {
     private final Map<String, Address> byPoint;
     private final SettingsFiles settings;
     private final ArgumentTracer arguments;
+    private final TestModel tests;
 
     TestAddresses(final SourceModel model, final SettingsFiles settings) {
         this.settings = settings.onTheTestClasspath();
         this.arguments = new ArgumentTracer(model);
+        this.tests = model.tests();
         this.byPoint = model.getPoints().stream().collect(Collectors.toMap(
             point -> point.method() + " " + point.kind(), point -> model.callsOf(point).get(0).address(),
             (first, second) -> first));
@@ -33,7 +37,15 @@ final class TestAddresses {
     // Where a reach's test would connect. A point whose address is one of its parameters is followed back along the
     // test's chain, to the argument each caller passes, as far as the test.
     String of(final List<MethodKey> chain, final String kind) {
-        Address address = byPoint.get(chain.get(chain.size() - 1) + " " + kind);
+        final Address address = alongTheChain(chain, byPoint.get(chain.get(chain.size() - 1) + " " + kind));
+        if (address.isRelativePath() && servesOnAPort(chain.get(0).type())) {
+            return LOCAL;
+        }
+        return classify(settings.withValue(address), kind);
+    }
+
+    private Address alongTheChain(final List<MethodKey> chain, final Address atThePoint) {
+        Address address = atThePoint;
         for (int step = chain.size() - 1; step > 0 && ArgumentTracer.parameterOf(address).isPresent(); step--) {
             final String parameter = ArgumentTracer.parameterOf(address).orElseThrow();
             address = arguments.passedBy(chain.get(step - 1), chain.get(step), parameter).orElse(address);
@@ -41,7 +53,7 @@ final class TestAddresses {
                 break;
             }
         }
-        return classify(settings.withValue(address), kind);
+        return address;
     }
 
     // With no settings known on the test classpath, which ones a test runs with is unknown: never "none".
@@ -53,6 +65,12 @@ final class TestAddresses {
             return LOCAL;
         }
         return PointGroups.hostOf(address).isPresent() ? HOST : RUN_TIME;
+    }
+
+    // A test class that runs the application on a port of this machine, where a relative path is sent.
+    private boolean servesOnAPort(final String testClass) {
+        return tests.frameworkOf(testClass).map(TestModel.Framework::annotation).filter(Frameworks::servesOnAPort)
+            .isPresent();
     }
 
     private String noValue() {

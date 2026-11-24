@@ -60,6 +60,12 @@ public class Address {
         return LITERAL.equals(source);
     }
 
+    /** Whether this is a path such as /owners/1, relative to a server given elsewhere. */
+    @JsonIgnore
+    public boolean isRelativePath() {
+        return isLiteral() && value.length() > 1 && value.charAt(0) == '/' && value.charAt(1) != '/';
+    }
+
     @JsonIgnore
     boolean isFullLiteral() {
         return isLiteral() && !value.contains(UNKNOWN_PART);

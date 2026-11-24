@@ -51,3 +51,4 @@ com.example.groups.RemoteGroups#members(String) url
 com.example.schema.SchemaOwners#firstOwner() database
 com.example.schema.SchemaOwners#hostOf(String) host-lookup
 com.example.schema.SchemaOwners#hostOf(String) host-lookup
+com.example.boot.OrdersOverHttpTest#showsAnOrder() http
