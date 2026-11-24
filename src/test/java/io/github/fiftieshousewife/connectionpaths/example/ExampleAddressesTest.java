@@ -78,6 +78,12 @@ class ExampleAddressesTest {
     }
 
     @Test
+    void tracesAFieldNotALocalVariableOfTheSameNameElsewhere() {
+        assertThat(addressOf("com.example.addresses.StatusClient#check()").getValue())
+            .isEqualTo("https://status.internal/health");
+    }
+
+    @Test
     void leavesOutASettingOnlyAProfilesFileGives() {
         assertThat(addressOf("com.example.addresses.PriceFeeds#rates()").getSettingValue()).isNull();
     }

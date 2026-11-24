@@ -36,6 +36,12 @@ public final class Declarations {
             .<CallableDeclaration<?>>map(n -> (CallableDeclaration<?>) n).findFirst();
     }
 
+    // Whether a method has a parameter or local variable of this name, hiding a field of it.
+    static boolean declares(final CallableDeclaration<?> method, final String id) {
+        return method.getParameterByName(id).isPresent()
+            || !method.findAll(VariableDeclarator.class, v -> v.getNameAsString().equals(id)).isEmpty();
+    }
+
     /** The nodes around a node, nearest first. */
     public static Stream<Node> ancestors(final Node node) {
         return Stream.iterate(node.getParentNode(), Optional::isPresent, at -> at.get().getParentNode())

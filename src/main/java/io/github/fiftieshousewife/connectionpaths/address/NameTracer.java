@@ -83,9 +83,17 @@ final class NameTracer {
 
     private Address fieldIn(final TypeDeclaration<?> type, final String id, final Trace trace) {
         return SettingAnnotations.ofField(type, id).orElseGet(() -> {
-            final List<Expression> values = valuesIn(type, id);
+            final List<Expression> values = valuesIn(type, id).stream().filter(v -> isTheFields(v, id)).toList();
             return values.isEmpty() ? Address.builtBy(id) : follow(values, trace);
         });
+    }
+
+    // A value given in a method that has a variable or parameter of the field's name is that one's, unless it is
+    // given to this.name.
+    private static boolean isTheFields(final Expression value, final String id) {
+        final boolean toThis = value.getParentNode().filter(AssignExpr.class::isInstance)
+            .map(parent -> ((AssignExpr) parent).getTarget()).filter(FieldAccessExpr.class::isInstance).isPresent();
+        return toThis || Declarations.enclosingMethod(value).filter(m -> Declarations.declares(m, id)).isEmpty();
     }
 
     private Address follow(final List<Expression> values, final Trace trace) {
