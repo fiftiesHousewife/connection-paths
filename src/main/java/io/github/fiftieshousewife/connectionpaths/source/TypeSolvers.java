@@ -1,6 +1,8 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
 import io.github.fiftieshousewife.connectionpaths.Options;
+import com.github.javaparser.ParserConfiguration;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
@@ -41,9 +43,14 @@ public final class TypeSolvers {
             new CombinedTypeSolver(new ClassLoaderTypeSolver(ClassLoader.getPlatformClassLoader()));
         final List<Path> sources = new ArrayList<>(options.getMainSources());
         sources.addAll(options.getTestSources());
-        sources.stream().filter(Files::isDirectory).forEach(dir -> solver.add(new JavaParserTypeSolver(dir)));
+        // The source the solver reads resolves its own calls with the same solver, so code reached through it, such
+        // as a field's initialiser in another class, can be followed further.
+        final ParserConfiguration parsing = new ParserConfiguration()
+            .setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21);
+        sources.stream().filter(Files::isDirectory).forEach(dir -> solver.add(new JavaParserTypeSolver(dir, parsing)));
         final List<String> notes = new ArrayList<>();
         options.getClasspath().forEach(entry -> add(solver, entry, notes));
+        parsing.setSymbolResolver(new JavaSymbolSolver(solver));
         return new Setup(solver, notes);
     }
 

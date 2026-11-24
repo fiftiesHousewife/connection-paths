@@ -74,6 +74,14 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void takesAnAddressOnThisMachineAsLocalWhateverIsAddedToIt() {
+        assertThat(java.util.stream.Stream.of("fetchesTheFirstPage", "fetchesAPageWithAQuery", "fetchesAPageByItsPath",
+                "fetchesEachPageInAList", "fetchesEachPageByItsPlaceInAList")
+            .map(test -> reachOf("com.example.pages.LocalPagesTest." + test, "url").getAddressForTests()))
+            .containsExactly("local", "local", "local", "local", "local");
+    }
+
+    @Test
     void takesAnInternationalHostNameAsAHost() {
         assertThat(reachOf("com.example.pages.PageRequestTest.fetchesAPageWithAnInternationalName", "url")
             .getAddressForTests()).isEqualTo("host");

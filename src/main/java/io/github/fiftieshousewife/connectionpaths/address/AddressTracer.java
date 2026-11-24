@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.address;
 
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.ArrayAccessExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.CastExpr;
 import com.github.javaparser.ast.expr.ClassExpr;
@@ -45,6 +46,7 @@ public final class AddressTracer {
         new Handler(ConditionalExpr.class::isInstance, (e, t) -> eitherOf((ConditionalExpr) e, t)),
         new Handler(NameExpr.class::isInstance, (e, t) -> names.name((NameExpr) e, t)),
         new Handler(FieldAccessExpr.class::isInstance, (e, t) -> names.field((FieldAccessExpr) e, t)),
+        new Handler(ArrayAccessExpr.class::isInstance, (e, t) -> names.element((ArrayAccessExpr) e, t)),
         new Handler(MethodCallExpr.class::isInstance, (e, t) -> calls.call((MethodCallExpr) e, t)),
         new Handler(ObjectCreationExpr.class::isInstance, (e, t) -> calls.creation((ObjectCreationExpr) e, t)),
         new Handler(ClassExpr.class::isInstance, (e, t) -> Address.of(Address.CLASSPATH_RESOURCE,

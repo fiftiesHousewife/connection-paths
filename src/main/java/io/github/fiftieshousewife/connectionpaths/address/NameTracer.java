@@ -4,6 +4,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.ArrayAccessExpr;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
@@ -65,6 +66,13 @@ final class NameTracer {
             .map(id -> fieldIn(type, id, trace)).filter(Address::isNamed).findFirst());
     }
 
+    // One element of an array written out where it is made, such as urls[i]: any of them.
+    Address element(final ArrayAccessExpr access, final Trace trace) {
+        final Node scope = Declarations.enclosingMethod(access).<Node>map(Node.class::cast).orElse(access);
+        final List<Expression> elements = Iterated.elementsOf(scope, access.getName()).toList();
+        return elements.isEmpty() ? Address.builtBy(AddressText.shorten(access)) : follow(elements, trace);
+    }
+
     Address field(final FieldAccessExpr access, final Trace trace) {
         final Optional<TypeDeclaration<?>> owner = Declarations.of(access)
             .flatMap(Declarations::enclosingType)
@@ -99,7 +107,7 @@ final class NameTracer {
             .map(c -> c.getArgument(0));
         final Stream<Expression> put = scope.findAll(MethodCallExpr.class, c -> isProviderUrlPutOn(c, id)).stream()
             .map(c -> c.getArgument(1));
-        return Stream.of(initialised, assigned, set, put).flatMap(s -> s).toList();
+        return Stream.of(initialised, assigned, set, put, Iterated.valuesOf(scope, id)).flatMap(s -> s).toList();
     }
 
     private static boolean isAddressSetterOn(final MethodCallExpr call, final String id) {

@@ -48,3 +48,8 @@ com.example.pages.PageInSetUpTest.hasAPage
 com.example.transfers.FileServerClientTest.listsTheFiles
 com.example.lookups.TimeClientTest.asksAServerAtANumericAddress
 com.example.lookups.TimeClientTest.asksTheLoopbackAddress
+com.example.pages.LocalPagesTest.fetchesTheFirstPage
+com.example.pages.LocalPagesTest.fetchesAPageWithAQuery
+com.example.pages.LocalPagesTest.fetchesAPageByItsPath
+com.example.pages.LocalPagesTest.fetchesEachPageInAList
+com.example.pages.LocalPagesTest.fetchesEachPageByItsPlaceInAList
