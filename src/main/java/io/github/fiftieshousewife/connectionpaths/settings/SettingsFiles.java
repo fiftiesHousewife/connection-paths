@@ -72,6 +72,11 @@ public final class SettingsFiles {
         return settings.values().stream().map(Setting::value);
     }
 
+    /** Whether the files hold any settings at all. */
+    public boolean isEmpty() {
+        return settings.isEmpty();
+    }
+
     int size() {
         return settings.size();
     }

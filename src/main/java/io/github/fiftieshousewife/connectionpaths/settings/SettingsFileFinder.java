@@ -41,9 +41,9 @@ final class SettingsFileFinder {
             .toList();
     }
 
-    private static boolean isOnTheTestClasspath(final Path file) {
-        final String path = file.toString().replace('\\', '/');
-        return path.contains("/src/test/resources/") || path.contains("/src/main/resources/");
+    static boolean isOnTheTestClasspath(final Path file) {
+        final String set = innermostSourceSet(file);
+        return set.startsWith("/src/test/resources/") || set.startsWith("/src/main/resources/");
     }
 
     private static Stream<Path> settingsFilesIn(final Path folder) {
@@ -75,7 +75,14 @@ final class SettingsFileFinder {
     }
 
     private static boolean isTestSettings(final Path file) {
-        return file.toString().replace('\\', '/').contains("/src/test/");
+        return innermostSourceSet(file).startsWith("/src/test/");
+    }
+
+    // The path from its innermost /src/main/ or /src/test/ on, as a repo can sit inside another's test resources.
+    private static String innermostSourceSet(final Path file) {
+        final String path = file.toAbsolutePath().normalize().toString().replace('\\', '/');
+        final int at = Math.max(path.lastIndexOf("/src/main/"), path.lastIndexOf("/src/test/"));
+        return at < 0 ? "" : path.substring(at);
     }
 
     private static boolean isProfileFile(final Path file) {

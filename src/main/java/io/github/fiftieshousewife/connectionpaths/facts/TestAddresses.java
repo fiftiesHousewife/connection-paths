@@ -43,14 +43,19 @@ final class TestAddresses {
         return classify(settings.withValue(address), kind);
     }
 
-    private static String classify(final Address address, final String kind) {
+    // With no settings known on the test classpath, which ones a test runs with is unknown: never "none".
+    private String classify(final Address address, final String kind) {
         if (hasNoValue(address)) {
-            return NONE;
+            return noValue();
         }
         if (Locality.of(address, kind).isPresent() || "process".equals(kind)) {
             return LOCAL;
         }
         return PointGroups.hostOf(address).isPresent() ? HOST : RUN_TIME;
+    }
+
+    private String noValue() {
+        return settings.isEmpty() ? RUN_TIME : NONE;
     }
 
     // A setting that no file on the test classpath gives a value, or only a placeholder for one.

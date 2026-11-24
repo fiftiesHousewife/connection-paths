@@ -88,4 +88,10 @@ class SettingsFilesTest {
     private static String file(final Path dir, final String name) {
         return dir.resolve(name).toString().replace('\\', '/');
     }
+
+    @Test
+    void takesAResourcesFolderGivenAsARelativePathAsOnTheTestClasspath() {
+        assertThat(SettingsFileFinder.isOnTheTestClasspath(Path.of("src/main/resources/application.properties")))
+            .isTrue();
+    }
 }
