@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 /**
@@ -41,14 +42,19 @@ public final class CallResolver {
     }
 
     void collect(final MethodKey caller, final Node body, final String file) {
-        body.findAll(MethodCallExpr.class).stream().filter(call -> !Mocks.isStubbedOrVerified(call))
+        callsIn(body, MethodCallExpr.class).filter(call -> !Mocks.isStubbedOrVerified(call))
             .forEach(call -> record(caller, call::resolve, new Site(call, file)));
-        body.findAll(ExplicitConstructorInvocationStmt.class)
+        callsIn(body, ExplicitConstructorInvocationStmt.class)
             .forEach(call -> record(caller, call::resolve, new Site(call, file)));
-        body.findAll(ObjectCreationExpr.class)
+        callsIn(body, ObjectCreationExpr.class)
             .forEach(create -> record(caller, create::resolve, new Site(create, file)));
-        body.findAll(MethodReferenceExpr.class)
+        callsIn(body, MethodReferenceExpr.class)
             .forEach(reference -> record(caller, reference::resolve, new Site(reference, file)));
+    }
+
+    // The calls of a kind in a member's body, leaving out those in the anonymous classes it makes: they are its own.
+    private static <T extends Node> Stream<T> callsIn(final Node body, final Class<T> kind) {
+        return body.findAll(kind).stream().filter(call -> !AnonymousClasses.isInsideAnonymousClassIn(call, body));
     }
 
     // Where a call is, for the unresolved report.

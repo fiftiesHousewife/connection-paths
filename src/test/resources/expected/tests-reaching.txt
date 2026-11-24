@@ -22,3 +22,4 @@ com.example.jdbc.CustomersTest.findsByName
 com.example.clients.ShopTest.countsOrders
 com.example.clients.ShopTest.listsPrices
 com.example.inherited.LedgerResourceTest.isReady
+com.example.watch.WatchersTest.firesAChange

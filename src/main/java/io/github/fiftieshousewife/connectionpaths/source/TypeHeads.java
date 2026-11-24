@@ -67,7 +67,7 @@ final class TypeHeads {
 
     // A supertype's full name, or ?.Name where it can't be resolved.
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.AvoidCatchingThrowable"})
-    private static String qualifiedName(final ClassOrInterfaceType type) {
+    static String qualifiedName(final ClassOrInterfaceType type) {
         try {
             return type.resolve().asReferenceType().getQualifiedName();
         } catch (RuntimeException | StackOverflowError e) {

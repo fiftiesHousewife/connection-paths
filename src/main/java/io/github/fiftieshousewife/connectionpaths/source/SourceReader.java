@@ -5,8 +5,10 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import java.io.IOException;
@@ -109,6 +111,21 @@ public final class SourceReader {
             }
             final MemberReader.Owner owner = new MemberReader.Owner(name, file, tests);
             type.getMembers().forEach(member -> members.read(member, owner));
+            readAnonymousClasses(type, owner);
+        });
+    }
+
+    // Each anonymous class is a type of its own, whose supertype is what it implements, so its methods are reached
+    // through that type's.
+    private void readAnonymousClasses(final Node maker, final MemberReader.Owner makerOwner) {
+        AnonymousClasses.madeIn(maker, makerOwner.type()).forEach(anonymous -> {
+            final ObjectCreationExpr creation = anonymous.creation();
+            final MemberReader.Owner owner =
+                new MemberReader.Owner(anonymous.name(), makerOwner.file(), makerOwner.tests());
+            model.types().supertype(anonymous.name(), TypeHeads.qualifiedName(creation.getType()));
+            model.declare(MethodKey.fieldsOf(anonymous.name()), TypeHeads.location(creation, owner.file()));
+            creation.getAnonymousClassBody().orElseThrow().forEach(member -> members.read(member, owner));
+            readAnonymousClasses(creation, owner);
         });
     }
 

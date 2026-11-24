@@ -87,7 +87,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 
 * Source is read with [JavaParser](https://javaparser.org/) and its symbol solver: the JDK, the module's own source and
   the classpath's jars. A method is known by its type, name and parameter types.
-* Calls in lambdas, anonymous classes and local classes belong to the method that holds them. A constructor also runs
+* Calls in lambdas and local classes belong to the method that holds them. An anonymous class is a type of its own,
+  named as the compiler names it (`Watchers$1`): its methods run when they are called through what it implements,
+  not where it is made, so a listener registered in a static initialiser isn't run when the class loads. A constructor also runs
   its class's field initialisers, and its superclass's constructor (`super(...)`, or the one without parameters) and
   field initialisers. Any use of a type may run its static initialisers and enum constants. Records are read like
   classes.
