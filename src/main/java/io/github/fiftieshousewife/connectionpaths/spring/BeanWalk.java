@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
@@ -42,15 +43,19 @@ final class BeanWalk implements XmlFiles.Handler {
     public void start(final XMLStreamReader element) {
         characters.setLength(0);
         final String name = element.getLocalName();
-        root = root == null ? name : root;
+        root = Objects.requireNonNullElse(root, name);
         if ("import".equals(name)) {
-            Optional.ofNullable(element.getAttributeValue(null, "resource")).ifPresent(imported::add);
+            addImport(element);
         } else if ("bean".equals(name)) {
             open.push(bean(element));
         } else if ("property".equals(name) && !open.isEmpty()) {
             property = element.getAttributeValue(null, "name");
             putProperty(element.getAttributeValue(null, "value"));
         }
+    }
+
+    private void addImport(final XMLStreamReader element) {
+        Optional.ofNullable(element.getAttributeValue(null, "resource")).ifPresent(imported::add);
     }
 
     @Override

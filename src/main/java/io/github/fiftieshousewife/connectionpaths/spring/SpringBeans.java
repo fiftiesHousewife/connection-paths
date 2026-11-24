@@ -48,7 +48,8 @@ public final class SpringBeans {
             model.xmlContextHolds(bean.at().file(), bean.point().method());
         });
         // A file that imports another makes the imported file's beans too, to any depth.
-        SpringXml.imports(files).forEach((file, imported) -> imported.stream().filter(resource -> !resource.contains("*"))
+        SpringXml.imports(files).forEach((file, imported) -> imported.stream()
+            .filter(resource -> !resource.contains("*"))
             .forEach(resource -> model.xmlContextHolds(file, XmlContexts.contextOf(resource))));
         beans.stream().map(SpringXml.Bean::getType).filter(Objects::nonNull).forEach(model::created);
     }
