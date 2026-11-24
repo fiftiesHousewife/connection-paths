@@ -58,6 +58,22 @@ class SettingsFilesTest {
     }
 
     @Test
+    void readsYamlAsAYamlParserDoes(@TempDir final Path dir) throws IOException {
+        Files.writeString(dir.resolve("a.yml"), """
+            secret: "a #1"
+            url: >
+              jdbc:postgresql://orders.internal/orders
+            db: {host: db.internal, port: 5432}
+            """);
+        final SettingsFiles settings = SettingsFiles.read(List.of(dir));
+        assertAll(
+            () -> assertThat(settings.get("secret").map(SettingsFiles.Setting::value)).contains("a #1"),
+            () -> assertThat(settings.get("url").map(SettingsFiles.Setting::value))
+                .contains("jdbc:postgresql://orders.internal/orders\n"),
+            () -> assertThat(settings.get("db.host").map(SettingsFiles.Setting::line)).contains(4));
+    }
+
+    @Test
     void readsXmlElementPathsWithAndWithoutTheRootAndNoOutsideEntities(@TempDir final Path dir)
         throws IOException {
         Files.writeString(dir.resolve("a.xml"), """

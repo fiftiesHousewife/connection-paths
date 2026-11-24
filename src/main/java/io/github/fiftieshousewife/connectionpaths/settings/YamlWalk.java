@@ -1,69 +1,67 @@
 package io.github.fiftieshousewife.connectionpaths.settings;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
-// Walks a YAML file's lines, keeping the mappings open at each one, and reports each scalar value by its path.
+// Reads a YAML file with a YAML parser, and reports each scalar value of its mappings by its path, with the line it is
+// on: spring: datasource: url: x is spring.datasource.url. Lists are left out. A file of several documents is read
+// one document after another.
+@Slf4j
 final class YamlWalk {
 
-    // One open mapping: how far it is indented, and its key.
-    private record Level(int indent, String key) {
-    }
+    private static final YAMLMapper YAML = new YAMLMapper();
 
-    private final Deque<Level> path = new ArrayDeque<>();
+    private final Deque<String> path = new ArrayDeque<>();
+    private final JsonParser parser;
     private final SettingsFiles.Found found;
 
-    YamlWalk(final SettingsFiles.Found found) {
+    private YamlWalk(final JsonParser parser, final SettingsFiles.Found found) {
+        this.parser = parser;
         this.found = found;
     }
 
-    void line(final String raw, final int number) {
-        final String line = withoutComment(raw).stripTrailing();
-        final String text = line.strip();
-        final int colon = text.indexOf(": ");
-        final boolean opens = colon < 0 && text.endsWith(":");
-        if (!isMapping(text, colon, opens)) {
-            return;
-        }
-        final int indent = line.length() - line.stripLeading().length();
-        leaveLevelsAt(indent);
-        if (opens) {
-            path.push(new Level(indent, text.substring(0, text.length() - 1).strip()));
-        } else {
-            found.setting(keyOf(text.substring(0, colon).strip()), unquoted(text.substring(colon + 2)), number);
+    static void read(final String text, final SettingsFiles.Found found) {
+        try (JsonParser parser = YAML.createParser(text)) {
+            final YamlWalk walk = new YamlWalk(parser, found);
+            for (JsonToken token = parser.nextToken(); token != null; token = parser.nextToken()) {
+                walk.step(token);
+            }
+        } catch (JacksonException e) {
+            log.warn("YAML settings read only in part: {}", e.getOriginalMessage());
         }
     }
 
-    // Leaves the keys a line at this indent, or less, is no longer under.
-    private void leaveLevelsAt(final int indent) {
-        while (!path.isEmpty() && path.peek().indent() >= indent) {
+    private void step(final JsonToken token) {
+        if (token == JsonToken.START_OBJECT) {
+            path.push(Objects.requireNonNullElse(parser.currentName(), ""));
+        } else if (token == JsonToken.END_OBJECT) {
             path.pop();
+        } else if (token == JsonToken.START_ARRAY) {
+            parser.skipChildren();
+        } else if (isValue(token)) {
+            found.setting(keyOf(parser.currentName()), parser.getString(), parser.currentTokenLocation().getLineNr());
         }
     }
 
-    // A key: value or key: line; not a list item, a document marker or anything else.
-    private static boolean isMapping(final String text, final int colon, final boolean opens) {
-        return !text.isEmpty() && !text.startsWith("-") && (colon > 0 || opens);
+    private static boolean isValue(final JsonToken token) {
+        return token.isScalarValue() && token != JsonToken.VALUE_NULL;
     }
 
-    private String keyOf(final String last) {
-        final StringBuilder key = new StringBuilder();
-        path.descendingIterator().forEachRemaining(level -> key.append(level.key()).append('.'));
-        return key.append(last).toString();
-    }
-
-    private static String withoutComment(final String line) {
-        final int hash = line.indexOf(" #");
-        if (line.strip().startsWith("#")) {
-            return "";
-        }
-        return hash < 0 ? line : line.substring(0, hash);
-    }
-
-    private static String unquoted(final String value) {
-        final String text = value.strip();
-        final boolean quoted = text.length() >= 2 && text.charAt(0) == text.charAt(text.length() - 1)
-            && (text.charAt(0) == '"' || text.charAt(0) == '\'');
-        return quoted ? text.substring(1, text.length() - 1) : text;
+    // The keys of the open mappings, outermost first, then this one's.
+    private String keyOf(final String name) {
+        final List<String> keys = new ArrayList<>(path);
+        Collections.reverse(keys);
+        keys.add(name);
+        return keys.stream().filter(key -> !key.isEmpty()).collect(Collectors.joining("."));
     }
 }

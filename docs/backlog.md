@@ -61,34 +61,31 @@ choice between ways of building it gets a [decision record](decisions/README.md)
 
 ## How it is built
 
-13. **Libraries where they do better.** Numeric addresses by Guava's `InetAddresses`; YAML by
-    `jackson-dataformat-yaml`, which reads quoted values, folded and multi-line values, inline maps, lists and
-    `---` documents; properties by `java.util.Properties`, a logical line at a time, for continuation lines and escapes.
-14. **Lists as resource files.** The lists of known types (address setters, Spring bean properties, stand-in
+13. **Lists as resource files.** The lists of known types (address setters, Spring bean properties, stand-in
     servers, framework starters and runners, mocked types, open-database types) as files beside
     `connection-rules.txt`, with a rule kind checked against the schema's, and an example case for each library
     family the rules name (queues, JNDI, Kafka, JMS, Rabbit, Mongo, Redis, JPA, gRPC, AWS, OkHttp, JAX-RS, Netty).
-15. **One way to ask the symbol solver.** About nine copies of its try and catch, three of walking a type's
+14. **One way to ask the symbol solver.** About nine copies of its try and catch, three of walking a type's
     ancestors, each XML file parsed more than once, and dead code (`ConnectionPaths.toJson`).
 
 ## How it is run
 
-16. **A classpath step as a tool.** A small script, for Windows and Unix, that picks the repo's wrapper (run with
+15. **A classpath step as a tool.** A small script, for Windows and Unix, that picks the repo's wrapper (run with
     `sh` if it has lost its execute bit), else the Maven or Gradle the organisation names, and says which artifact
     and repository failed if one can't be downloaded.
-17. **Newer and older Java.** The parser reads Java 21; set the level from the build, so Java 22 and later syntax
+16. **Newer and older Java.** The parser reads Java 21; set the level from the build, so Java 22 and later syntax
     parse, and so old code that names something `_` does.
-18. **Large repos.** Each file is parsed twice (once to read, once by the type solver), and the solver's cache has no
+17. **Large repos.** Each file is parsed twice (once to read, once by the type solver), and the solver's cache has no
     limit. Share the parse, and bound the cache.
-19. **Test names.** Two overloads of a test method share one name in the facts.
+18. **Test names.** Two overloads of a test method share one name in the facts.
 
 ## Checked against real repos
 
-20. **More repos.** Openfire 4.6.0, spring-petclinic, jsoup 1.15.3 and Commons Net 3.6 are checked against their
+19. **More repos.** Openfire 4.6.0, spring-petclinic, jsoup 1.15.3 and Commons Net 3.6 are checked against their
     tests run under the airgap agent: every test that calls out is graded reaches. Check an old Spring XML
     application and a multi-module Maven build next, and turn each fault into a case first.
 
 ## Released
 
-21. **The first release.** A Central Portal token, a signing key and the four secrets the release workflow reads,
+20. **The first release.** A Central Portal token, a signing key and the four secrets the release workflow reads,
     then the tag `v0.1.0`.

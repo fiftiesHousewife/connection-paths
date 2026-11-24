@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /** Reads settings from properties and YAML files, line by line, so each keeps its line number. */
 public final class TextSettings {
@@ -63,9 +62,8 @@ public final class TextSettings {
     }
 
     // The scalar values of a YAML file's mappings, keyed by their path: spring: datasource: url: x is
-    // spring.datasource.url. Lists, anchors and multi-line values are left out.
+    // spring.datasource.url.
     static void yaml(final List<String> lines, final SettingsFiles.Found found) {
-        final YamlWalk walk = new YamlWalk(found);
-        IntStream.range(0, lines.size()).forEach(i -> walk.line(lines.get(i), i + 1));
+        YamlWalk.read(String.join("\n", lines), found);
     }
 }
