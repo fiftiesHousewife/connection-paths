@@ -25,6 +25,18 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void givesWhatRunsOnAnOpenDatabaseTheDatabasesAddressForTests() {
+        assertThat(reachOf("com.example.schema.SchemaUpgradeTest.upgrades", "host-lookup").getAddressForTests())
+            .isEqualTo("none");
+    }
+
+    @Test
+    void givesACallPassedARowsValueTheDatabasesAddressForTests() {
+        assertThat(reachOf("com.example.schema.SchemaOwnersTest.findsTheFirstOwner", "host-lookup")
+            .getAddressForTests()).isEqualTo("none");
+    }
+
+    @Test
     void takesASettingOnlyTheMainResourcesGiveAsTheTestsToo() {
         assertThat(onlyReach("com.example.clients.ShopTest.countsOrders").getAddressForTests()).isEqualTo("host");
     }

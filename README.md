@@ -101,7 +101,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   that class's set-up, and not under an abstract class that declares it.
 * A call made only to stub or verify a mock (`when(store.all())`, `verify(store).all()`) is not counted as a call.
 * A call through an interface or superclass reaches only the overriding methods of classes the program creates (with
-  `new`, as an enum or test class, by a framework annotation, or by a name in the source or the settings): see
+  `new`, as an enum or test class, by a framework annotation, or by a name in the source or the settings). A `new`
+  in a class's own code counts only once that class is created, or in static code; one in a test class's code counts
+  only for that class's tests. See
   [the decision](docs/decisions/0011-a-call-through-an-interface-reaches-only-the-classes-the-program-creates.md).
   They are matched by name and parameter types, where a type variable (`save(T)`) matches any type so that generic interfaces work, except:
   * through the JDK's own types (`Map`, `Runnable`...): following them joins every `Map.put` to every class that
@@ -133,7 +135,11 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   them gives means the test can't reach the system. See [the decision](docs/decisions/0010-each-reach-says-whether-it-runs-a-mock-and-where-the-tests-own-settings-send-it.md).
   A point whose address is a parameter is followed back along each test's chain to the argument its caller passes;
   a JNDI environment table's address is its `Context.PROVIDER_URL`, and a value built in ways that can't be
-  followed comes from the settings-backed fields its method reads.
+  followed comes from the settings-backed fields its method reads. Code that runs only once a database connection is
+  open (a method given a `java.sql` connection, statement or result set, a call passed a value read from one, or one
+  inside a loop or `if` on one, such as `while (rows.next())`) can't connect in a test whose database reach can't:
+  it takes that reach's `address_for_tests`, and its mock. A DNS look-up through JNDI is where it asks for records
+  (`getAttributes`, `search`), not where its context is made.
 * A test that starts a framework is listed by the annotation that starts it, on its class, a superclass or a class
   around it. See [the decision](docs/decisions/0009-tests-that-start-a-framework-are-listed-by-their-annotation-apart-from-the-tests-that-reach-a-connection.md).
 * A test is listed if it may reach a connection. "May": measurement, the first run of the tests, confirms or clears

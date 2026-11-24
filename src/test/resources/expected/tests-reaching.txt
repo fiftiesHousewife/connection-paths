@@ -32,3 +32,6 @@ com.example.plugins.ExportersTest.exports
 com.example.directory.LdapConnectorTest.connects
 com.example.report.ReportClientWithServerTest.fetches
 com.example.boot.LedgerContainerTest.storesAnEntry
+com.example.schema.SchemaUpgradeTest.upgrades
+com.example.schema.SchemaOwnersTest.findsTheFirstOwner
+com.example.groups.GroupsFromTheDirectoryTest.listsRemoteMembers

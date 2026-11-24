@@ -44,3 +44,10 @@ com.example.lookups.ServiceRecords#find(String) directory
 com.example.lookups.Dialler#open() socket
 com.example.lookups.Dialler#open() socket
 com.example.boot.LedgerEntries#open() database
+com.example.schema.SchemaUpgrade#upgrade() database
+com.example.schema.SchemaCheck#check(Connection) host-lookup
+com.example.schema.SchemaCheck#check(Connection) host-lookup
+com.example.groups.RemoteGroups#members(String) url
+com.example.schema.SchemaOwners#firstOwner() database
+com.example.schema.SchemaOwners#hostOf(String) host-lookup
+com.example.schema.SchemaOwners#hostOf(String) host-lookup

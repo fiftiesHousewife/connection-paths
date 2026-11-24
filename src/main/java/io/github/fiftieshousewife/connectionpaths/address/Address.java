@@ -26,7 +26,7 @@ public class Address {
     public static final String JNDI_NAME = "jndi-name";
     static final String CLASSPATH_RESOURCE = "classpath-resource";
     static final String LOCAL_FILE = "local-file";
-    static final String DNS = "dns";
+    public static final String DNS = "dns";
     public static final String PARAMETER = "parameter";
     public static final String BUILT_AT_RUN_TIME = "built-at-run-time";
     static final String UNKNOWN_PART = "{?}";

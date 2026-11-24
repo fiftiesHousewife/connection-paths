@@ -71,8 +71,9 @@ public final class CallGraph {
     }
 
     private static Set<String> liveTypes(final SourceModel model) {
-        final Set<String> live = new HashSet<>(model.getCreated());
-        model.getCreated().forEach(type -> live.addAll(model.types().ancestors(type)));
+        final Set<String> created = model.created(true);
+        final Set<String> live = new HashSet<>(created);
+        created.forEach(type -> live.addAll(model.types().ancestors(type)));
         return live;
     }
 

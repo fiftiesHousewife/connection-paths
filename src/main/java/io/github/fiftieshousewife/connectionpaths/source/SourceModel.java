@@ -35,6 +35,8 @@ public final class SourceModel {
     private final Map<MethodKey, Location> locations = new HashMap<>();
     private final Set<ConnectionPoint> points = new LinkedHashSet<>();
     private final Set<String> createdTypes = new HashSet<>();
+    private final Map<MethodKey, Set<String>> typesCreatedBy = new HashMap<>();
+    private final Set<String> onAnOpenDatabase = new HashSet<>();
     private final Map<String, Optional<CompilationUnit>> rereadFiles = new HashMap<>();
     private Function<Path, Optional<CompilationUnit>> parser = file -> Optional.empty();
     private final Map<ConnectionPoint, Map<Location, Address>> pointCalls = new HashMap<>();
@@ -67,6 +69,15 @@ public final class SourceModel {
         pointCalls.computeIfAbsent(point, k -> new LinkedHashMap<>()).putIfAbsent(at, address);
     }
 
+    void givenAnOpenDatabase(final String code) {
+        onAnOpenDatabase.add(code);
+    }
+
+    /** The methods, and calls ({@code caller > callee}), that run only once a database connection is open. */
+    public Set<String> givenAnOpenDatabase() {
+        return Collections.unmodifiableSet(onAnOpenDatabase);
+    }
+
     void rereadWith(final Function<Path, Optional<CompilationUnit>> fileParser) {
         this.parser = fileParser;
     }
@@ -81,9 +92,16 @@ public final class SourceModel {
         createdTypes.add(type);
     }
 
-    /** The types the program creates objects of. */
-    public Set<String> getCreated() {
-        return Collections.unmodifiableSet(createdTypes);
+    // A type created with new in a method or initialiser, which is created only if that code runs.
+    void createdBy(final MethodKey creator, final String type) {
+        testModel.createdIn(creator.type(), type);
+        typesCreatedBy.computeIfAbsent(creator, k -> new HashSet<>()).add(type);
+    }
+
+    /** The types created: by code that runs whatever else does, or a created type's; with or without tests' code. */
+    public Set<String> created(final boolean withTests) {
+        return CreatedTypes.live(this, createdTypes,
+            withTests ? typesCreatedBy : CreatedTypes.outsideTests(testModel, typesCreatedBy));
     }
 
     /** The supertypes of the types in the source. */

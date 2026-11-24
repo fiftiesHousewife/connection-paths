@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
@@ -73,5 +74,16 @@ final class TypeHeads {
         } catch (RuntimeException | StackOverflowError e) {
             return "?." + type.getNameAsString();
         }
+    }
+
+    // The type's full name: resolved, or, where its library isn't on the classpath, from the file's imports.
+    static String importedName(final ClassOrInterfaceType type) {
+        final String resolved = TypeHeads.qualifiedName(type);
+        if (!resolved.startsWith("?.")) {
+            return resolved;
+        }
+        return type.findCompilationUnit().stream().flatMap(unit -> unit.getImports().stream())
+            .filter(i -> !i.isAsterisk() && i.getName().getIdentifier().equals(type.getNameAsString()))
+            .map(ImportDeclaration::getNameAsString).findFirst().orElse(type.getNameAsString());
     }
 }

@@ -1,6 +1,5 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
-import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.address.AddressTracer;
 import io.github.fiftieshousewife.connectionpaths.rules.AnnotatedClients;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
@@ -30,8 +29,6 @@ import java.util.stream.Collectors;
  */
 public final class CallResolver {
 
-    private static final String SPRING_DATA_REPOSITORY = "org.springframework.data.repository.Repository";
-
     private final SourceModel model;
     private final ConnectionRules rules;
     private final Map<String, Map<String, Set<String>>> supertypesOf = new HashMap<>();
@@ -53,7 +50,7 @@ public final class CallResolver {
             record(caller, create::resolve, new Site(create, file));
             final String created = TypeHeads.qualifiedName(create.getType());
             if (!created.startsWith("?.")) {
-                model.created(created);
+                model.createdBy(caller, created);
             }
         });
         callsIn(body, MethodReferenceExpr.class)
@@ -84,27 +81,28 @@ public final class CallResolver {
             return;
         }
         final MethodKey callee = keyOf(resolved);
-        createdByReference(callee, site.node());
-        model.call(caller, callee);
-        model.getCounts().callsResolved++;
+        edge(caller, callee, site.node());
         final Optional<AnnotatedClients.Match> match = rules.match(callee, supertypes(resolved.declaringType()))
-            .map(rule -> new AnnotatedClients.Match(rule, addressOf(rule, site.node())))
+            .map(rule -> new AnnotatedClients.Match(rule, addresses.trace(site.node(), rule.kind(), rule.type())))
             .or(() -> clients.match(resolved));
-        match.ifPresent(found -> model.point(
+        match.filter(found -> DnsLookups.connects(found.rule(), found.address())).ifPresent(found -> model.point(
             new SourceModel.ConnectionPoint(found.rule().kind(), found.rule().toString(), caller),
             site.location(), found.address()));
     }
 
-    // A Spring Data repository reaches the application's data source, whatever its call is given.
-    private Address addressOf(final ConnectionRules.Rule rule, final Node call) {
-        return SPRING_DATA_REPOSITORY.equals(rule.type()) ? Address.of(Address.SETTING, Address.DATA_SOURCE_URL)
-            : addresses.trace(call, rule.kind());
+    private void edge(final MethodKey caller, final MethodKey callee, final Node site) {
+        createdByReference(caller, callee, site);
+        model.call(caller, callee);
+        if (OpenDatabases.readIn(site)) {
+            model.givenAnOpenDatabase(caller + " > " + callee);
+        }
+        model.getCounts().callsResolved++;
     }
 
     // A constructor reference, X::new, creates objects of X when it is called.
-    private void createdByReference(final MethodKey callee, final Node site) {
+    private void createdByReference(final MethodKey caller, final MethodKey callee, final Node site) {
         if (callee.isConstructor() && site instanceof MethodReferenceExpr) {
-            model.created(callee.type());
+            model.createdBy(caller, callee.type());
         }
     }
 

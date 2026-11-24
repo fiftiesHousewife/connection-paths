@@ -27,6 +27,8 @@ import java.util.stream.Stream;
  */
 public final class AddressTracer {
 
+    private static final String SPRING_DATA_REPOSITORY = "org.springframework.data.repository.Repository";
+
     private record Handler(Predicate<Expression> handles, BiFunction<Expression, Trace, Address> address) {
     }
 
@@ -62,6 +64,15 @@ public final class AddressTracer {
         return fromArgument.filter(a -> command || AddressText.isAnAddress(a))
             .or(() -> fromScope)
             .orElse(Address.builtBy(AddressText.shorten(call)));
+    }
+
+    /**
+     * The address of a connection call matched by a rule naming this type. A Spring Data repository reaches the
+     * application's data source, whatever its call is given.
+     */
+    public Address trace(final Node call, final String kind, final String ruleType) {
+        return SPRING_DATA_REPOSITORY.equals(ruleType) ? Address.of(Address.SETTING, Address.DATA_SOURCE_URL)
+            : trace(call, kind);
     }
 
     /** The address an expression gives, such as an argument passed to a method whose parameter is the address. */

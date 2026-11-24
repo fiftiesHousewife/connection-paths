@@ -76,6 +76,10 @@ mail jakarta.mail.Service#connect
 mail org.apache.commons.mail.Email#send
 
 directory javax.naming.directory.InitialDirContext#<init>
+# A DNS context sends nothing as it is made; it reaches the DNS servers when asked for records. These two count only
+# on a DNS context, and making one isn't a point.
+directory javax.naming.directory.DirContext#getAttributes
+directory javax.naming.directory.DirContext#search
 directory javax.naming.ldap.InitialLdapContext#<init>
 directory org.springframework.ldap.core.LdapOperations#*
 

@@ -27,6 +27,7 @@ public final class TestModel {
     private final Map<MethodKey, Set<String>> mocked = new HashMap<>();
     private final Set<MethodKey> statics = new HashSet<>();
     private final Map<String, Set<String>> standIns = new HashMap<>();
+    private final Map<String, Set<String>> testClassesCreating = new HashMap<>();
 
     TestModel(final TypeHierarchy types, final Set<MethodKey> declared) {
         this.types = types;
@@ -76,6 +77,19 @@ public final class TestModel {
         final Set<String> all = new TreeSet<>();
         types.runningWith(testClass).forEach(type -> all.addAll(standIns.getOrDefault(type, Set.of())));
         return all;
+    }
+
+    // A type created in a test class's own code, which is created only when that class's tests run.
+    void createdIn(final String creator, final String type) {
+        if (testTypeNames.contains(creator)) {
+            testClassesCreating.computeIfAbsent(type, k -> new HashSet<>()).add(creator);
+        }
+    }
+
+    /** Whether a type may be created as a test class's tests run: unless only other test classes create it. */
+    public boolean mayBeCreatedFor(final String testClass, final String type) {
+        final Set<String> creators = testClassesCreating.get(type);
+        return creators == null || types.runningWith(testClass).stream().anyMatch(creators::contains);
     }
 
     void isStatic(final MethodKey method) {

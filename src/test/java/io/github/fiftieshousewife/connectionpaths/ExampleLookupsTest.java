@@ -38,6 +38,14 @@ class ExampleLookupsTest {
     }
 
     @Test
+    void countsADnsLookupWhereItAsksForRecordsNotWhereItsContextIsMade() {
+        assertThat(FACTS.getConnectionPoints()).filteredOn(p -> p.getMethod().startsWith("com.example.lookups.Service"))
+            .extracting(Facts.Point::getMethod, Facts.Point::getCall)
+            .containsExactly(tuple("com.example.lookups.ServiceRecords#find(String)",
+                "javax.naming.directory.DirContext#getAttributes"));
+    }
+
+    @Test
     void listsEachCallOfAMethodThatConnectsMoreThanOnce() {
         assertThat(pointsOf("com.example.lookups.Dialler#open()"))
             .extracting(Facts.Point::getLine, p -> p.getAddress().getValue())

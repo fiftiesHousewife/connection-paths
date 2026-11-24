@@ -24,16 +24,14 @@ public final class FactsBuilder {
     private final SourceModel model;
     private final CallGraph graph;
     private final SettingsFiles settings;
-    private final MockedChains mocks;
-    private final TestAddresses testAddresses;
+    private final Reaches reaches;
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "These are shared on purpose")
     public FactsBuilder(final SourceModel model, final CallGraph graph, final SettingsFiles settings) {
         this.model = model;
         this.graph = graph;
         this.settings = settings;
-        this.mocks = new MockedChains(model);
-        this.testAddresses = new TestAddresses(model, settings);
+        this.reaches = new Reaches(model, settings);
     }
 
     /** The facts, naming the tool's version and what happened to the classpath's entries. */
@@ -119,31 +117,12 @@ public final class FactsBuilder {
                 .test(TestChains.nameOf(test)).file(at.file()).line(at.line())
                 .systems(systemsByTest.getOrDefault(test, List.of()))
                 .standIns(model.tests().standInsOf(test.type()));
-            final List<Facts.Reach> reaches = reachedByKind.entrySet().stream()
-                .map(kind -> reach(test, kind.getKey(), kind.getValue())).flatMap(Optional::stream).toList();
+            final List<Facts.Reach> reaches = this.reaches.of(test, reachedByKind);
             if (!reaches.isEmpty()) {
                 reaches.forEach(entry::reach);
                 tests.add(entry.build());
             }
         });
         return tests;
-    }
-
-    // How a test reaches a kind of connection: through its own body first, otherwise through its set-up.
-    private Optional<Facts.Reach> reach(final MethodKey test, final String kind, final Map<MethodKey, MethodKey> next) {
-        return TestChains.of(model, test, next).map(c -> reachOf(test, kind, c));
-    }
-
-    private Facts.Reach reachOf(final MethodKey test, final String kind, final TestChains.TestChain chain) {
-        final List<MethodKey> steps = chain.steps();
-        final MethodKey point = steps.get(steps.size() - 1);
-        return Facts.Reach.builder()
-            .kind(kind)
-            .point(point.toString())
-            .throughSetUp(chain.throughSetUp())
-            .throughMock(mocks.throughMock(test, steps).map(MethodKey::toString).orElse(null))
-            .addressForTests(testAddresses.of(steps, kind))
-            .chain(steps.stream().map(MethodKey::toString).toList())
-            .build();
     }
 }

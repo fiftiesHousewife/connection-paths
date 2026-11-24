@@ -103,6 +103,9 @@ final class MemberReader {
             new MethodKey(owner.type(), method.getNameAsString(), Signatures.of(method.getParameters()));
         final SourceModel.Location at = TypeHeads.location(method, owner.file());
         model.declare(key, at);
+        if (OpenDatabases.given(method)) {
+            model.givenAnOpenDatabase(key.toString());
+        }
         calls.collect(key, method, owner.file());
         if (method.isStatic()) {
             model.tests().isStatic(key);

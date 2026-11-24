@@ -121,7 +121,7 @@ public class Facts {
 
     /** One kind of connection a test may reach, and one chain of calls showing how. */
     @Value
-    @Builder
+    @Builder(toBuilder = true)
     public static class Reach {
         String kind;
         String point;
