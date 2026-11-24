@@ -79,7 +79,15 @@ final class MemberReader {
             final String type = owner.type();
             final MethodKey key = isStatic(member) ? MethodKey.staticsOf(type) : MethodKey.fieldsOf(type);
             calls.collect(key, member, owner.file());
+            if (owner.tests()) {
+                model.tests().mocks(key, MockedTypes.in(member));
+                standIn(member).ifPresent(server -> model.tests().standIn(owner.type(), server));
+            }
         }
+    }
+
+    private static Optional<String> standIn(final BodyDeclaration<?> member) {
+        return member instanceof FieldDeclaration field ? StandIns.in(field) : Optional.empty();
     }
 
     private static boolean isStatic(final BodyDeclaration<?> member) {
@@ -96,7 +104,11 @@ final class MemberReader {
         final SourceModel.Location at = TypeHeads.location(method, owner.file());
         model.declare(key, at);
         calls.collect(key, method, owner.file());
+        if (method.isStatic()) {
+            model.tests().isStatic(key);
+        }
         if (owner.tests()) {
+            model.tests().mocks(key, MockedTypes.in(method));
             readTestMethod(method, key, at);
         }
     }

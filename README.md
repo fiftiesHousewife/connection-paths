@@ -67,7 +67,7 @@ says.
 | `summary` | Files and methods read; calls resolved and not; tests, how many may reach a connection, and how many start a framework |
 | `connection_points` | Each method that opens or uses a connection: its kind, the rule its call matched, the file and line of that call, its `address`, and, if it stays on this machine, why (`local`) |
 | `systems` | What tests may reach outside the program: the points that go to one host, setting, variable, JNDI name or class; the systems that are `alternatives` to it; how many tests may reach it; and the `shared_chain` of calls they all go through |
-| `tests` | Each test that may reach a connection: for each kind, a chain of calls from the test to the connection, and whether it goes through what runs with the test (`through_set_up`); and the `systems` it may reach |
+| `tests` | Each test that may reach a connection: for each kind, a chain of calls from the test to the connection; whether it goes through what runs with the test (`through_set_up`); the first step that would run a mock the test puts in place instead of the real code (`through_mock`); where the test's own settings send it (`address_for_tests`: `host`, `local`, `none` or `run-time`); the `systems` it may reach; and the embedded servers its rules or extensions start (`stand_ins`) |
 | `tests_starting_a_framework` | Each test that starts a framework (`@SpringBootTest`, `@Testcontainers`, `@QuarkusTest`, Spring's runner...), which may connect through wiring no call shows: the annotation, and the class it is on |
 | `not_resolved` | The calls it couldn't resolve, by reason, most common first; a missing library shows up here by its types' names |
 | `dispatch_points_not_followed` | Calls through an interface or superclass with more implementations than the limit (listeners, handlers, plug-ins): reported, not followed |
@@ -89,7 +89,8 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   the classpath's jars. A method is known by its type, name and parameter types.
 * Calls in lambdas and local classes belong to the method that holds them. An anonymous class is a type of its own,
   named as the compiler names it (`Watchers$1`): its methods run when they are called through what it implements,
-  not where it is made, so a listener registered in a static initialiser isn't run when the class loads. A constructor also runs
+  not where it is made, so a listener registered in a static initialiser isn't run when the class
+  loads. A constructor also runs
   its class's field initialisers, and its superclass's constructor (`super(...)`, or the one without parameters) and
   field initialisers. Any use of a type may run its static initialisers and enum constants. Records are read like
   classes.
@@ -121,6 +122,10 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   system; so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen
   on (`network.interface`) is local too. Systems reached through the same interface method are alternatives.
   See [the decision](docs/decisions/0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md).
+* A chain that calls an instance method of a type the test mocks (a `@Mock` field, or `mock(T.class)` in the test,
+  what runs with it, or a test-source helper they call) is kept, and marked at that step. Where the test would
+  connect comes from the settings on the test classpath, test resources before main ones: a setting none of
+  them gives means the test can't reach the system. See [the decision](docs/decisions/0010-each-reach-says-whether-it-runs-a-mock-and-where-the-tests-own-settings-send-it.md).
 * A test that starts a framework is listed by the annotation that starts it, on its class, a superclass or a class
   around it. See [the decision](docs/decisions/0009-tests-that-start-a-framework-are-listed-by-their-annotation-apart-from-the-tests-that-reach-a-connection.md).
 * A test is listed if it may reach a connection. "May": measurement, the first run of the tests, confirms or clears

@@ -33,14 +33,22 @@ public final class SettingsFiles {
 
     private final Map<String, Setting> settings = new TreeMap<>();
     private final Map<String, Setting> loosely = new TreeMap<>();
+    private final Optional<SettingsFiles> testClasspath;
 
-    private SettingsFiles() {
+    private SettingsFiles(final List<Path> files, final Optional<SettingsFiles> testClasspath) {
+        this.testClasspath = testClasspath;
+        files.forEach(this::readFile);
     }
 
+    /** The settings in the folders' files; and, apart, those on the test classpath, test resources first. */
     public static SettingsFiles read(final List<Path> folders) {
-        final SettingsFiles files = new SettingsFiles();
-        filesIn(folders).forEach(files::readFile);
-        return files;
+        return new SettingsFiles(filesIn(folders),
+            Optional.of(new SettingsFiles(SettingsFileFinder.testClasspathFilesIn(folders), Optional.empty())));
+    }
+
+    /** The settings a test runs with: those in test resources, then main resources. */
+    public SettingsFiles onTheTestClasspath() {
+        return testClasspath.orElse(this);
     }
 
     /** The properties, YAML and XML files in the folders, in the order their settings are kept. */

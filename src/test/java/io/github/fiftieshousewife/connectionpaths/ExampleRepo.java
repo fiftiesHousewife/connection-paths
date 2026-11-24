@@ -46,6 +46,11 @@ final class ExampleRepo {
         assertThat(address.getSource() + " " + address.getValue()).isEqualTo(source + " " + value);
     }
 
+    static Facts.Reach reachOf(final String test, final String kind) {
+        return REACHING.get(test).getReaches().stream().filter(r -> r.getKind().equals(kind)).findFirst()
+            .orElseThrow();
+    }
+
     static Facts.Reach onlyReach(final String test) {
         final List<Facts.Reach> reaches = REACHING.get(test).getReaches();
         assertThat(reaches).hasSize(1);

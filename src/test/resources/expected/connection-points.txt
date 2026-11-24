@@ -34,3 +34,4 @@ com.example.addresses.ListenAddress#partner() host-lookup
 com.example.addresses.OrdersReplica#open() database
 org.apache.commons.dbcp.BasicDataSource#<bean reportsDataSource>() database
 org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>() database
+com.example.addresses.AuditFeed#read() url

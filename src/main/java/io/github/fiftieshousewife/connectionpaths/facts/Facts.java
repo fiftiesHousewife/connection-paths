@@ -17,7 +17,7 @@ import lombok.Value;
 @Builder
 public class Facts {
 
-    static final String SCHEMA = "connection-paths/3";
+    static final String SCHEMA = "connection-paths/4";
     static final String FRAMEWORK_TESTS = "tests_starting_a_framework";
 
     @Builder.Default
@@ -101,6 +101,8 @@ public class Facts {
         List<Reach> reaches;
         @Singular
         List<String> systems;
+        @Singular
+        List<String> standIns;
     }
 
     /**
@@ -124,6 +126,9 @@ public class Facts {
         String kind;
         String point;
         boolean throughSetUp;
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        String throughMock;
+        String addressForTests;
         @Singular("step")
         List<String> chain;
     }

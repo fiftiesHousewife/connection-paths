@@ -23,3 +23,8 @@ com.example.clients.ShopTest.countsOrders
 com.example.clients.ShopTest.listsPrices
 com.example.inherited.LedgerResourceTest.isReady
 com.example.watch.WatchersTest.firesAChange
+com.example.mocked.StoreWithMockFieldTest.totalsTheOrders
+com.example.mocked.StoreFromFixturesTest.totalsTheOrders
+com.example.addresses.AuditFeedTest.readsTheFeed
+com.example.addresses.CrmClientTest.opens
+com.example.mail.MailLoginWithGreenMailTest.checksAUser

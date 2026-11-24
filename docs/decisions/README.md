@@ -16,3 +16,4 @@ a whole are in [under-test](https://github.com/fiftiesHousewife/under-test/tree/
 | [Connection points are grouped into systems, and local connections are part of none](0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md) | proposed |
 | [A sibling module's class folder on the classpath is read from its source](0008-a-sibling-modules-class-folder-on-the-classpath-is-read-from-its-source.md) | rejected |
 | [Tests that start a framework are listed by their annotation, apart from the tests that reach a connection](0009-tests-that-start-a-framework-are-listed-by-their-annotation-apart-from-the-tests-that-reach-a-connection.md) | proposed |
+| [Each reach says whether it runs a mock, and where the test's own settings send it](0010-each-reach-says-whether-it-runs-a-mock-and-where-the-tests-own-settings-send-it.md) | proposed |

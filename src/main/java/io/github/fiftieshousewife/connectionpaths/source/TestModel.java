@@ -24,6 +24,9 @@ public final class TestModel {
     private final Map<String, Set<MethodKey>> setUps = new HashMap<>();
     private final Set<String> testTypeNames = new HashSet<>();
     private final Map<String, String> frameworks = new HashMap<>();
+    private final Map<MethodKey, Set<String>> mocked = new HashMap<>();
+    private final Set<MethodKey> statics = new HashSet<>();
+    private final Map<String, Set<String>> standIns = new HashMap<>();
 
     TestModel(final TypeHierarchy types, final Set<MethodKey> declared) {
         this.types = types;
@@ -56,6 +59,37 @@ public final class TestModel {
     // A test class, or a class tests extend, that starts a framework by this annotation.
     void startsAFramework(final String type, final String annotation) {
         frameworks.put(type, annotation);
+    }
+
+    void mocks(final MethodKey code, final Set<String> types) {
+        if (!types.isEmpty()) {
+            mocked.computeIfAbsent(code, k -> new HashSet<>()).addAll(types);
+        }
+    }
+
+    void standIn(final String testClass, final String server) {
+        standIns.computeIfAbsent(testClass, k -> new TreeSet<>()).add(server);
+    }
+
+    /** The servers a test class's rules or extensions start on this machine, with its superclasses' and outer's. */
+    public Set<String> standInsOf(final String testClass) {
+        final Set<String> all = new TreeSet<>();
+        types.runningWith(testClass).forEach(type -> all.addAll(standIns.getOrDefault(type, Set.of())));
+        return all;
+    }
+
+    void isStatic(final MethodKey method) {
+        statics.add(method);
+    }
+
+    /** The types a method or initialiser in the test source puts a mock in place of. */
+    public Set<String> mockedBy(final MethodKey code) {
+        return mocked.getOrDefault(code, Set.of());
+    }
+
+    /** Whether a method is static, so it runs its own code even on a type that a test mocks. */
+    public boolean isStaticMethod(final MethodKey method) {
+        return statics.contains(method);
     }
 
     /** Every test, by its name and where it is. */

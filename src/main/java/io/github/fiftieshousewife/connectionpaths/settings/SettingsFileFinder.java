@@ -33,6 +33,19 @@ final class SettingsFileFinder {
             .toList();
     }
 
+    // The files a test finds on its classpath, test resources before main ones.
+    static List<Path> testClasspathFilesIn(final List<Path> folders) {
+        return filesIn(folders).stream().filter(SettingsFileFinder::isOnTheTestClasspath)
+            .sorted(Comparator.comparing((Path file) -> !isTestSettings(file))
+                .thenComparing(SettingsFileFinder::isProfileFile).thenComparing(Comparator.naturalOrder()))
+            .toList();
+    }
+
+    private static boolean isOnTheTestClasspath(final Path file) {
+        final String path = file.toString().replace('\\', '/');
+        return path.contains("/src/test/resources/") || path.contains("/src/main/resources/");
+    }
+
     private static Stream<Path> settingsFilesIn(final Path folder) {
         try (Stream<Path> paths = Files.walk(folder)) {
             return paths.filter(SettingsFileFinder::isSettingsFile).toList().stream();
