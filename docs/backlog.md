@@ -32,9 +32,8 @@ choice between ways of building it gets a [decision record](decisions/README.md)
 5. **XML parsers that fetch a DTD.** A parser built without turning external entities off (`new SAXReader()`,
    `DocumentBuilderFactory`) can fetch a DTD over HTTP; there is no rule for it yet.
 6. **Dispatch points.** Give how many places call each one, and put the few with most calls in the summary.
-7. **Names traced in their scope.** A same-named variable anywhere in a type counts as the one traced, and `add`
-   counts as an address setter on anything. Resolve the name to its declaration, and keep `add` to lists of
-   addresses.
+7. **`add` as an address setter on anything.** It is one so a list of hosts built with `hosts.add(...)` is followed;
+   keep it to collections of strings once a real repo shows it matching something else.
 8. **Smaller faults from a review of the code**:
     * a point keeps one production caller's address: give every distinct one;
     * one `dns:` string anywhere in a class makes all its connections DNS ones: limit it to directory and JNDI calls;
