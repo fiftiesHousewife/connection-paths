@@ -18,6 +18,12 @@ class ExampleSpringXmlContextsTest {
     }
 
     @Test
+    void reachesTheBeansOfTheContextASuperclassNames() {
+        assertThat(reachOf("com.example.spring.ReportsContextSubclassTest.loadsTheBeansItsSuperclassNames", "database")
+            .getPoint()).startsWith(BEAN);
+    }
+
+    @Test
     void reachesTheBeansOfTheContextCodeLoads() {
         assertThat(reachOf("com.example.spring.LegacyLauncherTest.starts", "database").getChain())
             .contains("com.example.spring.LegacyLauncher#start()").last().asString().startsWith(BEAN);

@@ -41,3 +41,4 @@ com.example.pages.PageRequestTest.fetchesAPage
 com.example.pages.PageRequestTest.fetchesAPageWithAnInternationalName
 com.example.spring.LegacyLauncherTest.starts
 com.example.spring.ReportsContextTest.loadsTheReportBeans
+com.example.spring.ReportsContextSubclassTest.loadsTheBeansItsSuperclassNames

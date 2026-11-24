@@ -24,12 +24,14 @@ class ExampleFrameworksTest {
                     "com.example.boot.OrdersApplicationTest"),
                 tuple("com.example.boot.OrdersOverHttpTest.showsAnOrder",
                     "@SpringBootTest(webEnvironment = RANDOM_PORT)", "com.example.boot.OrdersOverHttpTest"),
+                tuple("com.example.spring.ReportsContextSubclassTest.loadsTheBeansItsSuperclassNames",
+                    "@ContextConfiguration", "com.example.spring.ReportsContextBase"),
                 tuple("com.example.spring.ReportsContextTest.loadsTheReportBeans", "@ContextConfiguration",
                     "com.example.spring.ReportsContextTest"));
     }
 
     @Test
     void countsThemInTheSummary() {
-        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(5);
+        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(6);
     }
 }
