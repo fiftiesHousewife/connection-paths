@@ -2,6 +2,8 @@
 # One rule a line: <kind> <type>#<method>. A method of * means every method but the constructor.
 # A rule matches a call to that type or to any type that extends or implements it; a rule naming the exact type wins
 # over one that matches through a supertype. Lines starting with # are comments.
+# A rule <kind> @<annotation> matches a call to a method carrying the annotation, or declared in a type that carries
+# it: clients that are only an interface, made at run time by a library.
 
 database java.sql.DriverManager#getConnection
 database javax.sql.DataSource#getConnection
@@ -117,3 +119,23 @@ host-lookup java.net.InetAddress#getAllByName
 
 process java.lang.ProcessBuilder#start
 process java.lang.Runtime#exec
+
+# Clients that are only an annotated interface
+http @org.springframework.cloud.openfeign.FeignClient
+http @org.springframework.cloud.netflix.feign.FeignClient
+http @feign.RequestLine
+http @retrofit2.http.GET
+http @retrofit2.http.POST
+http @retrofit2.http.PUT
+http @retrofit2.http.DELETE
+http @retrofit2.http.PATCH
+http @retrofit2.http.HEAD
+http @retrofit2.http.OPTIONS
+http @retrofit2.http.HTTP
+http @org.springframework.web.service.annotation.HttpExchange
+http @org.springframework.web.service.annotation.GetExchange
+http @org.springframework.web.service.annotation.PostExchange
+http @org.springframework.web.service.annotation.PutExchange
+http @org.springframework.web.service.annotation.DeleteExchange
+http @org.springframework.web.service.annotation.PatchExchange
+http @org.eclipse.microprofile.rest.client.inject.RegisterRestClient

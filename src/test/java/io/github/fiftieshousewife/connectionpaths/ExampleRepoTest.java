@@ -51,7 +51,9 @@ class ExampleRepoTest {
                 tuple("com.example.addresses.Fetcher#fetch()", "url"),
                 tuple("com.example.overloads.RemoteLoader#load(URL)", "url"),
                 tuple("com.example.jdbc.Customers#count()", "database"),
-                tuple("com.example.jdbc.Customers#named(String)", "database"));
+                tuple("com.example.jdbc.Customers#named(String)", "database"),
+                tuple("com.example.clients.Shop#orderCount()", "http"),
+                tuple("com.example.clients.Shop#priceList()", "http"));
     }
 
     @Test
@@ -76,7 +78,9 @@ class ExampleRepoTest {
             DB_MANAGER_TEST,
             "com.example.overloads.LoaderTest.loadsFromAUrl",
             "com.example.jdbc.CustomersTest.counts",
-            "com.example.jdbc.CustomersTest.findsByName");
+            "com.example.jdbc.CustomersTest.findsByName",
+            "com.example.clients.ShopTest.countsOrders",
+            "com.example.clients.ShopTest.listsPrices");
     }
 
     @Test
@@ -155,9 +159,9 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(93),
+            () -> assertThat(summary.getFiles()).isEqualTo(98),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
-            () -> assertThat(summary.getTests()).isEqualTo(31),
-            () -> assertThat(summary.getTestsReaching()).isEqualTo(20));
+            () -> assertThat(summary.getTests()).isEqualTo(35),
+            () -> assertThat(summary.getTestsReaching()).isEqualTo(22));
     }
 }

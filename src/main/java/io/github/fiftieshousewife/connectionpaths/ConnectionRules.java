@@ -16,6 +16,8 @@ import java.util.Set;
 public final class ConnectionRules {
 
     static final String WILDCARD = "*";
+    /** The method of a rule naming an annotation rather than a type's method. */
+    static final String ANNOTATED = "@";
     private static final String BUILT_IN = "/connection-rules.txt";
 
     /** One rule: calls to {@code type#method} (or to a subtype's) are a connection of this kind. */
@@ -35,9 +37,14 @@ public final class ConnectionRules {
             return anyDeclared && matchesMethod(name);
         }
 
+        /** A rule {@code <kind> @<annotation>}: calls to methods carrying it, or declared in a type that does. */
+        boolean isAnnotation() {
+            return ANNOTATED.equals(method);
+        }
+
         @Override
         public String toString() {
-            return type + "#" + method;
+            return isAnnotation() ? ANNOTATED + type : type + "#" + method;
         }
     }
 
@@ -87,15 +94,26 @@ public final class ConnectionRules {
             if (line.isEmpty() || line.startsWith("#")) {
                 continue;
             }
-            final String[] parts = line.split("\\s+");
-            final int hash = parts.length == 2 ? parts[1].indexOf('#') : -1;
-            if (hash <= 0 || hash == parts[1].length() - 1) {
-                throw new IllegalArgumentException(source + " line " + (i + 1)
-                    + ": expected '<kind> <type>#<method>', got '" + line + "'");
-            }
-            parsed.add(new Rule(parts[0], parts[1].substring(0, hash), parts[1].substring(hash + 1)));
+            final int number = i + 1;
+            parsed.add(rule(line).orElseThrow(() -> new IllegalArgumentException(source + " line " + number
+                + ": expected '<kind> <type>#<method>' or '<kind> @<annotation>', got '" + line + "'")));
         }
         return parsed;
+    }
+
+    private static Optional<Rule> rule(final String line) {
+        final String[] parts = line.split("\\s+");
+        if (parts.length != 2) {
+            return Optional.empty();
+        }
+        final String target = parts[1];
+        if (target.startsWith(ANNOTATED)) {
+            return target.length() > 1 ? Optional.of(new Rule(parts[0], target.substring(1), ANNOTATED))
+                : Optional.empty();
+        }
+        final int hash = target.indexOf('#');
+        return hash <= 0 || hash == target.length() - 1 ? Optional.empty()
+            : Optional.of(new Rule(parts[0], target.substring(0, hash), target.substring(hash + 1)));
     }
 
     private static List<Rule> builtIn() {

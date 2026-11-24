@@ -29,10 +29,12 @@ final class CallResolver {
     private final ConnectionRules rules;
     private final Map<String, Map<String, Set<String>>> supertypesOf = new HashMap<>();
     private final AddressTracer addresses = new AddressTracer();
+    private final AnnotatedClients clients;
 
     CallResolver(final SourceModel model, final ConnectionRules rules) {
         this.model = model;
         this.rules = rules;
+        this.clients = new AnnotatedClients(rules);
     }
 
     void collect(final MethodKey caller, final Node body, final String file) {
@@ -73,9 +75,12 @@ final class CallResolver {
         final MethodKey callee = keyOf(resolved);
         model.call(caller, callee);
         model.getCounts().callsResolved++;
-        rules.match(callee, supertypes(resolved.declaringType()))
-            .ifPresent(rule -> model.point(new SourceModel.ConnectionPoint(rule.kind(), rule.toString(), caller),
-                site.location(), addresses.trace(site.node(), rule.kind())));
+        final Optional<AnnotatedClients.Match> match = rules.match(callee, supertypes(resolved.declaringType()))
+            .map(rule -> new AnnotatedClients.Match(rule, addresses.trace(site.node(), rule.kind())))
+            .or(() -> clients.match(resolved));
+        match.ifPresent(found -> model.point(
+            new SourceModel.ConnectionPoint(found.rule().kind(), found.rule().toString(), caller),
+            site.location(), found.address()));
     }
 
     static MethodKey keyOf(final ResolvedMethodLikeDeclaration resolved) {

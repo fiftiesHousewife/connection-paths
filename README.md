@@ -105,7 +105,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
     They are listed instead.
 * A rule `Type#method` matches calls to that type and its subtypes. A rule `Type#*` matches, through a subtype,
   only the methods `Type` declares (a template's own setters aren't queries), or every method where it declares
-  none, as Spring Data's `Repository` does.
+  none, as Spring Data's `Repository` does. A rule `@Annotation` matches calls to the methods of a client that is
+  only an interface (`@FeignClient`, Retrofit's `@GET`, `@HttpExchange`), with the annotation's `url` as the
+  address.
 * An address is traced from the connection call's first argument, or what the call is made on, back through
   variables, fields, constructors, builder chains, the JDK's helpers and the source's own methods, to a literal or a
   name. A call passing a dotted key (`crowd.server.url`) reads a setting, which is looked up in the settings files

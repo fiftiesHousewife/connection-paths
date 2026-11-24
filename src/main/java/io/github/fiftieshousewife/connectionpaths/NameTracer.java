@@ -28,7 +28,7 @@ final class NameTracer {
     private static final Set<String> ADDRESS_SETTERS = Set.of("setUrl", "setURL", "setJdbcUrl", "setHost", "setUri",
         "setURI", "setServerName", "setServerUrl", "setProviderUrl", "setConnectionString");
     /** Spring's {@code ${key}} or {@code ${key:default}}. */
-    private static final Pattern PLACEHOLDER = Pattern.compile("^\\$\\{([^}:]+)(:.*)?}$");
+    static final Pattern PLACEHOLDER = Pattern.compile("^\\$\\{([^}:]+)(:.*)?}$");
 
     private final AddressTracer expressions;
 

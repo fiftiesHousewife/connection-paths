@@ -62,6 +62,16 @@ class ConnectionRulesTest {
     }
 
     @Test
+    void aRuleCanNameAnAnnotationInstead() {
+        final ConnectionRules.Rule rule = ConnectionRules.parse(List.of("http @retrofit2.http.GET"), "mine.txt").get(0);
+        assertAll(
+            () -> assertThat(rule.isAnnotation()).isTrue(),
+            () -> assertThat(rule).hasToString("@retrofit2.http.GET"),
+            () -> assertThatThrownBy(() -> ConnectionRules.parse(List.of("http @"), "mine.txt"))
+                .hasMessageContaining("@<annotation>"));
+    }
+
+    @Test
     void aMissingRulesFileIsReported(@TempDir final Path dir) {
         final Optional<Path> missing = Optional.of(dir.resolve("missing.txt"));
         assertThatThrownBy(() -> ConnectionRules.load(missing)).hasMessageContaining("missing.txt");

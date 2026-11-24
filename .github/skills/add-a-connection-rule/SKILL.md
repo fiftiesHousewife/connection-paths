@@ -8,7 +8,9 @@ description: Add a call that opens or uses a connection to connection-paths' bui
 The rules are in [connection-rules.txt](../../../src/main/resources/connection-rules.txt), one a line:
 `<kind> <type>#<method>`. A method of `*` means every method but the constructor; `<init>` means the constructor. A
 rule matches the type and anything that extends or implements it, so name the **interface** a client implements
-(`JdbcOperations`, not `JdbcTemplate`) and one rule covers every implementation.
+(`JdbcOperations`, not `JdbcTemplate`) and one rule covers every implementation. A client that is only an
+interface, made at run time from its annotations (Feign, Retrofit, Spring's `@HttpExchange`), takes a rule
+`<kind> @<annotation>`: it matches calls to methods carrying the annotation, or declared in a type that does.
 
 1. **Pick the kind** from those already used: `database`, `http`, `mail`, `directory`, `jndi`, `queue`, `socket`,
    `url`, `host-lookup`, `process`. A new kind changes the facts file's schema, which lives in
