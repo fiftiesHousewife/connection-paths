@@ -14,6 +14,8 @@ dependencies {
     implementation(libs.jackson3.databind)
     compileOnly(libs.spotbugs.annotations)
     testCompileOnly(libs.spotbugs.annotations)
+    // SpotBugs logs through slf4j-simple; its plugin otherwise picks an older one.
+    spotbugsSlf4j(libs.slf4j.simple)
 }
 
 // Built with the toolchain's JDK, but runs on Java 17 and later: the machines that run it often have an older JDK.
