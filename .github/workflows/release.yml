@@ -36,7 +36,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@v6
       - name: Check the tag is a version and every secret is set
         run: |
           case "${VERSION#v}" in
