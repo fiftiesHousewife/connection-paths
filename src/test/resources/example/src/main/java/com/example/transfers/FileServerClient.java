@@ -10,7 +10,11 @@ public class FileServerClient {
     private String dataHost;
 
     public void connect(String host) throws IOException {
-        control = new Socket(host, 21);
+        connect(host, 21);
+    }
+
+    public void connect(String host, int port) throws IOException {
+        control = new Socket(host, port);
         dataHost = readReply();
     }
 
