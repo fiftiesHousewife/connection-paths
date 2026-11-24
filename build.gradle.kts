@@ -12,6 +12,7 @@ plugins {
 dependencies {
     implementation(libs.javaparser.symbol.solver)
     implementation(libs.jackson3.databind)
+    implementation(libs.guava)
     compileOnly(libs.spotbugs.annotations)
     testCompileOnly(libs.spotbugs.annotations)
 }

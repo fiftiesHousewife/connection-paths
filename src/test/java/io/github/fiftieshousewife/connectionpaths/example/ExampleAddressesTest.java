@@ -112,6 +112,7 @@ class ExampleAddressesTest {
                 tuple("com.example.addresses.ListenAddress#toListenOn()",
                     "an address of this machine, to listen on"),
                 tuple("com.example.lookups.Peers#gateway()", "a numeric address, which nothing looks up"),
+                tuple("com.example.lookups.Peers#onTheLink()", "a numeric address, which nothing looks up"),
                 tuple("org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>()",
                     "an H2 database in memory or in a file"));
     }

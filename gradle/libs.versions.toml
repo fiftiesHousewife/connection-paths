@@ -5,6 +5,8 @@
 lombok = "1.18.48"
 jackson3 = "3.3.0"
 javaparser = "3.28.2"
+# The version JavaParser brings; declared because the code uses it too.
+guava = "33.6.0-jre"
 json-schema-validator = "3.0.9"
 spotbugs = "4.10.5"
 
@@ -18,6 +20,7 @@ lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 json-schema-validator = { module = "com.networknt:json-schema-validator", version.ref = "json-schema-validator" }
 jackson3-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson3" }
 jackson3-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson3" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
 javaparser-symbol-solver = { module = "com.github.javaparser:javaparser-symbol-solver-core", version.ref = "javaparser" }
 
 # Gradle plugins, as ordinary dependencies of build-logic

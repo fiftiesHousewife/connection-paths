@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.address;
 
+import com.google.common.net.InetAddresses;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,8 +40,6 @@ public final class Locality {
 
     private static final Pattern PATH = Pattern.compile("\\.{0,2}/[^/].*");
 
-    private static final Pattern IPV4 = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3}");
-
     private static final Pattern LISTEN_WORDS = Pattern.compile("interface|bind|listen", Pattern.CASE_INSENSITIVE);
 
     /** Why an address is local, or empty if it may reach another machine. */
@@ -64,15 +63,9 @@ public final class Locality {
         return valueOf(address).filter(Locality::isNumeric).map(v -> "a numeric address, which nothing looks up");
     }
 
-    // IPv4, or IPv6: hexadecimal digits, dots and at least one colon, perhaps in brackets.
+    // An IPv4 or IPv6 address, as an address or in brackets as a URL has it; Guava reads it without looking it up.
     private static boolean isNumeric(final String value) {
-        final String bare = value.replaceFirst("^\\[", "").replaceFirst("]$", "");
-        return IPV4.matcher(value).matches()
-            || bare.indexOf(':') >= 0 && bare.chars().allMatch(Locality::isIpv6Character);
-    }
-
-    private static boolean isIpv6Character(final int c) {
-        return c == ':' || c == '.' || Character.digit(c, 16) >= 0;
+        return InetAddresses.isInetAddress(value) || InetAddresses.isUriInetAddress(value);
     }
 
     // A setting such as network.interface or server.bind-address.
