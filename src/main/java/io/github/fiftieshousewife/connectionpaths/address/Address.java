@@ -20,6 +20,7 @@ public class Address {
 
     public static final String LITERAL = "literal";
     public static final String SETTING = "setting";
+    public static final String DATA_SOURCE_URL = "spring.datasource.url";
     public static final String ENVIRONMENT_VARIABLE = "environment-variable";
     static final String SYSTEM_PROPERTY = "system-property";
     public static final String JNDI_NAME = "jndi-name";

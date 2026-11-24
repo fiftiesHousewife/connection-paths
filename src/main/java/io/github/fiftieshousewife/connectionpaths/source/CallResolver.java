@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.address.AddressTracer;
 import io.github.fiftieshousewife.connectionpaths.rules.AnnotatedClients;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
@@ -28,6 +29,8 @@ import java.util.stream.Collectors;
  * verified on a mock ({@code when(store.all())}, {@code verify(store).all()}) isn't a call, and is left out.
  */
 public final class CallResolver {
+
+    private static final String SPRING_DATA_REPOSITORY = "org.springframework.data.repository.Repository";
 
     private final SourceModel model;
     private final ConnectionRules rules;
@@ -85,11 +88,17 @@ public final class CallResolver {
         model.call(caller, callee);
         model.getCounts().callsResolved++;
         final Optional<AnnotatedClients.Match> match = rules.match(callee, supertypes(resolved.declaringType()))
-            .map(rule -> new AnnotatedClients.Match(rule, addresses.trace(site.node(), rule.kind())))
+            .map(rule -> new AnnotatedClients.Match(rule, addressOf(rule, site.node())))
             .or(() -> clients.match(resolved));
         match.ifPresent(found -> model.point(
             new SourceModel.ConnectionPoint(found.rule().kind(), found.rule().toString(), caller),
             site.location(), found.address()));
+    }
+
+    // A Spring Data repository reaches the application's data source, whatever its call is given.
+    private Address addressOf(final ConnectionRules.Rule rule, final Node call) {
+        return SPRING_DATA_REPOSITORY.equals(rule.type()) ? Address.of(Address.SETTING, Address.DATA_SOURCE_URL)
+            : addresses.trace(call, rule.kind());
     }
 
     // A constructor reference, X::new, creates objects of X when it is called.

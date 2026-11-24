@@ -38,7 +38,7 @@ public final class ConnectionPaths {
             new SourceReader(setup.solver(), rules).read(options.getMainSources(), options.getTestSources());
         // Beans defined in Spring XML open connections the Java source never shows.
         new SpringBeans(setup.solver(), rules).addTo(model, SettingsFiles.filesIn(options.getSettings()));
-        final SettingsFiles settings = SettingsFiles.read(options.getSettings());
+        final SettingsFiles settings = SettingsFiles.read(options.getSettings(), options.getClasspath());
         // A class named in a setting or a service file may be created by name.
         settings.values().forEach(model::created);
         ServiceFiles.namedIn(options.getSettings()).forEach(model::created);

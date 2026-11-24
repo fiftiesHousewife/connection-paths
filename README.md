@@ -32,13 +32,14 @@ java -jar connection-paths.jar --module path/to/module --classpath @classpath.tx
 ```
 
 `--classpath` gives the jars the code compiles against. Without them most calls into libraries can't be resolved; the
-facts file says how many and why. Get them from the build. Maven compiles the module and the modules it uses first,
-since a module of the same build can't be resolved until it is built; no test runs:
+facts file says how many and why. Get them from the build, which compiles the code and the tests first, so the
+classpath is the one that compile used (a module of the same build can't be resolved until it is built); no test
+runs:
 
 | Build | Command |
 |---|---|
 | Maven | `mvn -q -pl <module> -am test-compile dependency:build-classpath -Dmdep.includeScope=test -Dmdep.outputFile=classpath.txt` |
-| Gradle | `gradle -q --init-script tools/print-classpath.gradle connectionPathsClasspath` (prints where it wrote the file) |
+| Gradle | `gradle -q --init-script tools/print-classpath.gradle connectionPathsClasspath` (compiles the tests and runs none; prints where it wrote the file) |
 
 The classpath from the build is better than one read from the build files by hand, which misses jars that come in
 through other jars. If the build can't give one:
@@ -118,7 +119,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   name. A call passing a dotted key (`crowd.server.url`) reads a setting, which is looked up in the settings files
   under `--module` and `--settings` folders: production settings before test ones, a file without a Spring profile
   before one with, and keys matched loosely, as Spring matches them (`jdbcUrl`, `jdbc-url`, `JDBC_URL`). A field
-  of a `@ConfigurationProperties("orders-db")` class reads the setting `orders-db.<field>`. See [the decision](docs/decisions/0006-each-connections-address-is-traced-in-the-source-and-looked-up-in-the-repos-settings-files.md).
+  of a `@ConfigurationProperties("orders-db")` class reads the setting `orders-db.<field>`. A Spring Data repository's
+  call reads `spring.datasource.url`; where no settings file sets it, the tool takes the embedded database Spring
+  Boot starts when H2, Derby or HSQLDB is on the classpath. See [the decision](docs/decisions/0006-each-connections-address-is-traced-in-the-source-and-looked-up-in-the-repos-settings-files.md).
 * A system is the points that go to one host, else to one setting, variable or JNDI name, else those opened in one
   class. Databases in memory or in files, files, jars, classpath resources and localhost are local and part of no
   system (a look-up on the machine's DNS servers is not: they are other machines); so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen

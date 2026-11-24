@@ -35,16 +35,29 @@ public final class SettingsFiles {
     private final Map<String, Setting> settings = new TreeMap<>();
     private final Map<String, Setting> loosely = new TreeMap<>();
     private final Optional<SettingsFiles> testClasspath;
+    private final Optional<Setting> embeddedDatabase;
 
-    private SettingsFiles(final List<Path> files, final Optional<SettingsFiles> testClasspath) {
+    private SettingsFiles(final List<Path> files, final Optional<SettingsFiles> testClasspath,
+                          final Optional<Setting> embeddedDatabase) {
         this.testClasspath = testClasspath;
+        this.embeddedDatabase = embeddedDatabase;
         files.forEach(this::readFile);
     }
 
     /** The settings in the folders' files; and, apart, those on the test classpath, test resources first. */
     public static SettingsFiles read(final List<Path> folders) {
+        return read(folders, List.of());
+    }
+
+    /**
+     * The settings in the folders' files, and those on the test classpath; where neither names a Spring Boot data
+     * source, the embedded database Spring Boot would start from the classpath, if it has one.
+     */
+    public static SettingsFiles read(final List<Path> folders, final List<Path> classpath) {
+        final Optional<Setting> embedded = EmbeddedDatabases.on(classpath);
         return new SettingsFiles(filesIn(folders),
-            Optional.of(new SettingsFiles(SettingsFileFinder.testClasspathFilesIn(folders), Optional.empty())));
+            Optional.of(new SettingsFiles(SettingsFileFinder.testClasspathFilesIn(folders), Optional.empty(),
+                embedded)), embedded);
     }
 
     /** The settings a test runs with: those in test resources, then main resources. */
@@ -58,7 +71,8 @@ public final class SettingsFiles {
     }
 
     Optional<Setting> get(final String key) {
-        return Optional.ofNullable(settings.get(key)).or(() -> Optional.ofNullable(loosely.get(loose(key))));
+        return Optional.ofNullable(settings.get(key)).or(() -> Optional.ofNullable(loosely.get(loose(key))))
+            .or(() -> embeddedDatabase.filter(e -> loose(key).equals(loose(Address.DATA_SOURCE_URL))));
     }
 
     // A key as Spring compares keys: without dashes, with underscores as dots, in lower case.
