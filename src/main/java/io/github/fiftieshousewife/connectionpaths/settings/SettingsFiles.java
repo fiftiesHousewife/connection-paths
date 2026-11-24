@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.settings;
 
+import io.github.fiftieshousewife.connectionpaths.address.SettingAnnotations;
 import io.github.fiftieshousewife.connectionpaths.address.Address;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -104,9 +105,16 @@ public final class SettingsFiles {
             return address.toBuilder().placeholder(address.isLiteral() && isPlaceholder(address.getValue())).build();
         }
         return get(address.getValue())
-            .map(s -> address.toBuilder().settingValue(s.value()).settingFile(s.file()).settingLine(s.line())
-                .placeholder(isPlaceholder(s.value())).build())
-            .orElse(address);
+            .map(s -> address.toBuilder().settingValue(resolved(s.value())).settingFile(s.file()).settingLine(s.line())
+                .placeholder(isPlaceholder(resolved(s.value()))).build())
+            .orElseGet(() -> address.toBuilder()
+                .placeholder(address.getSettingValue() != null && isPlaceholder(address.getSettingValue())).build());
+    }
+
+    // A value that refers to another, ${DB_URL:jdbc:h2:mem:orders}, is its default where it has one: what runs when
+    // nothing sets the variable. Without one, it stays as it is, known only at run time.
+    private static String resolved(final String value) {
+        return SettingAnnotations.defaultOf(value.strip()).orElse(value);
     }
 
     private void readFile(final Path file) {

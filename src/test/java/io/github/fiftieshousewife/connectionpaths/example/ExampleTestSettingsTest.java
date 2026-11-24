@@ -82,6 +82,13 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void takesASettingsDefaultWhereNoFileSetsItAndAnEnvironmentVariableAsKnownOnlyAtRunTime() {
+        assertThat(java.util.stream.Stream.of("readsPrices", "readsStock", "readsPayments")
+            .map(test -> reachOf("com.example.addresses.PriceFeedsTest." + test, "url").getAddressForTests()))
+            .containsExactly("host", "run-time", "local");
+    }
+
+    @Test
     void takesAnInternationalHostNameAsAHost() {
         assertThat(reachOf("com.example.pages.PageRequestTest.fetchesAPageWithAnInternationalName", "url")
             .getAddressForTests()).isEqualTo("host");

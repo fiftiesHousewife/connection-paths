@@ -28,9 +28,20 @@ public final class SettingAnnotations {
         return matcher.matches() ? Optional.of(matcher.group(1)) : Optional.empty();
     }
 
-    /** A setting given as {@code ${key}}, read by {@code via}; otherwise the text as a literal address. */
+    /** The default in a Spring placeholder, {@code ${key:default}}, used where nothing sets the key. */
+    public static Optional<String> defaultOf(final String text) {
+        final Matcher matcher = PLACEHOLDER.matcher(text);
+        return matcher.matches() && matcher.group(2) != null ? Optional.of(matcher.group(2).substring(1))
+            : Optional.empty();
+    }
+
+    /**
+     * A setting given as {@code ${key}}, read by {@code via}, with its default as its value until a settings file sets
+     * it; otherwise the text as a literal address.
+     */
     public static Address settingOrLiteral(final String text, final String via) {
-        return keyOf(text).map(key -> Address.builder().source(Address.SETTING).value(key).via(via).build())
+        return keyOf(text).map(key -> Address.builder().source(Address.SETTING).value(key).via(via)
+                .settingValue(defaultOf(text).orElse(null)).build())
             .orElse(Address.of(Address.LITERAL, text));
     }
 

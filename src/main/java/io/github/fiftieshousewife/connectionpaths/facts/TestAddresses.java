@@ -2,6 +2,7 @@ package io.github.fiftieshousewife.connectionpaths.facts;
 
 import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.address.Locality;
+import io.github.fiftieshousewife.connectionpaths.address.SettingAnnotations;
 import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.Frameworks;
@@ -76,9 +77,16 @@ final class TestAddresses {
 
     // With no settings known on the test classpath, which ones a test runs with is unknown: never "none".
     private String classify(final Address address, final String kind) {
+        if (isFilledAtRunTime(address)) {
+            return RUN_TIME;
+        }
         if (hasNoValue(address)) {
             return noValue();
         }
+        return ofItsValue(address, kind);
+    }
+
+    private static String ofItsValue(final Address address, final String kind) {
         if (Locality.of(address, kind).isPresent() || "process".equals(kind)) {
             return LOCAL;
         }
@@ -93,6 +101,12 @@ final class TestAddresses {
 
     private String noValue() {
         return settings.isEmpty() ? RUN_TIME : NONE;
+    }
+
+    // A setting whose value refers to another, such as ${DB_URL}, with no default: the environment fills it in.
+    private static boolean isFilledAtRunTime(final Address address) {
+        return Address.SETTING.equals(address.getSource()) && address.getSettingValue() != null
+            && SettingAnnotations.keyOf(address.getSettingValue().strip()).isPresent();
     }
 
     // A setting that no file on the test classpath gives a value, or only a placeholder for one.

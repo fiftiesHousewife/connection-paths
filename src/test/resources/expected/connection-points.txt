@@ -62,3 +62,6 @@ com.example.lookups.Peers#byAddress(String) host-lookup
 com.example.transfers.FileServerClient#connect(String,int) socket
 com.example.transfers.FileServerClient#list() socket
 com.example.lookups.TimeClient#ask(InetAddress,int) socket
+com.example.addresses.PriceFeeds#prices() url
+com.example.addresses.PriceFeeds#stock() url
+com.example.addresses.PriceFeeds#payments() url
