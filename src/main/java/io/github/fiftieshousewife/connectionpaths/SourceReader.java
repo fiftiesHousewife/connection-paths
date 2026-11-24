@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +54,7 @@ final class SourceReader {
     private final CallResolver calls;
     private final Map<MethodKey, SourceModel.Location> junit3Candidates = new HashMap<>();
     private final Map<String, String> superclasses = new HashMap<>();
+    private final Set<String> abstractTestTypes = new HashSet<>();
 
     SourceReader(final CombinedTypeSolver solver, final ConnectionRules rules) {
         this.parser = new JavaParser(new ParserConfiguration()
@@ -69,6 +71,7 @@ final class SourceReader {
                 model.test(method, at);
             }
         });
+        InheritedTests.spread(model, abstractTestTypes);
         superclasses.forEach((type, superclass) -> {
             // Creating an object first runs its superclass's constructor (super() unless it says otherwise), and so
             // the superclass's field initialisers.
@@ -126,6 +129,9 @@ final class SourceReader {
         superclass(type).ifPresent(parent -> superclasses.put(name, parent));
         if (tests) {
             model.testType(name);
+            if (type instanceof ClassOrInterfaceDeclaration declaration && declaration.isAbstract()) {
+                abstractTestTypes.add(name);
+            }
             nestedTestClass(type).ifPresent(outer -> model.nestedIn(name, outer));
             Frameworks.startedBy(type).ifPresent(annotation -> model.startsAFramework(name, annotation));
         }

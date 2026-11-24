@@ -80,7 +80,8 @@ class ExampleRepoTest {
             "com.example.jdbc.CustomersTest.counts",
             "com.example.jdbc.CustomersTest.findsByName",
             "com.example.clients.ShopTest.countsOrders",
-            "com.example.clients.ShopTest.listsPrices");
+            "com.example.clients.ShopTest.listsPrices",
+            "com.example.inherited.LedgerResourceTest.isReady");
     }
 
     @Test
@@ -159,9 +160,10 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(98),
+            () -> assertThat(summary.getFiles()).isEqualTo(101),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
-            () -> assertThat(summary.getTests()).isEqualTo(35),
-            () -> assertThat(summary.getTestsReaching()).isEqualTo(22));
+            // The abstract ResourceContractTest's one test is counted twice, under each subclass, not under itself.
+            () -> assertThat(summary.getTests()).isEqualTo(37),
+            () -> assertThat(summary.getTestsReaching()).isEqualTo(23));
     }
 }

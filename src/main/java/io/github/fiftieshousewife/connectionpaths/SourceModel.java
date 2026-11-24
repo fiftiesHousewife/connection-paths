@@ -27,6 +27,8 @@ final class SourceModel {
     private final Map<String, Set<String>> parents = new HashMap<>();
     private final Map<MethodKey, Location> locations = new HashMap<>();
     private final Map<MethodKey, Location> tests = new TreeMap<>();
+    /** Tests run by a subclass, by the name it runs them under, and the method that declares each. */
+    private final Map<MethodKey, MethodKey> inherited = new HashMap<>();
     private final Map<String, Set<MethodKey>> setUps = new HashMap<>();
     private final Set<ConnectionPoint> points = new LinkedHashSet<>();
     private final Map<ConnectionPoint, Location> pointLocations = new HashMap<>();
@@ -60,6 +62,26 @@ final class SourceModel {
 
     void test(final MethodKey test, final Location at) {
         tests.put(test, at);
+    }
+
+    /** A test a subclass runs, declared in one of its superclasses; it runs with the subclass's set-up. */
+    void inheritedTest(final MethodKey runAs, final MethodKey declaredAs, final Location at) {
+        tests.put(runAs, at);
+        inherited.put(runAs, declaredAs);
+    }
+
+    /** A test declared in an abstract class, which only its subclasses run. */
+    void dropTest(final MethodKey test) {
+        tests.remove(test);
+    }
+
+    /** The method that declares a test: itself, or for an inherited test, its superclass's. */
+    MethodKey declarationOf(final MethodKey test) {
+        return inherited.getOrDefault(test, test);
+    }
+
+    Set<String> getTestTypes() {
+        return Collections.unmodifiableSet(testTypes);
     }
 
     void setUp(final String type, final MethodKey method) {
