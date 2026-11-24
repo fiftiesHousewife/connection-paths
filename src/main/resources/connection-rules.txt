@@ -116,6 +116,10 @@ url java.net.URLConnection#getOutputStream
 
 host-lookup java.net.InetAddress#getByName
 host-lookup java.net.InetAddress#getAllByName
+# The machine's own name, and the name of an address, can be looked up on DNS servers too.
+host-lookup java.net.InetAddress#getLocalHost
+host-lookup java.net.InetAddress#getCanonicalHostName
+host-lookup java.net.InetAddress#getHostName
 
 process java.lang.ProcessBuilder#start
 process java.lang.Runtime#exec

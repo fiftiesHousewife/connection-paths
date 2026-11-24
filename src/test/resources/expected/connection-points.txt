@@ -37,3 +37,9 @@ org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>() database
 com.example.addresses.AuditFeed#read() url
 com.example.plugins.FtpExporter#export(String) socket
 com.example.directory.DirectoryContext#<init>(Hashtable) directory
+com.example.lookups.MachineName#canonicalName() host-lookup
+com.example.lookups.MachineName#canonicalName() host-lookup
+com.example.lookups.MachineName#peerName(Socket) host-lookup
+com.example.lookups.ServiceRecords#find(String) directory
+com.example.lookups.Dialler#open() socket
+com.example.lookups.Dialler#open() socket

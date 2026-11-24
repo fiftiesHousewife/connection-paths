@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 
 /**
  * Whether an address stays on the machine: an in-memory or file database, a file, a jar or a classpath resource,
- * the machine's own host name, an address of its own to listen on, or its DNS servers. A connection like that needs
- * no stand-in system.
+ * the machine's own host name, or an address of its own to listen on. A connection like that needs no stand-in
+ * system. A look-up on the machine's DNS servers is not local: they are other machines.
  */
 public final class Locality {
 
@@ -27,7 +27,7 @@ public final class Locality {
             "this machine"));
 
     private static final Map<String, String> LOCAL_SOURCES = Map.of(Address.CLASSPATH_RESOURCE, "a classpath resource",
-        Address.LOCAL_FILE, "a file", Address.DNS, "the machine's DNS servers");
+        Address.LOCAL_FILE, "a file");
 
     private Locality() {
     }

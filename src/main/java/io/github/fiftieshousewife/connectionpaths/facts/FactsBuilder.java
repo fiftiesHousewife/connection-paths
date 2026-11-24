@@ -81,13 +81,14 @@ public final class FactsBuilder {
     private List<Facts.Point> points() {
         return model.getPoints().stream()
             .sorted((a, b) -> (a.method() + a.call()).compareTo(b.method() + b.call()))
-            .map(p -> {
-                final SourceModel.Location at = model.locationOf(p);
-                final Address address = settings.withValue(model.addressOf(p));
-                return Facts.Point.builder().kind(p.kind()).call(p.call()).method(p.method().toString())
-                    .file(at.file()).line(at.line()).address(address).local(localBecause(p, address)).build();
-            })
+            .flatMap(p -> model.callsOf(p).stream().map(call -> point(p, call)))
             .toList();
+    }
+
+    private Facts.Point point(final SourceModel.ConnectionPoint p, final SourceModel.PointCall call) {
+        final Address address = settings.withValue(call.address());
+        return Facts.Point.builder().kind(p.kind()).call(p.call()).method(p.method().toString())
+            .file(call.at().file()).line(call.at().line()).address(address).local(localBecause(p, address)).build();
     }
 
     // Why a point stays on this machine, if it does. A point whose address is a parameter no code in the source passes

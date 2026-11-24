@@ -32,12 +32,12 @@ java -jar connection-paths.jar --module path/to/module --classpath @classpath.tx
 ```
 
 `--classpath` gives the jars the code compiles against. Without them most calls into libraries can't be resolved; the
-facts file says how many and why. Get them from the build, which resolves dependencies without compiling or running
-anything:
+facts file says how many and why. Get them from the build. Maven compiles the module and the modules it uses first,
+since a module of the same build can't be resolved until it is built; no test runs:
 
 | Build | Command |
 |---|---|
-| Maven | `mvn -q dependency:build-classpath -Dmdep.outputFile=classpath.txt` |
+| Maven | `mvn -q -pl <module> -am test-compile dependency:build-classpath -Dmdep.includeScope=test -Dmdep.outputFile=classpath.txt` |
 | Gradle | `gradle -q --init-script tools/print-classpath.gradle connectionPathsClasspath` (prints where it wrote the file) |
 
 The classpath from the build is better than one read from the build files by hand, which misses jars that come in
@@ -65,7 +65,7 @@ says.
 | Field | What |
 |---|---|
 | `summary` | Files and methods read; calls resolved and not; tests, how many may reach a connection, and how many start a framework |
-| `connection_points` | Each method that opens or uses a connection: its kind, the rule its call matched, the file and line of that call, its `address`, and, if it stays on this machine, why (`local`) |
+| `connection_points` | Each call that opens or uses a connection, so a method that connects twice is listed twice: its kind, the rule its call matched, its method, the file and line of the call, its `address`, and, if it stays on this machine, why (`local`) |
 | `systems` | What tests may reach outside the program: the points that go to one host, setting, variable, JNDI name or class; the systems that are `alternatives` to it; how many tests may reach it; and the `shared_chain` of calls they all go through |
 | `tests` | Each test that may reach a connection: for each kind, a chain of calls from the test to the connection; whether it goes through what runs with the test (`through_set_up`); the first step that would run a mock the test puts in place instead of the real code (`through_mock`); where the test's own settings send it (`address_for_tests`: `host`, `local`, `none` or `run-time`); the `systems` it may reach; and the embedded servers its rules or extensions start (`stand_ins`) |
 | `tests_starting_a_framework` | Each test that starts a framework (`@SpringBootTest`, `@Testcontainers`, `@QuarkusTest`, Spring's runner...), which may connect through wiring no call shows: the annotation, and the class it is on |
@@ -121,7 +121,7 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   of a `@ConfigurationProperties("orders-db")` class reads the setting `orders-db.<field>`. See [the decision](docs/decisions/0006-each-connections-address-is-traced-in-the-source-and-looked-up-in-the-repos-settings-files.md).
 * A system is the points that go to one host, else to one setting, variable or JNDI name, else those opened in one
   class. Databases in memory or in files, files, jars, classpath resources and localhost are local and part of no
-  system; so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen
+  system (a look-up on the machine's DNS servers is not: they are other machines); so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen
   on (`network.interface`) is local too. Systems reached through the same interface method are alternatives.
   See [the decision](docs/decisions/0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md).
 * A chain that calls an instance method of a type the test mocks (a `@Mock` field, or `mock(T.class)` in the test,

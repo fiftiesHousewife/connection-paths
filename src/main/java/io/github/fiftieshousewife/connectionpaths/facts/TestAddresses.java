@@ -26,7 +26,8 @@ final class TestAddresses {
         this.settings = settings.onTheTestClasspath();
         this.arguments = new ArgumentTracer(model);
         this.byPoint = model.getPoints().stream().collect(Collectors.toMap(
-            point -> point.method() + " " + point.kind(), model::addressOf, (first, second) -> first));
+            point -> point.method() + " " + point.kind(), point -> model.callsOf(point).get(0).address(),
+            (first, second) -> first));
     }
 
     // Where a reach's test would connect. A point whose address is one of its parameters is followed back along the

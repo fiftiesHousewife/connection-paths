@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -24,6 +26,10 @@ public final class SourceModel {
     public record ConnectionPoint(String kind, String call, MethodKey method) {
     }
 
+    /** One call that makes a method a connection point: where it is, and the address it is given. */
+    public record PointCall(Location at, Address address) {
+    }
+
     private final Set<MethodKey> declared = new HashSet<>();
     private final Map<MethodKey, Set<MethodKey>> calls = new HashMap<>();
     private final Map<MethodKey, Location> locations = new HashMap<>();
@@ -31,8 +37,7 @@ public final class SourceModel {
     private final Set<String> createdTypes = new HashSet<>();
     private final Map<String, Optional<CompilationUnit>> rereadFiles = new HashMap<>();
     private Function<Path, Optional<CompilationUnit>> parser = file -> Optional.empty();
-    private final Map<ConnectionPoint, Location> pointLocations = new HashMap<>();
-    private final Map<ConnectionPoint, Address> pointAddresses = new HashMap<>();
+    private final Map<ConnectionPoint, Map<Location, Address>> pointCalls = new HashMap<>();
     private final TypeHierarchy hierarchy = new TypeHierarchy();
     private final TestModel testModel = new TestModel(hierarchy, declared);
     private final Unresolved unresolved = new Unresolved();
@@ -56,11 +61,10 @@ public final class SourceModel {
         calls.computeIfAbsent(caller, k -> new HashSet<>()).add(callee);
     }
 
-    /** A connection point, at the first call in its method that makes it one. */
+    /** A connection point, at one of the calls in its method that make it one. */
     public void point(final ConnectionPoint point, final Location at, final Address address) {
         points.add(point);
-        pointLocations.putIfAbsent(point, at);
-        pointAddresses.putIfAbsent(point, address);
+        pointCalls.computeIfAbsent(point, k -> new LinkedHashMap<>()).putIfAbsent(at, address);
     }
 
     void rereadWith(final Function<Path, Optional<CompilationUnit>> fileParser) {
@@ -107,12 +111,10 @@ public final class SourceModel {
         return locations.get(method);
     }
 
-    public Location locationOf(final ConnectionPoint point) {
-        return pointLocations.get(point);
-    }
-
-    public Address addressOf(final ConnectionPoint point) {
-        return pointAddresses.get(point);
+    /** Each call that makes a method this connection point, in the order they were read. */
+    public List<PointCall> callsOf(final ConnectionPoint point) {
+        return pointCalls.getOrDefault(point, Map.of()).entrySet().stream()
+            .map(e -> new PointCall(e.getKey(), e.getValue())).toList();
     }
 
     public Set<ConnectionPoint> getPoints() {
