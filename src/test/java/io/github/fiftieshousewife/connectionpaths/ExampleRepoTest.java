@@ -1,5 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.source.Unresolved;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.CONFIG_TEST;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.DB_MANAGER_TEST;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.FACTS;

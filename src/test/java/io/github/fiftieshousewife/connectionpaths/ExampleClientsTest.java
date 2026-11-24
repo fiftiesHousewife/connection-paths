@@ -1,5 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import io.github.fiftieshousewife.connectionpaths.address.Address;
+import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.FACTS;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.REACHING;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.addressOf;

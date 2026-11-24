@@ -1,0 +1,50 @@
+package io.github.fiftieshousewife.connectionpaths.source;
+
+import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.ClassExpr;
+import java.util.Optional;
+import java.util.Set;
+
+/**
+ * The annotations by which a test class starts a framework, such as Spring, Quarkus or Micronaut, or containers. The
+ * framework wires objects together and may open connections that no call in the source shows, so these tests are
+ * listed by the annotation rather than by a chain of calls.
+ */
+public final class Frameworks {
+
+    private static final Set<String> STARTERS = Set.of("SpringBootTest", "DataJpaTest", "DataJdbcTest", "JdbcTest",
+        "JooqTest", "DataMongoTest", "DataRedisTest", "DataCassandraTest", "DataElasticsearchTest", "DataNeo4jTest",
+        "DataLdapTest", "DataR2dbcTest", "WebMvcTest", "WebFluxTest", "RestClientTest", "GraphQlTest",
+        "ContextConfiguration", "SpringJUnitConfig", "SpringJUnitWebConfig", "WebAppConfiguration", "Testcontainers",
+        "QuarkusTest", "QuarkusIntegrationTest", "QuarkusMainTest", "MicronautTest");
+    /** The annotations that name a runner or extension, and the runners and extensions that start a framework. */
+    private static final Set<String> RUN_WITH = Set.of("RunWith", "ExtendWith");
+    private static final Set<String> RUNNERS = Set.of("SpringRunner", "SpringJUnit4ClassRunner", "SpringExtension",
+        "QuarkusTestExtension", "MicronautJunit5Extension", "Arquillian", "ArquillianExtension");
+
+    private Frameworks() {
+    }
+
+    /** The annotation on a type that starts a framework, as written: {@code @SpringBootTest}. */
+    static Optional<String> startedBy(final TypeDeclaration<?> type) {
+        for (final AnnotationExpr annotation : type.getAnnotations()) {
+            final String name = annotation.getName().getIdentifier();
+            if (STARTERS.contains(name)) {
+                return Optional.of("@" + name);
+            }
+            final Optional<String> runner = RUN_WITH.contains(name) ? runnerIn(annotation) : Optional.empty();
+            if (runner.isPresent()) {
+                return Optional.of("@" + name + "(" + runner.get() + ".class)");
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<String> runnerIn(final AnnotationExpr annotation) {
+        return annotation.findAll(ClassExpr.class).stream()
+            .map(type -> Signatures.simple(type.getType().asString()))
+            .filter(RUNNERS::contains)
+            .findFirst();
+    }
+}

@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.CONFIG_TEST;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.FACTS;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.OPEN;

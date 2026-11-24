@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.List;

@@ -1,5 +1,15 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.FactsBuilder;
+import io.github.fiftieshousewife.connectionpaths.graph.CallGraph;
+import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
+import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
+import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import io.github.fiftieshousewife.connectionpaths.source.SourceReader;
+import io.github.fiftieshousewife.connectionpaths.source.TypeSolvers;
+import io.github.fiftieshousewife.connectionpaths.spring.SpringBeans;
+import io.github.fiftieshousewife.connectionpaths.spring.SpringXml;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -52,7 +62,7 @@ public final class ConnectionPaths {
         return JSON.writeValueAsString(facts);
     }
 
-    static String version() {
+    public static String version() {
         final String fromJar = ConnectionPaths.class.getPackage().getImplementationVersion();
         return fromJar == null ? "development" : fromJar;
     }

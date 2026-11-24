@@ -1,5 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths;
 
+import io.github.fiftieshousewife.connectionpaths.address.Address;
+import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.FACTS;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.system;
 import static org.assertj.core.api.Assertions.assertThat;
