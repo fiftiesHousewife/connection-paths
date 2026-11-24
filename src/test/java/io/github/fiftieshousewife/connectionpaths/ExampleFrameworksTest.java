@@ -23,11 +23,13 @@ class ExampleFrameworksTest {
                 tuple("com.example.boot.OrdersApplicationTest.startsUp", "@SpringBootTest",
                     "com.example.boot.OrdersApplicationTest"),
                 tuple("com.example.boot.OrdersOverHttpTest.showsAnOrder",
-                    "@SpringBootTest(webEnvironment = RANDOM_PORT)", "com.example.boot.OrdersOverHttpTest"));
+                    "@SpringBootTest(webEnvironment = RANDOM_PORT)", "com.example.boot.OrdersOverHttpTest"),
+                tuple("com.example.spring.ReportsContextTest.loadsTheReportBeans", "@ContextConfiguration",
+                    "com.example.spring.ReportsContextTest"));
     }
 
     @Test
     void countsThemInTheSummary() {
-        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(4);
+        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(5);
     }
 }

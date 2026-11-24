@@ -39,3 +39,5 @@ com.example.boot.OrdersOverHttpTest.showsAnOrder
 com.example.report.ReportClientStartingItsServerTest.fetches
 com.example.pages.PageRequestTest.fetchesAPage
 com.example.pages.PageRequestTest.fetchesAPageWithAnInternationalName
+com.example.spring.LegacyLauncherTest.starts
+com.example.spring.ReportsContextTest.loadsTheReportBeans

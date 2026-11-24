@@ -143,6 +143,6 @@ public final class SourceReader {
             abstractTestTypes.add(name);
         }
         TypeHeads.nestedTestClassIn(type).ifPresent(outer -> model.types().nestedIn(name, outer));
-        Frameworks.startedBy(type).ifPresent(annotation -> model.tests().startsAFramework(name, annotation));
+        XmlContexts.read(type, name, model);
     }
 }

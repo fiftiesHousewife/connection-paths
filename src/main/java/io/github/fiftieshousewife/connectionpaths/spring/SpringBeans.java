@@ -42,7 +42,10 @@ public final class SpringBeans {
     /** Adds the beans in the files to the model: the connection points they make, and the classes they create. */
     public void addTo(final SourceModel model, final List<Path> files) {
         final List<SpringXml.Bean> beans = SpringXml.read(files);
-        points(beans).forEach(bean -> model.point(bean.point(), bean.at(), bean.address()));
+        points(beans).forEach(bean -> {
+            model.point(bean.point(), bean.at(), bean.address());
+            model.xmlContextHolds(bean.at().file(), bean.point().method());
+        });
         beans.stream().map(SpringXml.Bean::getType).filter(Objects::nonNull).forEach(model::created);
     }
 

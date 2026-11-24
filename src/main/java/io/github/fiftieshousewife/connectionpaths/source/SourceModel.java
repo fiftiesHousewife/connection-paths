@@ -45,14 +45,6 @@ public final class SourceModel {
     private final Unresolved unresolved = new Unresolved();
     private final Counts counts = new Counts();
 
-    /** How much was read. */
-    @lombok.Getter
-    public static final class Counts {
-        int files;
-        int filesNotParsed;
-        int callsResolved;
-    }
-
     void declare(final MethodKey method, final Location at) {
         declared.add(method);
         locations.putIfAbsent(method, at);
@@ -76,6 +68,11 @@ public final class SourceModel {
     /** The methods, and calls ({@code caller > callee}), that run only once a database connection is open. */
     public Set<String> givenAnOpenDatabase() {
         return Collections.unmodifiableSet(onAnOpenDatabase);
+    }
+
+    /** A bean in a Spring XML file, which code that loads the file as a context makes. */
+    public void xmlContextHolds(final String file, final MethodKey bean) {
+        call(XmlContexts.contextOf(file), bean);
     }
 
     void rereadWith(final Function<Path, Optional<CompilationUnit>> fileParser) {

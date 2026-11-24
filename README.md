@@ -152,7 +152,10 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   each one.
 
 * A bean defined in Spring XML whose class is a connection client (a `DataSource` with a `url` property) is a
-  connection point at the XML file and line, named `<class>#<bean id>`, with that property as its address.
+  connection point at the XML file and line, named `<class>#<bean id>`, with that property as its address. A test
+  class whose `@ContextConfiguration` (or `@SpringJUnitConfig`, `@ImportResource`) names the file reaches its beans
+  through its set-up, and code that makes a `ClassPathXmlApplicationContext` on it reaches them from where it does;
+  files are matched by name, through a step of their own, `ApplicationContext#<xml applicationContext.xml>`.
 
 It does not follow reflection, the wiring between Spring beans, or code loaded by name at run time. What it doesn't
 do yet is in the [backlog](docs/backlog.md).

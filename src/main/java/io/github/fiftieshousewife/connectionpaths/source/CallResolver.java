@@ -48,6 +48,7 @@ public final class CallResolver {
             .forEach(call -> record(caller, call::resolve, new Site(call, file)));
         callsIn(body, ObjectCreationExpr.class).forEach(create -> {
             record(caller, create::resolve, new Site(create, file));
+            XmlContexts.loadedBy(create).forEach(xml -> model.call(caller, XmlContexts.contextOf(xml)));
             final String created = TypeHeads.qualifiedName(create.getType());
             if (!created.startsWith("?.")) {
                 model.createdBy(caller, created);
