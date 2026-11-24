@@ -99,8 +99,10 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   JUnit 3 tests are found by their superclass. A test a class inherits is listed under each class that runs it, with
   that class's set-up, and not under an abstract class that declares it.
 * A call made only to stub or verify a mock (`when(store.all())`, `verify(store).all()`) is not counted as a call.
-* A call through an interface or superclass reaches the overriding methods in the source, matched by name and
-  parameter types, where a type variable (`save(T)`) matches any type so that generic interfaces work, except:
+* A call through an interface or superclass reaches only the overriding methods of classes the program creates (with
+  `new`, as an enum or test class, by a framework annotation, or by a name in the source or the settings): see
+  [the decision](docs/decisions/0011-a-call-through-an-interface-reaches-only-the-classes-the-program-creates.md).
+  They are matched by name and parameter types, where a type variable (`save(T)`) matches any type so that generic interfaces work, except:
   * through the JDK's own types (`Map`, `Runnable`...): following them joins every `Map.put` to every class that
     extends a map;
   * where more than three methods in the production source override it (`--max-implementations`; test doubles don't

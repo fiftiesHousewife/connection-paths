@@ -46,8 +46,13 @@ public final class CallResolver {
             .forEach(call -> record(caller, call::resolve, new Site(call, file)));
         callsIn(body, ExplicitConstructorInvocationStmt.class)
             .forEach(call -> record(caller, call::resolve, new Site(call, file)));
-        callsIn(body, ObjectCreationExpr.class)
-            .forEach(create -> record(caller, create::resolve, new Site(create, file)));
+        callsIn(body, ObjectCreationExpr.class).forEach(create -> {
+            record(caller, create::resolve, new Site(create, file));
+            final String created = TypeHeads.qualifiedName(create.getType());
+            if (!created.startsWith("?.")) {
+                model.created(created);
+            }
+        });
         callsIn(body, MethodReferenceExpr.class)
             .forEach(reference -> record(caller, reference::resolve, new Site(reference, file)));
     }
@@ -76,6 +81,7 @@ public final class CallResolver {
             return;
         }
         final MethodKey callee = keyOf(resolved);
+        createdByReference(callee, site.node());
         model.call(caller, callee);
         model.getCounts().callsResolved++;
         final Optional<AnnotatedClients.Match> match = rules.match(callee, supertypes(resolved.declaringType()))
@@ -84,6 +90,13 @@ public final class CallResolver {
         match.ifPresent(found -> model.point(
             new SourceModel.ConnectionPoint(found.rule().kind(), found.rule().toString(), caller),
             site.location(), found.address()));
+    }
+
+    // A constructor reference, X::new, creates objects of X when it is called.
+    private void createdByReference(final MethodKey callee, final Node site) {
+        if (callee.isConstructor() && site instanceof MethodReferenceExpr) {
+            model.created(callee.type());
+        }
     }
 
     static MethodKey keyOf(final ResolvedMethodLikeDeclaration resolved) {

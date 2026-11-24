@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,6 +65,11 @@ public final class SettingsFiles {
     private static String loose(final String key) {
         return key.chars().filter(c -> c != '-').map(c -> c == '_' ? '.' : Character.toLowerCase(c))
             .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
+    }
+
+    /** Every value in the settings files. */
+    public Stream<String> values() {
+        return settings.values().stream().map(Setting::value);
     }
 
     int size() {

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,16 +55,24 @@ public final class CallGraph {
         }
     }
 
-    // For each supertype method (by override key), the methods in the source that override it, in a fixed order.
+    // For each supertype method (by override key), the methods in the source that override it, in a fixed order. Only
+    // a class whose objects the program creates, or one it creates a subclass of, can have its method called.
     private static Map<String, List<MethodKey>> overriddenBy(final SourceModel model) {
+        final Set<String> live = liveTypes(model);
         final Map<String, List<MethodKey>> result = new TreeMap<>();
         new TreeSet<>(model.getDeclared()).stream()
-            .filter(method -> !method.isConstructor() && !method.isInitialisers())
+            .filter(method -> !method.isConstructor() && !method.isInitialisers() && live.contains(method.type()))
             .forEach(method -> model.types().ancestors(method.type()).stream()
                 .filter(ancestor -> !isJdkOrUnknown(ancestor))
                 .forEach(ancestor -> result.computeIfAbsent(method.overrideKey(ancestor), k -> new ArrayList<>())
                     .add(method)));
         return result;
+    }
+
+    private static Set<String> liveTypes(final SourceModel model) {
+        final Set<String> live = new HashSet<>(model.getCreated());
+        model.getCreated().forEach(type -> live.addAll(model.types().ancestors(type)));
+        return live;
     }
 
     private static String typeOf(final String overrideKey) {

@@ -73,7 +73,9 @@ public final class SourceReader {
         final ParseResult<CompilationUnit> result = parse(file);
         if (result.isSuccessful() && result.getResult().isPresent()) {
             final String name = file.toString().replace('\\', '/');
-            result.getResult().get().findAll(TypeDeclaration.class).forEach(type -> readType(type, name, tests));
+            final CompilationUnit unit = result.getResult().get();
+            unit.findAll(TypeDeclaration.class).forEach(type -> readType(type, name, tests));
+            CreatedTypes.namedInStrings(unit).forEach(model::created);
             return;
         }
         model.getCounts().filesNotParsed++;
@@ -101,6 +103,9 @@ public final class SourceReader {
         type.getFullyQualifiedName().ifPresent(name -> {
             TypeHeads.supertypes(type).forEach(parent -> model.types().supertype(name, parent));
             TypeHeads.superclass(type).ifPresent(parent -> superclasses.put(name, parent));
+            if (CreatedTypes.isCreatedWithoutNew(type, tests)) {
+                model.created(name);
+            }
             if (tests) {
                 readTestType(type, name);
             }
@@ -123,6 +128,7 @@ public final class SourceReader {
             final MemberReader.Owner owner =
                 new MemberReader.Owner(anonymous.name(), makerOwner.file(), makerOwner.tests());
             model.types().supertype(anonymous.name(), TypeHeads.qualifiedName(creation.getType()));
+            model.created(anonymous.name());
             model.declare(MethodKey.fieldsOf(anonymous.name()), TypeHeads.location(creation, owner.file()));
             creation.getAnonymousClassBody().orElseThrow().forEach(member -> members.read(member, owner));
             readAnonymousClasses(creation, owner);

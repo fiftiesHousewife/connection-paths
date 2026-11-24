@@ -23,6 +23,7 @@ public final class SourceModel {
     private final Map<MethodKey, Set<MethodKey>> calls = new HashMap<>();
     private final Map<MethodKey, Location> locations = new HashMap<>();
     private final Set<ConnectionPoint> points = new LinkedHashSet<>();
+    private final Set<String> createdTypes = new HashSet<>();
     private final Map<ConnectionPoint, Location> pointLocations = new HashMap<>();
     private final Map<ConnectionPoint, Address> pointAddresses = new HashMap<>();
     private final TypeHierarchy hierarchy = new TypeHierarchy();
@@ -53,6 +54,16 @@ public final class SourceModel {
         points.add(point);
         pointLocations.putIfAbsent(point, at);
         pointAddresses.putIfAbsent(point, address);
+    }
+
+    /** A type the program creates objects of, with new, by name, or through a framework. */
+    public void created(final String type) {
+        createdTypes.add(type);
+    }
+
+    /** The types the program creates objects of. */
+    public Set<String> getCreated() {
+        return Collections.unmodifiableSet(createdTypes);
     }
 
     /** The supertypes of the types in the source. */

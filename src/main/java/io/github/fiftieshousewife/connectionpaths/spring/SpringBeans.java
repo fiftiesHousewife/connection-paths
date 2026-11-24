@@ -11,7 +11,9 @@ import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -35,7 +37,14 @@ public final class SpringBeans {
         this.rules = rules;
     }
 
-    /** The connection points the beans make, with addresses as the beans give them. */
+    /** Adds the beans in the files to the model: the connection points they make, and the classes they create. */
+    public void addTo(final SourceModel model, final List<Path> files) {
+        final List<SpringXml.Bean> beans = SpringXml.read(files);
+        points(beans).forEach(bean -> model.point(bean.point(), bean.at(), bean.address()));
+        beans.stream().map(SpringXml.Bean::getType).filter(Objects::nonNull).forEach(model::created);
+    }
+
+    // The connection points the beans make, with addresses as the beans give them.
     public List<SourcePoint> points(final List<SpringXml.Bean> beans) {
         final List<SourcePoint> points = new ArrayList<>();
         for (final SpringXml.Bean bean : beans) {

@@ -4,12 +4,12 @@ import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import io.github.fiftieshousewife.connectionpaths.facts.FactsBuilder;
 import io.github.fiftieshousewife.connectionpaths.graph.CallGraph;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
+import io.github.fiftieshousewife.connectionpaths.settings.ServiceFiles;
 import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
 import io.github.fiftieshousewife.connectionpaths.source.SourceReader;
 import io.github.fiftieshousewife.connectionpaths.source.TypeSolvers;
 import io.github.fiftieshousewife.connectionpaths.spring.SpringBeans;
-import io.github.fiftieshousewife.connectionpaths.spring.SpringXml;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -37,10 +37,12 @@ public final class ConnectionPaths {
         final SourceModel model =
             new SourceReader(setup.solver(), rules).read(options.getMainSources(), options.getTestSources());
         // Beans defined in Spring XML open connections the Java source never shows.
-        new SpringBeans(setup.solver(), rules).points(SpringXml.read(SettingsFiles.filesIn(options.getSettings())))
-            .forEach(bean -> model.point(bean.point(), bean.at(), bean.address()));
-        final CallGraph graph = new CallGraph(model, options.getMaxImplementations());
+        new SpringBeans(setup.solver(), rules).addTo(model, SettingsFiles.filesIn(options.getSettings()));
         final SettingsFiles settings = SettingsFiles.read(options.getSettings());
+        // A class named in a setting or a service file may be created by name.
+        settings.values().forEach(model::created);
+        ServiceFiles.namedIn(options.getSettings()).forEach(model::created);
+        final CallGraph graph = new CallGraph(model, options.getMaxImplementations());
         return new FactsBuilder(model, graph, settings).build(version(), setup.notes());
     }
 
