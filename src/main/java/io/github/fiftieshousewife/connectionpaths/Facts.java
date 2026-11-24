@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Builder;
 import lombok.Singular;
@@ -15,6 +16,7 @@ import lombok.Value;
 public class Facts {
 
     static final String SCHEMA = "connection-paths/3";
+    static final String FRAMEWORK_TESTS = "tests_starting_a_framework";
 
     @Builder.Default
     String schema = SCHEMA;
@@ -27,6 +29,7 @@ public class Facts {
     @Singular
     List<TestReach> tests;
     @Singular("testStartingAFramework")
+    @JsonProperty(FRAMEWORK_TESTS)
     List<FrameworkTest> testsStartingAFramework;
     @Singular("notResolved")
     List<Unresolved.Reason> notResolved;
@@ -46,6 +49,8 @@ public class Facts {
         int callsNotResolved;
         int tests;
         int testsReaching;
+        // Snake case would join the one-letter word to the next: tests_starting_aframework.
+        @JsonProperty(FRAMEWORK_TESTS)
         int testsStartingAFramework;
     }
 

@@ -52,6 +52,14 @@ class OptionsParserTest {
     }
 
     @Test
+    void refusesAClasspathFileThatNamesNothing(@TempDir final Path dir) throws IOException {
+        final Path file = Files.writeString(dir.resolve("cp.txt"), "\n");
+        assertThatThrownBy(() -> OptionsParser.classpath("@" + file))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("names no jar or folder");
+    }
+
+    @Test
     void explainsWrongArguments() {
         assertAll(
             () -> assertThatThrownBy(() -> OptionsParser.parse(List.of("--rules", "r.txt")))

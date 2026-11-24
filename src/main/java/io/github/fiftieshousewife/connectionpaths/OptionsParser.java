@@ -84,13 +84,21 @@ public final class OptionsParser {
     }
 
     static List<Path> classpath(final String value) {
-        final String text = value.startsWith("@") ? read(Path.of(value.substring(1))) : value;
+        final boolean fromFile = value.startsWith("@");
+        final String text = fromFile ? read(Path.of(value.substring(1))) : value;
         // A file written on Windows may start with a byte order mark.
-        return Arrays.stream(text.replace("\uFEFF", "").split("[\\r\\n" + File.pathSeparator + "]+"))
+        final String[] parts = text.replace("\uFEFF", "").split("[\\r\\n" + File.pathSeparator + "]+");
+        final List<Path> entries = Arrays.stream(parts)
             .map(String::strip)
             .filter(entry -> !entry.isEmpty())
             .map(Path::of)
             .toList();
+        // An empty file is a classpath step that failed or wrote somewhere else: without it, most calls don't resolve.
+        if (fromFile && entries.isEmpty()) {
+            throw new IllegalArgumentException("The classpath file " + value.substring(1)
+                + " names no jar or folder; run the classpath step again, or leave --classpath out");
+        }
+        return entries;
     }
 
     private static int positive(final String flag, final String value) {
