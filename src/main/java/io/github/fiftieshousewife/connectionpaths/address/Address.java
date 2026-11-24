@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
@@ -37,6 +38,8 @@ public class Address {
     private static final int FULL_LITERAL = 9;
     private static final int LEAST = 1;
 
+    private static final Pattern PLACEHOLDER = Pattern.compile(".*(YOUR[-_]|<[^>]+>|\\$\\{|CHANGE[-_ ]?ME|TODO|XXX"
+        + "|(?i:example\\.(com|org|net)|changeme|placeholder|//(undefined|unset|invalid)\\b)).*");
     public static final Comparator<Address> MOST_INFORMATIVE = Comparator.comparingInt(Address::rank).reversed();
 
     String source;
@@ -64,6 +67,14 @@ public class Address {
     @JsonIgnore
     public boolean isRelativePath() {
         return isLiteral() && value.length() > 1 && value.charAt(0) == '/' && value.charAt(1) != '/';
+    }
+
+    /**
+     * Whether a value looks like one a person is meant to fill in, or a stand-in until one is: YOUR-..., CHANGE-ME,
+     * ${...}, example.com, http://undefined/.
+     */
+    public static boolean looksLikeAPlaceholder(final String value) {
+        return PLACEHOLDER.matcher(value).matches();
     }
 
     @JsonIgnore

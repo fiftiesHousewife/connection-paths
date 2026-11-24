@@ -98,9 +98,16 @@ public final class FactsBuilder {
         if (local.isPresent()) {
             return local.get();
         }
-        final boolean parameterNobodyPasses = Address.PARAMETER.equals(address.getSource())
+        final boolean parameterNobodyPasses = isOwnParameter(address, point.method())
             && graph.reachBack(Set.of(point.method())).size() == 1;
         return parameterNobodyPasses ? "its address is a parameter no code in the source passes" : null;
+    }
+
+    // A parameter of the point's own method, named as the tracer names it: url of read, environment of Context.
+    private static boolean isOwnParameter(final Address address, final MethodKey method) {
+        final String name = method.isConstructor() ? method.type().substring(method.type().lastIndexOf('.') + 1)
+            : method.name();
+        return Address.PARAMETER.equals(address.getSource()) && address.getValue().endsWith(" of " + name);
     }
 
     private List<Facts.FrameworkTest> testsStartingAFramework() {

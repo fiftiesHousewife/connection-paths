@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -28,8 +27,6 @@ public final class SettingsFiles {
     record Setting(String value, String file, int line) {
     }
 
-    private static final Pattern PLACEHOLDER = Pattern.compile(".*(YOUR[-_]|<[^>]+>|\\$\\{|CHANGE[-_ ]?ME|TODO|XXX"
-        + "|(?i:example\\.(com|org|net)|changeme|placeholder|//(undefined|unset|invalid)\\b)).*");
 
 
     private final Map<String, Setting> settings = new TreeMap<>();
@@ -98,7 +95,7 @@ public final class SettingsFiles {
     // Whether a value looks like one a person is meant to fill in, or a stand-in until one is: YOUR-..., CHANGE-ME,
     // ${...}, example.com, http://undefined/.
     static boolean isPlaceholder(final String value) {
-        return value != null && PLACEHOLDER.matcher(value).matches();
+        return value != null && Address.looksLikeAPlaceholder(value);
     }
 
     /** A setting's address with its value from the settings files, where they hold one. */

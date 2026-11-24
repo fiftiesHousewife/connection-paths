@@ -118,8 +118,17 @@ public final class AddressTracer {
         return address.isLiteral() ? address.getValue() : Address.UNKNOWN_PART;
     }
 
+    // The most informative of several values; one that looks like a stand-in until a real value is set, such as a
+    // field's http://undefined/, gives way to any other that says something.
     static Address best(final Stream<Address> candidates) {
-        return candidates.min(Address.MOST_INFORMATIVE).orElse(Address.builtBy("?"));
+        final List<Address> all = candidates.toList();
+        final boolean real = all.stream().anyMatch(a -> AddressText.saysSomething(a) && !isStandIn(a));
+        return all.stream().filter(a -> !(real && isStandIn(a))).min(Address.MOST_INFORMATIVE)
+            .orElse(Address.builtBy("?"));
+    }
+
+    private static boolean isStandIn(final Address address) {
+        return address.isLiteral() && Address.looksLikeAPlaceholder(address.getValue());
     }
 
     // A class that looks hosts up through JNDI's DNS provider reaches the machine's DNS servers.

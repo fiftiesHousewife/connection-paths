@@ -54,9 +54,10 @@ class ExampleSystemsTest {
     }
 
     @Test
-    void doesNotNameASystemAfterAStandInHostSuchAsUndefined() {
+    void takesWhatASetterGivesOverAStandInHostSuchAsUndefined() {
         assertAll(
             () -> assertThat(system("com.example.addresses.Fetcher").getNamedBy()).isEqualTo("class"),
-            () -> assertThat(system("com.example.addresses.Fetcher").getAddress().isPlaceholder()).isTrue());
+            () -> assertThat(system("com.example.addresses.Fetcher").getAddress().getValue())
+                .isEqualTo("url of target"));
     }
 }

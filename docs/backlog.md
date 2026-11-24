@@ -7,9 +7,9 @@ choice between ways of building it gets a [decision record](decisions/README.md)
 ## What it finds
 
 1. **An address held in an object's field, for the point itself.** A test's own call now gives its reach the
-   address it hands a builder (`Jsoup.connect(url)`), but the point's `address` still says the parameter or the
-   class's placeholder: following a value through a setter into a field and out through a getter, across calls,
-   would give the point the addresses its callers set. For a library, a system named after its connecting class says
+   address it hands a builder (`Jsoup.connect(url)`), and a field's stand-in value (`http://undefined/`) gives way
+   to what its setter is given, but the point's `address` still names the setter's parameter: following that
+   parameter back to what the setter's callers pass would give the point the addresses they set. For a library, a system named after its connecting class says
    little: the hosts are its callers'.
 2. **A server's instance only a running application has.** `XMPPServer.getInstance()` is null in a test that
    starts no server, so a chain through it doesn't run (Openfire's GroupJIDTest).
