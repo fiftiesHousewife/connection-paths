@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:p="http://www.springframework.org/schema/p">
+
+    <bean id="reportsDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="url" value="${reports.db.url}"/>
+        <property name="maxActive" value="8"/>
+    </bean>
+
+    <bean id="auditDataSource" class="org.apache.commons.dbcp.BasicDataSource" p:url="jdbc:h2:mem:audit"/>
+
+    <bean id="reportJob" class="com.example.report.ReportJob">
+        <property name="name">
+            <value>nightly</value>
+        </property>
+    </bean>
+</beans>

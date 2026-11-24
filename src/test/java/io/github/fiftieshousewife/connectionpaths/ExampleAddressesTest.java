@@ -103,6 +103,8 @@ class ExampleAddressesTest {
                 tuple("com.example.docs.DocumentReader#read(URL)",
                     "its address is a parameter no code in the source passes"),
                 tuple("com.example.addresses.ListenAddress#toListenOn()",
-                    "an address of this machine, to listen on"));
+                    "an address of this machine, to listen on"),
+                tuple("org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>()",
+                    "an H2 database in memory or in a file"));
     }
 }

@@ -14,8 +14,9 @@ ways of building it gets a [decision record](decisions/README.md).
 2. **A parameter's address, from the arguments its callers pass.** Where a point's address is a parameter
    (`DocumentReader#read(URL)`), follow each test's chain back to the argument passed, a bounded number of steps,
    and give the address on that test's reach.
-3. **Spring XML beans.** A `<bean class="...DataSource">` with a `url` property opens a connection the source never
-   shows. Read bean definitions as connection points, with the property as the address.
+3. **Tests that load a Spring XML context.** A bean in Spring XML is a connection point, but no test reaches it: a
+   test whose `@ContextConfiguration` names the file, or that builds a `ClassPathXmlApplicationContext` on it,
+   could reach each of its beans.
 4. **Settings loaded from a named file.** A `Properties` loaded from `orders.properties` and read with
    `getProperty("url")` should be looked up in that file, not in every settings file. Spring profiles are read
    after the files without one; a test's own profile (`application-test.yml`) could give the value its tests use.

@@ -26,6 +26,9 @@ public final class ConnectionPaths {
         final ConnectionRules rules = ConnectionRules.load(options.extraRules());
         final SourceModel model =
             new SourceReader(setup.solver(), rules).read(options.getMainSources(), options.getTestSources());
+        // Beans defined in Spring XML open connections the Java source never shows.
+        new SpringBeans(setup.solver(), rules).points(SpringXml.read(SettingsFiles.filesIn(options.getSettings())))
+            .forEach(bean -> model.point(bean.point(), bean.at(), bean.address()));
         final CallGraph graph = new CallGraph(model, options.getMaxImplementations());
         final SettingsFiles settings = SettingsFiles.read(options.getSettings());
         return new FactsBuilder(model, graph, settings).build(version(), setup.notes());

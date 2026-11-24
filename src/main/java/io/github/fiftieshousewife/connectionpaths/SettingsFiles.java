@@ -50,11 +50,16 @@ final class SettingsFiles {
 
     static SettingsFiles read(final List<Path> folders) {
         final SettingsFiles files = new SettingsFiles();
-        folders.stream().filter(Files::isDirectory).flatMap(SettingsFiles::settingsFilesIn)
+        filesIn(folders).forEach(files::readFile);
+        return files;
+    }
+
+    /** The properties, YAML and XML files in the folders, in the order their settings are kept. */
+    static List<Path> filesIn(final List<Path> folders) {
+        return folders.stream().filter(Files::isDirectory).flatMap(SettingsFiles::settingsFilesIn)
             .sorted(Comparator.comparing(SettingsFiles::isTestSettings).thenComparing(SettingsFiles::isProfileFile)
                 .thenComparing(Comparator.naturalOrder()))
-            .forEach(files::readFile);
-        return files;
+            .toList();
     }
 
     Optional<Setting> get(final String key) {

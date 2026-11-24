@@ -56,7 +56,9 @@ class ExampleRepoTest {
                 tuple("com.example.clients.Shop#priceList()", "http"),
                 tuple("com.example.addresses.ListenAddress#toListenOn()", "host-lookup"),
                 tuple("com.example.addresses.ListenAddress#partner()", "host-lookup"),
-                tuple("com.example.addresses.OrdersReplica#open()", "database"));
+                tuple("com.example.addresses.OrdersReplica#open()", "database"),
+                tuple("org.apache.commons.dbcp.BasicDataSource#<bean reportsDataSource>()", "database"),
+                tuple("org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>()", "database"));
     }
 
     @Test
@@ -163,7 +165,7 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(104),
+            () -> assertThat(summary.getFiles()).isEqualTo(105),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
             // The abstract ResourceContractTest's one test is counted twice, under each subclass, not under itself.
             () -> assertThat(summary.getTests()).isEqualTo(37),

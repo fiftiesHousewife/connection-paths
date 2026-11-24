@@ -10,7 +10,7 @@ follows: no repurposed words, no dates in text, things referred to by name.
 ## Where things are
 | Path | What |
 |---|---|
-| `src/main/java/.../connectionpaths/` | `SourceReader` reads the source; `CallResolver` resolves each call; `CallGraph` walks back from connections; `AddressTracer` and `NameTracer` trace each address; `SettingsFiles` reads properties, YAML and XML; `Locality` and `SystemsBuilder` sort points into local ones and systems; `Frameworks` knows the annotations that start a framework, and `AnnotatedClients` the clients that are only an annotated interface; `FactsBuilder` and `Facts` are the output |
+| `src/main/java/.../connectionpaths/` | `SourceReader` reads the source; `CallResolver` resolves each call; `CallGraph` walks back from connections; `AddressTracer` and `NameTracer` trace each address; `SettingsFiles` reads properties, YAML and XML; `Locality` and `SystemsBuilder` sort points into local ones and systems; `Frameworks` knows the annotations that start a framework, `AnnotatedClients` the clients that are only an annotated interface, and `SpringXml` and `SpringBeans` the beans defined in Spring XML; `FactsBuilder` and `Facts` are the output |
 | `src/main/resources/connection-rules.txt` | The calls that count as opening or using a connection |
 | `src/test/resources/example/` | An example repo with known answers; `ExampleRepoTest` checks each one |
 | `tools/print-classpath.gradle` | Writes a Gradle build's classpath for `--classpath` |
