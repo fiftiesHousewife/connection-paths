@@ -54,3 +54,6 @@ com.example.schema.SchemaOwners#hostOf(String) host-lookup
 com.example.boot.OrdersOverHttpTest#showsAnOrder() http
 com.example.pages.PageFetcher#fetch(PageRequest) url
 org.apache.commons.dbcp.BasicDataSource#<bean ledgerDataSource>() database
+com.example.jobs.RemoteJob#prepare() url
+com.example.lookups.Peers#gateway() host-lookup
+com.example.lookups.Peers#byAddress(String) host-lookup

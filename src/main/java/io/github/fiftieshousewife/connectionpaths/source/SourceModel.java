@@ -5,6 +5,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -36,7 +37,7 @@ public final class SourceModel {
     private final Set<ConnectionPoint> points = new LinkedHashSet<>();
     private final Set<String> createdTypes = new HashSet<>();
     private final Map<MethodKey, Set<String>> typesCreatedBy = new HashMap<>();
-    private final Set<String> onAnOpenDatabase = new HashSet<>();
+    private final Map<Mark, Set<String>> marks = new EnumMap<>(Mark.class);
     private final Map<String, Optional<CompilationUnit>> rereadFiles = new HashMap<>();
     private Function<Path, Optional<CompilationUnit>> parser = file -> Optional.empty();
     private final Map<ConnectionPoint, Map<Location, Address>> pointCalls = new HashMap<>();
@@ -61,13 +62,13 @@ public final class SourceModel {
         pointCalls.computeIfAbsent(point, k -> new LinkedHashMap<>()).putIfAbsent(at, address);
     }
 
-    void givenAnOpenDatabase(final String code) {
-        onAnOpenDatabase.add(code);
+    void mark(final Mark mark, final String code) {
+        marks.computeIfAbsent(mark, k -> new HashSet<>()).add(code);
     }
 
-    /** The methods, and calls ({@code caller > callee}), that run only once a database connection is open. */
-    public Set<String> givenAnOpenDatabase() {
-        return Collections.unmodifiableSet(onAnOpenDatabase);
+    /** The methods, and calls ({@code caller > callee}), the source says this of. */
+    public Set<String> marked(final Mark mark) {
+        return Collections.unmodifiableSet(marks.getOrDefault(mark, Set.of()));
     }
 
     /** A bean in a Spring XML file, which code that loads the file as a context makes. */

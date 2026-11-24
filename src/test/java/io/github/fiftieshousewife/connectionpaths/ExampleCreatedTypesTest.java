@@ -28,4 +28,9 @@ class ExampleCreatedTypesTest {
         assertThat(REACHING.get("com.example.groups.GroupsFromTheDirectoryTest.listsRemoteMembers").getReaches())
             .extracting(Facts.Reach::getPoint).containsExactly("com.example.groups.RemoteGroups#members(String)");
     }
+
+    @Test
+    void followsASuperCallOnlyIntoTheSuperclassNotIntoItsOtherSubclasses() {
+        assertThat(REACHING).doesNotContainKey("com.example.jobs.LocalJobTest.prepares");
+    }
 }

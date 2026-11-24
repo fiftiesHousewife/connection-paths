@@ -8,8 +8,9 @@ import java.util.regex.Pattern;
 
 /**
  * Whether an address stays on the machine: an in-memory or file database, a file, a jar or a classpath resource,
- * the machine's own host name, or an address of its own to listen on. A connection like that needs no stand-in
- * system. A look-up on the machine's DNS servers is not local: they are other machines.
+ * the machine's own host name, an address of its own to listen on, or, for a host look-up, a numeric address, which
+ * nothing looks up. A connection like that needs no stand-in system. A look-up on the machine's DNS servers is not
+ * local: they are other machines.
  */
 public final class Locality {
 
@@ -38,16 +39,30 @@ public final class Locality {
 
     private static final Pattern PATH = Pattern.compile("\\.{0,2}/[^/].*");
 
+    private static final Pattern NUMERIC_ADDRESS =
+        Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3}|\\[?[0-9a-fA-F:]*:[0-9a-fA-F:.]*]?");
+
     private static final Pattern LISTEN_WORDS = Pattern.compile("interface|bind|listen", Pattern.CASE_INSENSITIVE);
 
     /** Why an address is local, or empty if it may reach another machine. */
     public static Optional<String> of(final Address address, final String kind) {
-        if ("host-lookup".equals(kind) && isListenSetting(address)) {
-            return Optional.of("an address of this machine, to listen on");
+        final Optional<String> lookup = "host-lookup".equals(kind) ? ofLookup(address) : Optional.empty();
+        if (lookup.isPresent()) {
+            return lookup;
         }
         final boolean path = "url".equals(kind) && address.isLiteral()
             && PATH.matcher(address.getValue()).matches();
         return path ? Optional.of("a file or a classpath resource") : of(address);
+    }
+
+    // A look-up of an address of this machine to listen on, or of a numeric address (IPv4, or IPv6 in hexadecimal and
+    // colons), which nothing looks up.
+    private static Optional<String> ofLookup(final Address address) {
+        if (isListenSetting(address)) {
+            return Optional.of("an address of this machine, to listen on");
+        }
+        return valueOf(address).filter(v -> NUMERIC_ADDRESS.matcher(v).matches())
+            .map(v -> "a numeric address, which nothing looks up");
     }
 
     // A setting such as network.interface or server.bind-address.
@@ -64,6 +79,14 @@ public final class Locality {
             return ofValue(address.getSettingValue());
         }
         return address.isLiteral() ? ofValue(address.getValue()) : Optional.empty();
+    }
+
+    // The address's value, from its setting where it is one.
+    private static Optional<String> valueOf(final Address address) {
+        if (Address.SETTING.equals(address.getSource())) {
+            return Optional.ofNullable(address.getSettingValue()).map(String::strip);
+        }
+        return address.isLiteral() ? Optional.of(address.getValue().strip()) : Optional.empty();
     }
 
     private static Optional<String> ofValue(final String value) {

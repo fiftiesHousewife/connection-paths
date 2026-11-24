@@ -104,7 +104,7 @@ final class MemberReader {
         final SourceModel.Location at = TypeHeads.location(method, owner.file());
         model.declare(key, at);
         if (OpenDatabases.given(method)) {
-            model.givenAnOpenDatabase(key.toString());
+            model.mark(Mark.ON_AN_OPEN_DATABASE, key.toString());
         }
         calls.collect(key, method, owner.file());
         if (method.isStatic()) {

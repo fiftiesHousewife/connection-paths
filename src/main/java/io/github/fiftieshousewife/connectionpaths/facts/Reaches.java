@@ -2,6 +2,7 @@ package io.github.fiftieshousewife.connectionpaths.facts;
 
 import io.github.fiftieshousewife.connectionpaths.graph.TestChains;
 import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
+import io.github.fiftieshousewife.connectionpaths.source.Mark;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
 import java.util.List;
@@ -65,9 +66,10 @@ final class Reaches {
 
     private Facts.Reach behind(final Facts.Reach reach, final Facts.Reach database) {
         final List<String> chain = reach.getChain();
+        final Set<String> open = model.marked(Mark.ON_AN_OPEN_DATABASE);
         final boolean needsIt = !DATABASE.equals(reach.getKind()) && IntStream.range(0, chain.size())
-            .anyMatch(i -> model.givenAnOpenDatabase().contains(chain.get(i))
-                || i > 0 && model.givenAnOpenDatabase().contains(chain.get(i - 1) + " > " + chain.get(i)));
+            .anyMatch(i -> open.contains(chain.get(i))
+                || i > 0 && open.contains(chain.get(i - 1) + " > " + chain.get(i)));
         return needsIt ? reach.toBuilder().addressForTests(database.getAddressForTests())
             .throughMock(Optional.ofNullable(reach.getThroughMock()).orElse(database.getThroughMock())).build()
             : reach;

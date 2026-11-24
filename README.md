@@ -100,6 +100,7 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   JUnit 3 tests are found by their superclass. A test a class inherits is listed under each class that runs it, with
   that class's set-up, and not under an abstract class that declares it.
 * A call made only to stub or verify a mock (`when(store.all())`, `verify(store).all()`) is not counted as a call.
+* A `super.m()` call runs only the method it names, never one that overrides it.
 * A call through an interface or superclass reaches only the overriding methods of classes the program creates (with
   `new`, as an enum or test class, by a framework annotation, or by a name in the source or the settings). A `new`
   in a class's own code counts only once that class is created, or in static code; one in a test class's code counts
@@ -127,7 +128,7 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 * A system is the points that go to one host, else to one setting, variable or JNDI name, else those opened in one
   class. Databases in memory or in files, files, jars, classpath resources and localhost are local and part of no
   system (a look-up on the machine's DNS servers is not: they are other machines); so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen
-  on (`network.interface`) is local too. Systems reached through the same interface method are alternatives.
+  on (`network.interface`) is local too, and so is a look-up of a numeric address, which looks nothing up. Systems reached through the same interface method are alternatives.
   See [the decision](docs/decisions/0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md).
 * A chain that calls an instance method of a type the test mocks (a `@Mock` field, or `mock(T.class)` in the test,
   what runs with it, or a test-source helper they call) is kept, and marked at that step. Where the test would

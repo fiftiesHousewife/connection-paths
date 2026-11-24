@@ -4,6 +4,7 @@ import io.github.fiftieshousewife.connectionpaths.address.AddressTracer;
 import io.github.fiftieshousewife.connectionpaths.rules.AnnotatedClients;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
@@ -95,7 +96,10 @@ public final class CallResolver {
         createdByReference(caller, callee, site);
         model.call(caller, callee);
         if (OpenDatabases.readIn(site)) {
-            model.givenAnOpenDatabase(caller + " > " + callee);
+            model.mark(Mark.ON_AN_OPEN_DATABASE, caller + " > " + callee);
+        }
+        if (site instanceof MethodCallExpr call && call.getScope().filter(Expression::isSuperExpr).isPresent()) {
+            model.mark(Mark.NOT_VIRTUAL, caller + " > " + callee);
         }
         model.getCounts().callsResolved++;
     }

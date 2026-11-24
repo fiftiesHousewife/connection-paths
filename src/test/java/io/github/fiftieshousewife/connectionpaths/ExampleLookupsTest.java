@@ -51,4 +51,16 @@ class ExampleLookupsTest {
             .extracting(Facts.Point::getLine, p -> p.getAddress().getValue())
             .containsExactly(tuple(9, "primary.example.com"), tuple(11, "backup.example.com"));
     }
+
+    @Test
+    void takesALookupOfANumericAddressAsLookingNothingUp() {
+        assertThat(pointsOf("com.example.lookups.Peers#gateway()")).extracting(Facts.Point::getLocal)
+            .containsExactly("a numeric address, which nothing looks up");
+    }
+
+    @Test
+    void gradesATestsLookupOfANumericAddressAsLocal() {
+        assertThat(ExampleRepo.reachOf("com.example.lookups.PeersTest.findsAPeerByItsAddress", "host-lookup")
+            .getAddressForTests()).isEqualTo("local");
+    }
 }

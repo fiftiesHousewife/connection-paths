@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.graph;
 
+import io.github.fiftieshousewife.connectionpaths.source.Mark;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.Signatures;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
@@ -48,11 +49,18 @@ public final class CallGraph {
         if (!statics.equals(callee) && !model.getCalls().getOrDefault(statics, Set.of()).isEmpty()) {
             callers.computeIfAbsent(statics, k -> new TreeSet<>()).add(caller);
         }
-        callersByOverrideKey.computeIfAbsent(callee.overrideKey(callee.type()), k -> new HashMap<>())
-            .computeIfAbsent(callee.parameters(), k -> new TreeSet<>()).add(caller);
+        addDispatchCaller(model, caller, callee);
         // A constructor the source doesn't declare still runs the type's field initialisers.
         if (callee.isConstructor() && !model.getDeclared().contains(callee)) {
             callers.computeIfAbsent(MethodKey.fieldsOf(callee.type()), k -> new TreeSet<>()).add(caller);
+        }
+    }
+
+    // A call that may run any method overriding the one it names; a super.m() call runs only the method it names.
+    private void addDispatchCaller(final SourceModel model, final MethodKey caller, final MethodKey callee) {
+        if (!model.marked(Mark.NOT_VIRTUAL).contains(caller + " > " + callee)) {
+            callersByOverrideKey.computeIfAbsent(callee.overrideKey(callee.type()), k -> new HashMap<>())
+                .computeIfAbsent(callee.parameters(), k -> new TreeSet<>()).add(caller);
         }
     }
 
