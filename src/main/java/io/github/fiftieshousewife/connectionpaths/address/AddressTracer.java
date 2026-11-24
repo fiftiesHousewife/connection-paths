@@ -16,6 +16,7 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.TextBlockLiteralExpr;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 public final class AddressTracer {
 
     private static final String SPRING_DATA_REPOSITORY = "org.springframework.data.repository.Repository";
+    private static final Set<String> DNS_KINDS = Set.of("directory", "jndi");
 
     private record Handler(Predicate<Expression> handles, BiFunction<Expression, Trace, Address> address) {
     }
@@ -57,7 +59,7 @@ public final class AddressTracer {
      * process, it is the command.
      */
     public Address trace(final Node call, final String kind) {
-        if (mentionsDns(call)) {
+        if (DNS_KINDS.contains(kind) && mentionsDns(call)) {
             return Address.of(Address.DNS, "the machine's DNS servers");
         }
         final Optional<Address> fromArgument = AddressText.firstArgument(call).map(a -> expression(a, new Trace()));
@@ -133,7 +135,8 @@ public final class AddressTracer {
         return address.isLiteral() && Address.looksLikeAPlaceholder(address.getValue());
     }
 
-    // A class that looks hosts up through JNDI's DNS provider reaches the machine's DNS servers.
+    // A directory or JNDI call in a class that looks hosts up through JNDI's DNS provider reaches the machine's DNS
+    // servers.
     private static boolean mentionsDns(final Node call) {
         return Declarations.enclosingType(call).stream()
             .flatMap(type -> type.findAll(StringLiteralExpr.class).stream())

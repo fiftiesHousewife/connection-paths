@@ -58,7 +58,7 @@ public final class SpringXml {
         try {
             XmlFiles.walk(file, walk);
         } catch (IOException | XMLStreamException e) {
-            log.debug("No beans read from {}: {}", file, e.getMessage());
+            log.warn("No beans read from {}: {}", file, e.getMessage());
             return new BeanWalk(nameOf(file));
         }
         return walk;

@@ -131,7 +131,7 @@ public final class SettingsFiles {
                 TextSettings.yaml(lines, (key, value, line) -> add(key, new Setting(value, name, line)));
             }
         } catch (IOException | IllegalArgumentException e) {
-            log.debug("Settings not read from {}: {}", name, e.getMessage());
+            log.warn("Settings not read from {}: {}", name, e.getMessage());
         }
     }
 

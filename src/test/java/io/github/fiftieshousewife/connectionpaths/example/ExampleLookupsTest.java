@@ -38,8 +38,15 @@ class ExampleLookupsTest {
     }
 
     @Test
+    void leavesAnotherConnectionInAClassThatLooksUpThroughDnsToItsOwnAddress() {
+        assertThat(pointsOf("com.example.lookups.ServiceRecords#zoneFile()"))
+            .extracting(p -> p.getAddress().getSource()).containsExactly("literal");
+    }
+
+    @Test
     void countsADnsLookupWhereItAsksForRecordsNotWhereItsContextIsMade() {
-        assertThat(FACTS.getConnectionPoints()).filteredOn(p -> p.getMethod().startsWith("com.example.lookups.Service"))
+        assertThat(FACTS.getConnectionPoints())
+            .filteredOn(p -> p.getMethod().startsWith("com.example.lookups.Service") && !"url".equals(p.getKind()))
             .extracting(Facts.Point::getMethod, Facts.Point::getCall)
             .containsExactly(tuple("com.example.lookups.ServiceRecords#find(String)",
                 "javax.naming.directory.DirContext#getAttributes"));

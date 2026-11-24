@@ -36,11 +36,10 @@ choice between ways of building it gets a [decision record](decisions/README.md)
    keep it to collections of strings once a real repo shows it matching something else.
 8. **Smaller faults from a review of the code**:
     * a point keeps one production caller's address: give every distinct one;
-    * one `dns:` string anywhere in a class makes all its connections DNS ones: limit it to directory and JNDI calls;
     * Spring XML is matched by bare file name, and `classpath*:` locations are dropped without a note;
     * every module's resources are merged: read the module analysed;
     * a dotted literal not ending in a few known endings (`db.acme.de`) counts as a setting key;
-    * a settings or XML file that fails to read is left out with no warning: warn, and list it in the output;
+    * a settings or XML file that fails to read is warned about, but not listed in the output;
     * type variables are guessed from short capital names; any method named `setUp` counts as set-up; tests of an
       abstract class with no subclass are kept; symbol-solver failures outside calls aren't counted as not resolved.
 9. **Tests still flagged in the field trials.** Commons Net's ListingFunctionalTest builds its hosts in a JUnit 3
