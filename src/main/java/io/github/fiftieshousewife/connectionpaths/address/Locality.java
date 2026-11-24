@@ -39,8 +39,7 @@ public final class Locality {
 
     private static final Pattern PATH = Pattern.compile("\\.{0,2}/[^/].*");
 
-    private static final Pattern NUMERIC_ADDRESS =
-        Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3}|\\[?[0-9a-fA-F:]*:[0-9a-fA-F:.]*]?");
+    private static final Pattern IPV4 = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3}");
 
     private static final Pattern LISTEN_WORDS = Pattern.compile("interface|bind|listen", Pattern.CASE_INSENSITIVE);
 
@@ -61,8 +60,18 @@ public final class Locality {
         if (isListenSetting(address)) {
             return Optional.of("an address of this machine, to listen on");
         }
-        return valueOf(address).filter(v -> NUMERIC_ADDRESS.matcher(v).matches())
-            .map(v -> "a numeric address, which nothing looks up");
+        return valueOf(address).filter(Locality::isNumeric).map(v -> "a numeric address, which nothing looks up");
+    }
+
+    // IPv4, or IPv6: hexadecimal digits, dots and at least one colon, perhaps in brackets.
+    private static boolean isNumeric(final String value) {
+        final String bare = value.replaceFirst("^\\[", "").replaceFirst("]$", "");
+        return IPV4.matcher(value).matches()
+            || bare.indexOf(':') >= 0 && bare.chars().allMatch(Locality::isIpv6Character);
+    }
+
+    private static boolean isIpv6Character(final int c) {
+        return c == ':' || c == '.' || Character.digit(c, 16) >= 0;
     }
 
     // A setting such as network.interface or server.bind-address.
