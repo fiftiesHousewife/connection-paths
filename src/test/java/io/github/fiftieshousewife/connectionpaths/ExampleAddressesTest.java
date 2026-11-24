@@ -15,6 +15,11 @@ import org.junit.jupiter.api.Test;
 class ExampleAddressesTest {
 
     @Test
+    void givesAPointWhoseAddressIsAParameterWhatTheCodeCallingItPasses() {
+        assertAddress("com.example.directory.DirectoryContext#<init>(Hashtable)", Address.SETTING, "ldap.host");
+    }
+
+    @Test
     void tracesEachAddressToWhereItComesFrom() {
         assertAll(
             () -> assertAddress("com.example.db.Database#open()", Address.LITERAL,

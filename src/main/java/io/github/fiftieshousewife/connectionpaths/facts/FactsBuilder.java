@@ -25,6 +25,7 @@ public final class FactsBuilder {
     private final CallGraph graph;
     private final SettingsFiles settings;
     private final Reaches reaches;
+    private final PointAddresses pointAddresses;
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "These are shared on purpose")
     public FactsBuilder(final SourceModel model, final CallGraph graph, final SettingsFiles settings) {
@@ -32,6 +33,7 @@ public final class FactsBuilder {
         this.graph = graph;
         this.settings = settings;
         this.reaches = new Reaches(model, settings);
+        this.pointAddresses = new PointAddresses(model, graph);
     }
 
     /** The facts, naming the tool's version and what happened to the classpath's entries. */
@@ -84,7 +86,7 @@ public final class FactsBuilder {
     }
 
     private Facts.Point point(final SourceModel.ConnectionPoint p, final SourceModel.PointCall call) {
-        final Address address = settings.withValue(call.address());
+        final Address address = settings.withValue(pointAddresses.of(p.method(), call.address()));
         return Facts.Point.builder().kind(p.kind()).call(p.call()).method(p.method().toString())
             .file(call.at().file()).line(call.at().line()).address(address).local(localBecause(p, address)).build();
     }

@@ -115,7 +115,8 @@ public final class CallGraph {
         return next;
     }
 
-    private Set<MethodKey> callersOf(final MethodKey method) {
+    /** The methods that may call this one: directly, or through a supertype's method it overrides. */
+    public Set<MethodKey> callersOf(final MethodKey method) {
         final Set<MethodKey> all = new TreeSet<>(callers.getOrDefault(method, Set.of()));
         for (final String overridden : overrides.getOrDefault(method, List.of())) {
             callersByOverrideKey.getOrDefault(overridden, Map.of()).forEach((parameters, callers) -> {

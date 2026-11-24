@@ -139,6 +139,8 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   names a host or this machine: `Jsoup.connect("https://jsoup.org/").get()` hands the address to a builder that
   holds it until the connection is made. A method that returns what it built from a parameter gives the argument
   its call passes, and fluent `url(...)` and `uri(...)` setters set an address.
+  A point whose own address is a parameter takes the most informative of what the production code calling it
+  passes, caller by caller; each test's reach follows its own chain instead.
   A point whose address is a parameter is followed back along each test's chain to the argument its caller passes;
   a JNDI environment table's address is its `Context.PROVIDER_URL`, and a value built in ways that can't be
   followed comes from the settings-backed fields its method reads. Code that runs only once a database connection is
