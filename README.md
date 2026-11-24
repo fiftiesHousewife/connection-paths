@@ -1,10 +1,10 @@
 # under-test-external-calls
 
-[![Build](https://github.com/fiftiesHousewife/under-test-external-calls/actions/workflows/build.yml/badge.svg)](https://github.com/fiftiesHousewife/under-test-external-calls/actions/workflows/build.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.fiftieshousewife.undertest/under-test-external-calls)](https://central.sonatype.com/artifact/io.github.fiftieshousewife.undertest/under-test-external-calls)
-[![Java 17+](https://img.shields.io/badge/java-17%2B-blue)](#running-it)
-[![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
-[![Decisions](https://img.shields.io/badge/decisions-MADR-informational)](docs/decisions/README.md)
+[![build](https://img.shields.io/github/actions/workflow/status/fiftiesHousewife/under-test-external-calls/build.yml?branch=main&label=build)](https://github.com/fiftiesHousewife/under-test-external-calls/actions/workflows/build.yml)
+[![maven central](https://img.shields.io/maven-central/v/io.github.fiftieshousewife.undertest/under-test-external-calls?label=maven%20central)](https://central.sonatype.com/artifact/io.github.fiftieshousewife.undertest/under-test-external-calls)
+[![runs on: Java 17+](https://img.shields.io/badge/runs%20on-Java%2017%2B-blue)](#running-it)
+[![licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
+[![decisions: MADR](https://img.shields.io/badge/decisions-MADR-informational)](docs/decisions/README.md)
 
 **Finds where Java code opens connections to things outside the program (databases, HTTP services, mail, directories,
 queues, sockets, other programs), where each one goes, and which tests can reach them, from source alone.**
