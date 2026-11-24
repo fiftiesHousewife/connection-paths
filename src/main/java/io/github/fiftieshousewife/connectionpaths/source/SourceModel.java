@@ -2,6 +2,7 @@ package io.github.fiftieshousewife.connectionpaths.source;
 
 import io.github.fiftieshousewife.connectionpaths.address.Address;
 import com.github.javaparser.ast.CompilationUnit;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -87,6 +88,7 @@ public final class SourceModel {
     }
 
     /** The tests, and what runs with them. */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The model is shared on purpose")
     public TestModel tests() {
         return testModel;
     }
@@ -117,6 +119,7 @@ public final class SourceModel {
         return Collections.unmodifiableSet(points);
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The model is shared on purpose")
     public Unresolved getUnresolved() {
         return unresolved;
     }

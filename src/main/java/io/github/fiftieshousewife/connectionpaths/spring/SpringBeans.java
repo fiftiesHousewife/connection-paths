@@ -9,6 +9,7 @@ import com.github.javaparser.resolution.model.SymbolReference;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.nio.file.Path;
@@ -32,6 +33,7 @@ public final class SpringBeans {
     private final CombinedTypeSolver solver;
     private final ConnectionRules rules;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The solver is shared on purpose")
     public SpringBeans(final CombinedTypeSolver solver, final ConnectionRules rules) {
         this.solver = solver;
         this.rules = rules;

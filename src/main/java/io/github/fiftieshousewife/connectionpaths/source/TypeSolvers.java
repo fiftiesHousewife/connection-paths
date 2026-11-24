@@ -5,6 +5,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderType
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class TypeSolvers {
 
     /** The solver, and what happened to each classpath entry that wasn't read as it was. */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The solver is shared on purpose")
     public record Setup(CombinedTypeSolver solver, List<String> notes) {
         public Setup {
             notes = List.copyOf(notes);

@@ -11,6 +11,7 @@ import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -45,6 +46,7 @@ public final class SourceReader {
     }
 
     /** Reads the production and test source folders. */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The model is shared on purpose")
     public SourceModel read(final List<Path> mainSources, final List<Path> testSources) {
         mainSources.forEach(dir -> readFolder(dir, false));
         testSources.forEach(dir -> readFolder(dir, true));

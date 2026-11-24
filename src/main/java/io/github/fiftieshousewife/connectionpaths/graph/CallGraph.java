@@ -6,6 +6,7 @@ import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -87,7 +88,7 @@ public final class CallGraph {
 
     /** Dispatch points not followed, as a supertype's method, with how many methods override each. */
     public Map<String, Integer> getNotFollowed() {
-        return notFollowed;
+        return Collections.unmodifiableMap(notFollowed);
     }
 
     /**

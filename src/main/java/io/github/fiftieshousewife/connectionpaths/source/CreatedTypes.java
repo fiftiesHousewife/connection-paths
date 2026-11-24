@@ -4,6 +4,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -16,7 +17,8 @@ final class CreatedTypes {
         "RestController", "Configuration", "Named", "Singleton", "ApplicationScoped", "RequestScoped",
         "SessionScoped", "Dependent", "Stateless", "Stateful", "MessageDriven", "WebServlet", "WebFilter",
         "WebListener", "Path", "Provider", "ServerEndpoint");
-    private static final Pattern CLASS_NAME = Pattern.compile("([a-z_][\\w]*\\.)+[A-Z][\\w$]*");
+    private static final Pattern PACKAGE_PART = Pattern.compile("[a-z_]\\w*");
+    private static final Pattern CLASS_PART = Pattern.compile("[A-Z][\\w$]*");
 
     private CreatedTypes() {
     }
@@ -29,6 +31,14 @@ final class CreatedTypes {
 
     static Stream<String> namedInStrings(final CompilationUnit file) {
         return file.findAll(StringLiteralExpr.class).stream().map(StringLiteralExpr::asString)
-            .filter(text -> CLASS_NAME.matcher(text).matches());
+            .filter(CreatedTypes::isClassName);
+    }
+
+    // A full class name such as com.example.Store: lower-case package parts, then the class's own name.
+    private static boolean isClassName(final String text) {
+        final String[] parts = text.split("\\.", -1);
+        final int last = parts.length - 1;
+        return last > 0 && CLASS_PART.matcher(parts[last]).matches()
+            && Arrays.stream(parts, 0, last).allMatch(part -> PACKAGE_PART.matcher(part).matches());
     }
 }

@@ -7,6 +7,7 @@ import io.github.fiftieshousewife.connectionpaths.graph.TestChains;
 import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ public final class FactsBuilder {
     private final MockedChains mocks;
     private final TestAddresses testAddresses;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "These are shared on purpose")
     public FactsBuilder(final SourceModel model, final CallGraph graph, final SettingsFiles settings) {
         this.model = model;
         this.graph = graph;
@@ -116,13 +118,10 @@ public final class FactsBuilder {
                 .test(TestChains.nameOf(test)).file(at.file()).line(at.line())
                 .systems(systemsByTest.getOrDefault(test, List.of()))
                 .standIns(model.tests().standInsOf(test.type()));
-            boolean any = false;
-            for (final Map.Entry<String, Map<MethodKey, MethodKey>> kind : reachedByKind.entrySet()) {
-                final Optional<Facts.Reach> reach = reach(test, kind.getKey(), kind.getValue());
-                reach.ifPresent(entry::reach);
-                any |= reach.isPresent();
-            }
-            if (any) {
+            final List<Facts.Reach> reaches = reachedByKind.entrySet().stream()
+                .map(kind -> reach(test, kind.getKey(), kind.getValue())).flatMap(Optional::stream).toList();
+            if (!reaches.isEmpty()) {
+                reaches.forEach(entry::reach);
                 tests.add(entry.build());
             }
         });

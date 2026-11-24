@@ -12,6 +12,8 @@ plugins {
 dependencies {
     implementation(libs.javaparser.symbol.solver)
     implementation(libs.jackson3.databind)
+    compileOnly(libs.spotbugs.annotations)
+    testCompileOnly(libs.spotbugs.annotations)
 }
 
 // Built with the toolchain's JDK, but runs on Java 17 and later: the machines that run it often have an older JDK.
