@@ -127,6 +127,7 @@ final class SourceReader {
         if (tests) {
             model.testType(name);
             nestedTestClass(type).ifPresent(outer -> model.nestedIn(name, outer));
+            Frameworks.startedBy(type).ifPresent(annotation -> model.startsAFramework(name, annotation));
         }
         model.declare(MethodKey.fieldsOf(name), location(type, file));
         model.declare(MethodKey.staticsOf(name), location(type, file));

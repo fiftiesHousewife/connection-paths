@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -32,6 +33,7 @@ final class SourceModel {
     private final Map<ConnectionPoint, Address> pointAddresses = new HashMap<>();
     private final Set<String> testTypes = new HashSet<>();
     private final Map<String, String> enclosing = new HashMap<>();
+    private final Map<String, String> frameworks = new HashMap<>();
     private final Unresolved unresolved = new Unresolved();
     private final Counts counts = new Counts();
 
@@ -82,6 +84,29 @@ final class SourceModel {
     /** A nested test class runs inside an instance of the class around it, with that class's set-up. */
     void nestedIn(final String inner, final String outer) {
         enclosing.put(inner, outer);
+    }
+
+    /** A test class, or a class tests extend, that starts a framework by this annotation. */
+    void startsAFramework(final String type, final String annotation) {
+        frameworks.put(type, annotation);
+    }
+
+    /** A framework a test class starts: by an annotation on it, its superclasses, or the classes around it. */
+    Optional<Framework> frameworkOf(final String testClass) {
+        for (String type = testClass; type != null; type = enclosing.get(type)) {
+            final Set<String> withAncestors = new LinkedHashSet<>(List.of(type));
+            withAncestors.addAll(ancestors(type));
+            for (final String each : withAncestors) {
+                if (frameworks.containsKey(each)) {
+                    return Optional.of(new Framework(frameworks.get(each), each));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** The annotation that starts a framework, and the class it is on. */
+    record Framework(String annotation, String on) {
     }
 
     /** Every supertype of a type, following the supertypes recorded for the types in the source. */

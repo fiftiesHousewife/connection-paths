@@ -14,7 +14,7 @@ import lombok.Value;
 @Builder
 public class Facts {
 
-    static final String SCHEMA = "connection-paths/2";
+    static final String SCHEMA = "connection-paths/3";
 
     @Builder.Default
     String schema = SCHEMA;
@@ -26,6 +26,8 @@ public class Facts {
     List<ExternalSystem> systems;
     @Singular
     List<TestReach> tests;
+    @Singular("testStartingAFramework")
+    List<FrameworkTest> testsStartingAFramework;
     @Singular("notResolved")
     List<Unresolved.Reason> notResolved;
     @Singular("dispatchPointNotFollowed")
@@ -44,6 +46,7 @@ public class Facts {
         int callsNotResolved;
         int tests;
         int testsReaching;
+        int testsStartingAFramework;
     }
 
     /** A method that opens or uses a connection, and the call that does it. */
@@ -104,6 +107,22 @@ public class Facts {
         /** The systems it may reach. */
         @Singular
         List<String> systems;
+    }
+
+    /**
+     * A test that starts a framework, such as Spring or Quarkus, or containers: the framework may open connections
+     * that no call in the source shows, whether or not the test is also in {@code tests}.
+     */
+    @Value
+    @Builder
+    public static class FrameworkTest {
+        String test;
+        String file;
+        int line;
+        /** The annotation that starts it, as written: {@code @SpringBootTest}. */
+        String framework;
+        /** The class the annotation is on: the test's own, a superclass or a class around it. */
+        String annotatedOn;
     }
 
     /** One kind of connection a test may reach, and one chain of calls showing how. */

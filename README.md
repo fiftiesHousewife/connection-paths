@@ -63,10 +63,11 @@ A JSON file, whose schema is [connection-paths.schema.json](https://github.com/f
 
 | Field | What |
 |---|---|
-| `summary` | Files and methods read; calls resolved and not; tests, and how many may reach a connection |
+| `summary` | Files and methods read; calls resolved and not; tests, how many may reach a connection, and how many start a framework |
 | `connection_points` | Each method that opens or uses a connection: its kind, the rule its call matched, the file and line of that call, its `address`, and, if it stays on this machine, why (`local`) |
 | `systems` | What tests may reach outside the program: the points that go to one host, setting, variable, JNDI name or class; the systems that are `alternatives` to it; how many tests may reach it; and the `shared_chain` of calls they all go through |
 | `tests` | Each test that may reach a connection: for each kind, a chain of calls from the test to the connection, and whether it goes through what runs with the test (`through_set_up`); and the `systems` it may reach |
+| `tests_starting_a_framework` | Each test that starts a framework (`@SpringBootTest`, `@Testcontainers`, `@QuarkusTest`, Spring's runner...), which may connect through wiring no call shows: the annotation, and the class it is on |
 | `not_resolved` | The calls it couldn't resolve, by reason, most common first; a missing library shows up here by its types' names |
 | `dispatch_points_not_followed` | Calls through an interface or superclass with more implementations than the limit (listeners, handlers, plug-ins): reported, not followed |
 | `classpath_notes` | Classpath entries it couldn't use, or read only after a workaround |
@@ -112,6 +113,8 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   system; so are host look-ups and processes. Systems reached through the same interface method are alternatives.
   See [the decision](docs/decisions/0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md).
 * A sibling module's class folder on the classpath (`../i18n/target/classes`) is read from its source.
+* A test that starts a framework is listed by the annotation that starts it, on its class, a superclass or a class
+  around it. See [the decision](docs/decisions/0009-tests-that-start-a-framework-are-listed-by-their-annotation-apart-from-the-tests-that-reach-a-connection.md).
 * A test is listed if it may reach a connection. "May": measurement, the first run of the tests, confirms or clears
   each one.
 

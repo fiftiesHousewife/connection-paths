@@ -155,9 +155,9 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(88),
+            () -> assertThat(summary.getFiles()).isEqualTo(93),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
-            () -> assertThat(summary.getTests()).isEqualTo(27),
+            () -> assertThat(summary.getTests()).isEqualTo(31),
             () -> assertThat(summary.getTestsReaching()).isEqualTo(20));
     }
 }

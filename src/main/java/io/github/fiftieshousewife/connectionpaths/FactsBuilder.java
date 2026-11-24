@@ -31,12 +31,14 @@ final class FactsBuilder {
         final List<Facts.Point> points = points();
         final SystemsBuilder.Result systems = new SystemsBuilder(model, graph).build(points);
         final List<Facts.TestReach> tests = testsReaching(reachedByKind, systems.byTest());
+        final List<Facts.FrameworkTest> frameworkTests = testsStartingAFramework();
         return Facts.builder()
             .toolVersion(toolVersion)
-            .summary(summary(tests.size()))
+            .summary(summary(tests.size(), frameworkTests.size()))
             .connectionPoints(points)
             .systems(systems.systems())
             .tests(tests)
+            .testsStartingAFramework(frameworkTests)
             .notResolved(model.getUnresolved().top(REASONS_REPORTED))
             .dispatchPointsNotFollowed(graph.getNotFollowed().entrySet().stream()
                 .map(e -> new Facts.Dispatch(e.getKey(), e.getValue())).toList())
@@ -44,7 +46,7 @@ final class FactsBuilder {
             .build();
     }
 
-    private Facts.Summary summary(final int testsReaching) {
+    private Facts.Summary summary(final int testsReaching, final int testsStartingAFramework) {
         return Facts.Summary.builder()
             .files(model.getCounts().files)
             .filesNotParsed(model.getCounts().filesNotParsed)
@@ -53,6 +55,7 @@ final class FactsBuilder {
             .callsNotResolved(model.getUnresolved().getTotal())
             .tests(model.getTests().size())
             .testsReaching(testsReaching)
+            .testsStartingAFramework(testsStartingAFramework)
             .build();
     }
 
@@ -80,6 +83,14 @@ final class FactsBuilder {
         final boolean parameterNobodyPasses = Address.PARAMETER.equals(address.getSource())
             && graph.reachBack(Set.of(point.method())).size() == 1;
         return parameterNobodyPasses ? "its address is a parameter no code in the source passes" : null;
+    }
+
+    private List<Facts.FrameworkTest> testsStartingAFramework() {
+        final List<Facts.FrameworkTest> found = new ArrayList<>();
+        model.getTests().forEach((test, at) -> model.frameworkOf(test.type()).ifPresent(framework ->
+            found.add(Facts.FrameworkTest.builder().test(TestChains.nameOf(test)).file(at.file()).line(at.line())
+                .framework(framework.annotation()).annotatedOn(framework.on()).build())));
+        return found;
     }
 
     private List<Facts.TestReach> testsReaching(final Map<String, Map<MethodKey, MethodKey>> reachedByKind,
