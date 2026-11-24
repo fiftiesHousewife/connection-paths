@@ -59,7 +59,7 @@ settings files outside the module, `--rules` for more connection rules, and `--m
 
 ## What it writes
 
-A JSON file, whose schema is [connection-paths.schema.json](https://github.com/fiftiesHousewife/under-test/blob/main/schema/connection-paths.schema.json) in under-test. Its words (connection point, system, chain, through set-up, shared chain, alternatives, local, test that
+A JSON file, whose schema is [external-calls.schema.json](https://github.com/fiftiesHousewife/under-test/blob/main/schema/external-calls.schema.json) in under-test. Its words (connection point, system, chain, through set-up, shared chain, alternatives, local, test that
 starts a framework, dispatch point) mean what under-test's [glossary](https://github.com/fiftiesHousewife/under-test/blob/main/GLOSSARY.md)
 says.
 

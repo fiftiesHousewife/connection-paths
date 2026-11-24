@@ -19,7 +19,7 @@ class MainTest {
         final String json = Files.readString(out);
         assertAll(
             () -> assertThat(status).isEqualTo(Main.OK),
-            () -> assertThat(json).contains("\"schema\" : \"connection-paths/4\""),
+            () -> assertThat(json).contains("\"schema\" : \"external-calls/1\""),
             () -> assertThat(json).contains("\"tests_reaching\" : 36"),
             () -> assertThat(json).contains("\"through_set_up\" : true"),
             () -> assertThat(json).doesNotContain("\"named\"", "\"literal\" :"),

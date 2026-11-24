@@ -11,13 +11,13 @@ import lombok.Value;
 
 /**
  * What the tool found, written as JSON with snake_case names. Its schema is
- * {@code schema/connection-paths.schema.json} in the under-test toolkit.
+ * {@code schema/external-calls.schema.json} in the under-test toolkit.
  */
 @Value
 @Builder
 public class Facts {
 
-    static final String SCHEMA = "connection-paths/4";
+    static final String SCHEMA = "external-calls/1";
     static final String FRAMEWORK_TESTS = "tests_starting_a_framework";
 
     @Builder.Default

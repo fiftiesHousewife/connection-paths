@@ -14,7 +14,7 @@ interface, made at run time from its annotations (Feign, Retrofit, Spring's `@Ht
 
 1. **Pick the kind** from those already used: `database`, `http`, `mail`, `directory`, `jndi`, `queue`, `socket`,
    `url`, `host-lookup`, `process`. A new kind changes the facts file's schema, which lives in
-   [under-test](https://github.com/fiftiesHousewife/under-test/blob/main/schema/connection-paths.schema.json): change
+   [under-test](https://github.com/fiftiesHousewife/under-test/blob/main/schema/external-calls.schema.json): change
    it there first.
 2. **Pick the call that connects**, not every call on the client: building a request or a client object usually
    doesn't connect, sending or executing does. Use `*` only for a type whose every method talks to the outside

@@ -40,7 +40,8 @@ Proposed: mark each reach, in schema `connection-paths/4`:
 * Mocks are known per test class and its helpers, not per test, so a mock made in one test marks its class's other
   tests too.
 * A Spring profile a test turns on (`@ActiveProfiles`) isn't read yet: its file ranks as any other test resource.
-* under-test's schema has to accept `connection-paths/4`.
+* under-test's schema has to accept `connection-paths/4`. (The schema has since been renamed, with the tool, to
+  `external-calls/1`, with the same content.)
 
 ## More Information
 
