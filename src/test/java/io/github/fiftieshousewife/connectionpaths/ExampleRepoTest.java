@@ -48,7 +48,10 @@ class ExampleRepoTest {
                 tuple("com.example.addresses.DirectoryClient#users()", "http"),
                 tuple("com.example.addresses.Notifier.Sender#open()", "socket"),
                 tuple("com.example.addresses.SecureChannel#open()", "socket"),
-                tuple("com.example.addresses.Fetcher#fetch()", "url"));
+                tuple("com.example.addresses.Fetcher#fetch()", "url"),
+                tuple("com.example.overloads.RemoteLoader#load(URL)", "url"),
+                tuple("com.example.jdbc.Customers#count()", "database"),
+                tuple("com.example.jdbc.Customers#named(String)", "database"));
     }
 
     @Test
@@ -70,7 +73,10 @@ class ExampleRepoTest {
             "com.example.ledger.LedgerCleanupTest.startsClean",
             "com.example.mail.SmtpMailerTest.sends",
             "com.example.mail.MailLoginTest.checksAUser",
-            DB_MANAGER_TEST);
+            DB_MANAGER_TEST,
+            "com.example.overloads.LoaderTest.loadsFromAUrl",
+            "com.example.jdbc.CustomersTest.counts",
+            "com.example.jdbc.CustomersTest.findsByName");
     }
 
     @Test
@@ -149,9 +155,9 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(79),
+            () -> assertThat(summary.getFiles()).isEqualTo(88),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
-            () -> assertThat(summary.getTests()).isEqualTo(22),
-            () -> assertThat(summary.getTestsReaching()).isEqualTo(17));
+            () -> assertThat(summary.getTests()).isEqualTo(27),
+            () -> assertThat(summary.getTestsReaching()).isEqualTo(20));
     }
 }

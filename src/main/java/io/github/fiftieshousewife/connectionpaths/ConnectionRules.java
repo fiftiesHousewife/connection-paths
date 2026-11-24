@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,6 +23,16 @@ public final class ConnectionRules {
 
         boolean matchesMethod(final String name) {
             return WILDCARD.equals(method) ? !MethodKey.CONSTRUCTOR.equals(name) : method.equals(name);
+        }
+
+        /**
+         * Through a supertype, a {@code *} rule matches only the methods that supertype declares, so a template's
+         * own setters aren't taken for its queries; but every method, where it declares none (a marker such as
+         * Spring Data's {@code Repository}) or what it declares isn't known.
+         */
+        boolean matchesThrough(final String name, final Set<String> declared) {
+            final boolean anyDeclared = !WILDCARD.equals(method) || declared.isEmpty() || declared.contains(name);
+            return anyDeclared && matchesMethod(name);
         }
 
         @Override
@@ -53,9 +64,10 @@ public final class ConnectionRules {
 
     /**
      * The rule a call matches: first a rule naming the type that declares the method, then one naming any of that
-     * type's supertypes, in the order the rules are listed.
+     * type's supertypes, in the order the rules are listed. The supertypes come with the names of the methods each
+     * declares, where they are known.
      */
-    Optional<Rule> match(final MethodKey called, final Set<String> supertypes) {
+    Optional<Rule> match(final MethodKey called, final Map<String, Set<String>> supertypes) {
         final Optional<Rule> exact = rules.stream()
             .filter(rule -> rule.type().equals(called.type()) && rule.matchesMethod(called.name()))
             .findFirst();
@@ -63,7 +75,8 @@ public final class ConnectionRules {
             return exact;
         }
         return rules.stream()
-            .filter(rule -> supertypes.contains(rule.type()) && rule.matchesMethod(called.name()))
+            .filter(rule -> supertypes.containsKey(rule.type())
+                && rule.matchesThrough(called.name(), supertypes.get(rule.type())))
             .findFirst();
     }
 

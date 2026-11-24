@@ -19,8 +19,11 @@ import java.util.TreeSet;
 final class CallGraph {
 
     private final Map<MethodKey, Set<MethodKey>> callers = new HashMap<>();
-    /** Callers by the key overriding matches on (type, name, number of parameters). */
-    private final Map<String, Set<MethodKey>> callersByOverrideKey = new HashMap<>();
+    /**
+     * Callers by the key overriding matches on (type, name, number of parameters), then by the parameter types the
+     * call names, so a call to one overload isn't followed to another with as many parameters.
+     */
+    private final Map<String, Map<String, Set<MethodKey>>> callersByOverrideKey = new HashMap<>();
     /** For each method in the source, the override keys of the supertype methods it overrides and is followed from. */
     private final Map<MethodKey, List<String>> overrides = new HashMap<>();
     private final Map<String, Integer> notFollowed = new TreeMap<>();
@@ -45,7 +48,8 @@ final class CallGraph {
         if (!statics.equals(callee) && !model.getCalls().getOrDefault(statics, Set.of()).isEmpty()) {
             callers.computeIfAbsent(statics, k -> new TreeSet<>()).add(caller);
         }
-        callersByOverrideKey.computeIfAbsent(callee.overrideKey(callee.type()), k -> new TreeSet<>()).add(caller);
+        callersByOverrideKey.computeIfAbsent(callee.overrideKey(callee.type()), k -> new HashMap<>())
+            .computeIfAbsent(callee.parameters(), k -> new TreeSet<>()).add(caller);
         // A constructor the source doesn't declare still runs the type's field initialisers.
         if (callee.isConstructor() && !model.getDeclared().contains(callee)) {
             callers.computeIfAbsent(MethodKey.fieldsOf(callee.type()), k -> new TreeSet<>()).add(caller);
@@ -109,7 +113,11 @@ final class CallGraph {
     private Set<MethodKey> callersOf(final MethodKey method) {
         final Set<MethodKey> all = new TreeSet<>(callers.getOrDefault(method, Set.of()));
         for (final String overridden : overrides.getOrDefault(method, List.of())) {
-            all.addAll(callersByOverrideKey.getOrDefault(overridden, Set.of()));
+            callersByOverrideKey.getOrDefault(overridden, Map.of()).forEach((parameters, callers) -> {
+                if (Signatures.couldBeTheSame(parameters, method.parameters())) {
+                    all.addAll(callers);
+                }
+            });
         }
         return all;
     }

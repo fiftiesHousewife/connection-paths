@@ -93,13 +93,16 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   class's constructors and fields, its superclasses', and, for a `@Nested` class, those of the classes around it.
   JUnit 3 tests are found by their superclass.
 * A call made only to stub or verify a mock (`when(store.all())`, `verify(store).all()`) is not counted as a call.
-* A call through an interface or superclass reaches the overriding methods in the source, matched by name and number
-  of parameters so that generic interfaces work, except:
+* A call through an interface or superclass reaches the overriding methods in the source, matched by name and
+  parameter types, where a type variable (`save(T)`) matches any type so that generic interfaces work, except:
   * through the JDK's own types (`Map`, `Runnable`...): following them joins every `Map.put` to every class that
     extends a map;
   * where more than three methods in the production source override it (`--max-implementations`; test doubles don't
     count): those are dispatch points, such as "notify every listener", that would otherwise mark nearly every test.
     They are listed instead.
+* A rule `Type#method` matches calls to that type and its subtypes. A rule `Type#*` matches, through a subtype,
+  only the methods `Type` declares (a template's own setters aren't queries), or every method where it declares
+  none, as Spring Data's `Repository` does.
 * An address is traced from the connection call's first argument, or what the call is made on, back through
   variables, fields, constructors, builder chains, the JDK's helpers and the source's own methods, to a literal or a
   name. A call passing a dotted key (`crowd.server.url`) reads a setting, which is looked up in the settings files

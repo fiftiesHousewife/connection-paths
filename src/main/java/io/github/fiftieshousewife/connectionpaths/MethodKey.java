@@ -37,8 +37,9 @@ public record MethodKey(String type, String name, String parameters) implements 
     }
 
     /**
-     * The key that overriding matches on: type, name and number of parameters. Parameter types aren't compared,
-     * because an override of a generic method ({@code save(T)}) names a different type ({@code save(Order)}).
+     * The key that overriding is first matched on: type, name and number of parameters. The parameter types are then
+     * compared by {@link Signatures#couldBeTheSame}, because an override of a generic method ({@code save(T)}) names
+     * a different type ({@code save(Order)}).
      */
     String overrideKey(final String inType) {
         return inType + "#" + name + "/" + parameterCount();

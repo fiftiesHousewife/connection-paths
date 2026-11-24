@@ -6,15 +6,17 @@ import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Resolves the calls in a member's body, and records each as an edge, a connection point or an unresolved call.
@@ -25,7 +27,7 @@ final class CallResolver {
 
     private final SourceModel model;
     private final ConnectionRules rules;
-    private final Map<String, Set<String>> supertypesOf = new HashMap<>();
+    private final Map<String, Map<String, Set<String>>> supertypesOf = new HashMap<>();
     private final AddressTracer addresses = new AddressTracer();
 
     CallResolver(final SourceModel model, final ConnectionRules rules) {
@@ -82,19 +84,30 @@ final class CallResolver {
             constructor ? MethodKey.CONSTRUCTOR : resolved.getName(), Signatures.of(resolved));
     }
 
+    /** A type's supertypes, each with the names of the methods it declares (empty where they can't be read). */
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.AvoidCatchingThrowable"})
-    private Set<String> supertypes(final ResolvedReferenceTypeDeclaration type) {
+    private Map<String, Set<String>> supertypes(final ResolvedReferenceTypeDeclaration type) {
         return supertypesOf.computeIfAbsent(type.getQualifiedName(), name -> {
-            final Set<String> all = new LinkedHashSet<>();
+            final Map<String, Set<String>> all = new LinkedHashMap<>();
             try {
                 for (final ResolvedReferenceType ancestor : type.getAllAncestors()) {
-                    all.add(ancestor.getQualifiedName());
+                    all.put(ancestor.getQualifiedName(), methodNames(ancestor));
                 }
             } catch (RuntimeException | StackOverflowError e) {
-                ancestorsFromSource(name).ifPresent(all::addAll);
+                ancestorsFromSource(name).ifPresent(found -> found.forEach(each -> all.put(each, Set.of())));
             }
             return all;
         });
+    }
+
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.AvoidCatchingThrowable"})
+    private static Set<String> methodNames(final ResolvedReferenceType type) {
+        try {
+            return type.getTypeDeclaration().map(declaration -> declaration.getDeclaredMethods().stream()
+                .map(ResolvedMethodDeclaration::getName).collect(Collectors.toSet())).orElse(Set.of());
+        } catch (RuntimeException | StackOverflowError e) {
+            return Set.of();
+        }
     }
 
     private Optional<Set<String>> ancestorsFromSource(final String type) {

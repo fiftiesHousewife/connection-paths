@@ -66,6 +66,38 @@ final class Signatures {
         return text;
     }
 
+    /**
+     * Whether a call naming one parameter list could be to a method declaring the other: each pair of types is the
+     * same, or one is a type variable or a type that couldn't be resolved.
+     */
+    static boolean couldBeTheSame(final String called, final String declared) {
+        final String[] calledTypes = called.split(",", -1);
+        final String[] declaredTypes = declared.split(",", -1);
+        if (calledTypes.length != declaredTypes.length) {
+            return false;
+        }
+        for (int i = 0; i < calledTypes.length; i++) {
+            if (!couldBeTheSameType(calledTypes[i], declaredTypes[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean couldBeTheSameType(final String one, final String other) {
+        return one.equals(other) || isOpen(one) || isOpen(other);
+    }
+
+    private static boolean isOpen(final String type) {
+        return UNKNOWN.equals(type) || "Object".equals(type) || isTypeVariable(type.replace("[]", ""));
+    }
+
+    /** A type variable such as {@code T} or {@code E2}, which an override names as the type it stands for. */
+    private static boolean isTypeVariable(final String name) {
+        return !name.isEmpty() && name.length() <= 2 && Character.isUpperCase(name.charAt(0))
+            && name.chars().allMatch(c -> Character.isUpperCase(c) || Character.isDigit(c));
+    }
+
     static String simple(final String type) {
         String text = withoutAnnotations(type).replace("...", "[]").strip();
         String previous;

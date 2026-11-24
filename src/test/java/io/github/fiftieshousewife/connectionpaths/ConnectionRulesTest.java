@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -49,7 +51,7 @@ class ConnectionRulesTest {
         assertAll(
             () -> assertThat(rules.getRules()).extracting(ConnectionRules.Rule::kind)
                 .contains("database", "http", "queue"),
-            () -> assertThat(rules.match(new MethodKey("com.corp.Bus", "publish", "String"), Set.of())).isPresent());
+            () -> assertThat(rules.match(new MethodKey("com.corp.Bus", "publish", "String"), Map.of())).isPresent());
     }
 
     @Test
@@ -66,6 +68,8 @@ class ConnectionRulesTest {
     }
 
     private static Optional<String> kind(final MethodKey call, final Set<String> supertypes) {
-        return RULES.match(call, supertypes).map(ConnectionRules.Rule::kind);
+        final Map<String, Set<String>> unknownMethods =
+            supertypes.stream().collect(Collectors.toMap(type -> type, type -> Set.of()));
+        return RULES.match(call, unknownMethods).map(ConnectionRules.Rule::kind);
     }
 }
