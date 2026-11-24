@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 // Where a test would connect, from the settings on the test classpath: to a host; on this machine; nowhere, as no
 // setting the test runs with gives the address; or to something only known at run time.
@@ -42,12 +43,15 @@ final class TestAddresses {
         return RUN_TIME.equals(graded) && chain.size() > 1 ? fromTheTest(chain, kind).orElse(graded) : graded;
     }
 
-    // Where the reach's own address leaves it unknown, what the test's call into its chain says, if that names a host
-    // or this machine: an address handed in, held by a builder and read back as the connection is made.
+    // Where the reach's own address leaves it unknown, what the test's call into its chain says, or, failing that, the
+    // next step's, such as its set-up's, if that names a host or this machine: an address handed in, held by a builder
+    // and read back as the connection is made.
     private Optional<String> fromTheTest(final List<MethodKey> chain, final String kind) {
-        return arguments.atTheTestsCall(chain.get(0), chain.get(1), kind)
+        return IntStream.range(0, Math.min(2, chain.size() - 1))
+            .mapToObj(step -> arguments.atTheTestsCall(chain.get(step), chain.get(step + 1), kind))
+            .flatMap(Optional::stream)
             .map(address -> classify(settings.withValue(address), kind))
-            .filter(grade -> HOST.equals(grade) || LOCAL.equals(grade));
+            .filter(grade -> HOST.equals(grade) || LOCAL.equals(grade)).findFirst();
     }
 
     private String graded(final List<MethodKey> chain, final String kind) {

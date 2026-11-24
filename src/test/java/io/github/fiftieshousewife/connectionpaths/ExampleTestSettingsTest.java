@@ -49,6 +49,12 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void takesTheAddressTheSetUpHandsABuilder() {
+        assertThat(reachOf("com.example.pages.PageInSetUpTest.hasAPage", "url").getAddressForTests())
+            .isEqualTo("host");
+    }
+
+    @Test
     void takesAnInternationalHostNameAsAHost() {
         assertThat(reachOf("com.example.pages.PageRequestTest.fetchesAPageWithAnInternationalName", "url")
             .getAddressForTests()).isEqualTo("host");
