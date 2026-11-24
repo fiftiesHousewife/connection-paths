@@ -22,12 +22,7 @@ import java.util.TreeSet;
 public final class CallGraph {
 
     private final Map<MethodKey, Set<MethodKey>> callers = new HashMap<>();
-    /**
-     * Callers by the key overriding matches on (type, name, number of parameters), then by the parameter types the
-     * call names, so a call to one overload isn't followed to another with as many parameters.
-     */
     private final Map<String, Map<String, Set<MethodKey>>> callersByOverrideKey = new HashMap<>();
-    /** For each method in the source, the override keys of the supertype methods it overrides and is followed from. */
     private final Map<MethodKey, List<String>> overrides = new HashMap<>();
     private final Map<String, Integer> notFollowed = new TreeMap<>();
 
@@ -35,7 +30,7 @@ public final class CallGraph {
         model.getCalls().forEach((caller, callees) -> callees.forEach(callee -> addCall(model, caller, callee)));
         overriddenBy(model).forEach((overridden, implementations) -> {
             // Test doubles in the test source don't make a call a dispatch point: only production code counts.
-            final long inProduction = implementations.stream().filter(m -> !model.isTestType(m.type())).count();
+            final long inProduction = implementations.stream().filter(m -> !model.tests().isTestType(m.type())).count();
             if (inProduction > maxImplementations) {
                 notFollowed.put(implementations.get(0).inType(typeOf(overridden)).toString(), (int) inProduction);
             } else {
@@ -59,19 +54,15 @@ public final class CallGraph {
         }
     }
 
-    /** For each supertype method (by override key), the methods in the source that override it, in a fixed order. */
+    // For each supertype method (by override key), the methods in the source that override it, in a fixed order.
     private static Map<String, List<MethodKey>> overriddenBy(final SourceModel model) {
         final Map<String, List<MethodKey>> result = new TreeMap<>();
-        for (final MethodKey method : new TreeSet<>(model.getDeclared())) {
-            if (method.isConstructor() || method.isInitialisers()) {
-                continue;
-            }
-            for (final String ancestor : model.ancestors(method.type())) {
-                if (!isJdkOrUnknown(ancestor)) {
-                    result.computeIfAbsent(method.overrideKey(ancestor), k -> new ArrayList<>()).add(method);
-                }
-            }
-        }
+        new TreeSet<>(model.getDeclared()).stream()
+            .filter(method -> !method.isConstructor() && !method.isInitialisers())
+            .forEach(method -> model.types().ancestors(method.type()).stream()
+                .filter(ancestor -> !isJdkOrUnknown(ancestor))
+                .forEach(ancestor -> result.computeIfAbsent(method.overrideKey(ancestor), k -> new ArrayList<>())
+                    .add(method)));
         return result;
     }
 
@@ -125,7 +116,7 @@ public final class CallGraph {
         return all;
     }
 
-    /** The chain from a method to the start it reaches, following {@link #reachBack}'s result. */
+    // The chain from a method to the start it reaches, following #reachBack's result.
     static List<MethodKey> chain(final MethodKey from, final Map<MethodKey, MethodKey> next) {
         final List<MethodKey> chain = new ArrayList<>(List.of(from));
         MethodKey current = from;

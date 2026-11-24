@@ -10,23 +10,41 @@ follows: no repurposed words, no dates in text, things referred to by name.
 ## Where things are
 | Path | What |
 |---|---|
-| `src/main/java/.../connectionpaths/` | `SourceReader` reads the source; `CallResolver` resolves each call; `CallGraph` walks back from connections; `AddressTracer` and `NameTracer` trace each address; `SettingsFiles` reads properties, YAML and XML; `Locality` and `SystemsBuilder` sort points into local ones and systems; `Frameworks` knows the annotations that start a framework, `AnnotatedClients` the clients that are only an annotated interface, and `SpringXml` and `SpringBeans` the beans defined in Spring XML; `FactsBuilder` and `Facts` are the output |
+| `src/main/java/.../connectionpaths/` | `Main`, `OptionsParser` and `Options` are the command line; `ConnectionPaths` runs the rest |
+| `.../source/` | `SourceReader` reads the source into a `SourceModel`, with its `TypeHierarchy` and `TestModel`; `CallResolver` resolves each call; `TypeSolvers` sets up JavaParser's symbol solver from the classpath |
+| `.../rules/` | `ConnectionRules` reads the rules; `AnnotatedClients` finds clients that are only an annotated interface |
+| `.../address/` | `AddressTracer` traces each connection's address back through the source; `Locality` says which stay on this machine |
+| `.../settings/` | `SettingsFiles` reads the repo's properties, YAML and XML settings; `XmlFiles` walks an XML file safely |
+| `.../spring/` | `SpringXml` and `SpringBeans` find the beans defined in Spring XML |
+| `.../graph/` | `CallGraph` walks back from connections; `TestChains` gives each test's chain |
+| `.../facts/` | `FactsBuilder` builds the output, `Facts`; `SystemsBuilder` groups points into systems |
 | `src/main/resources/connection-rules.txt` | The calls that count as opening or using a connection |
-| `src/test/resources/example/` | An example repo with known answers; `ExampleRepoTest` checks each one |
+| `src/test/resources/example/` | An example repo with known answers, some listed in `src/test/resources/expected/`; the `Example*Test` classes check each one |
 | `tools/print-classpath.gradle` | Writes a Gradle build's classpath for `--classpath` |
 | [`docs/decisions/`](docs/decisions/README.md) | This repo's decisions, in MADR form |
 | [`docs/backlog.md`](docs/backlog.md) | What it doesn't do yet, most useful first |
 | [`docs/evaluations/`](docs/evaluations/) | Comparisons with other tools that decisions rest on, with what's needed to run them again |
-| `build-logic/`, `config/quality/` | The same Gradle conventions and quality rules as under-test; `io.github.fiftieshousewife.publishing` is how it is published |
+| `build-logic/`, `config/quality/` | The Gradle conventions and quality rules, from which under-test's shared java-conventions plugin is seeded; `io.github.fiftieshousewife.publishing` is how it is published |
 | [`.github/workflows/`](.github/workflows/) | Build: `./gradlew check` on every pull request, and the jar run on Java 17. Release: a tag such as `v1.2.3` publishes to Maven Central and GitHub |
 | [`.github/skills/`](.github/skills/) | This repo's AI assistant skills (below) |
 
 ## Code standards (enforced by `./gradlew check`)
-The same as under-test's: at least 80% line coverage; no more than three parameters (use a Lombok `@Builder`); no record
-with more than three components; a test with more than one assertion wraps them in `assertAll`; logging through Lombok
-`@Slf4j`, never `System.out`; no forbidden JDK APIs; short, simple methods; no copy-pasted code; SpotBugs with
-FindSecBugs clean; final locals, braces always, no star imports; lines of 120 characters or fewer. It is built with
-Java 25 and runs on Java 17 (`--release 17`).
+Each of these fails the build:
+- **Size:** methods of 20 lines or fewer, not counting blank ones; files of 150 lines or fewer; lines of 120 characters
+  or fewer.
+- **Simplicity:** cyclomatic complexity of 6 or less and cognitive complexity of 7 or less for each method; boolean
+  expressions of at most three parts; no copy-pasted code.
+- **Parameters:** no more than three for a method or constructor (use a Lombok `@Builder`), and no more than three
+  components in a record.
+- **Packages** by area, each with a public entry point and package-private helpers.
+- **Comments:** no comment on a field (name it so it needs none, or say it on the class or method); Javadoc only on a
+  public type and its public members, and `//` comments elsewhere.
+- **Tests:** at least 80% line coverage; each test makes one assertion, or one `assertAll` holding several.
+- **Code:** logging through Lombok `@Slf4j`, never `System.out`; no forbidden JDK APIs; SpotBugs with FindSecBugs
+  clean; final locals, braces always, no star imports.
+
+And one that is reported, by the `pmdAdvice` task, without failing the build: prefer streams to for-each loops. It is
+built with Java 25 and runs on Java 17 (`--release 17`).
 
 ## Skills
 | Skill | Use it to |

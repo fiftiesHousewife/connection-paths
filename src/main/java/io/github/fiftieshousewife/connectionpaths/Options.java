@@ -12,17 +12,14 @@ import lombok.Value;
 @Builder
 public class Options {
 
-    /** Above this many implementations, a call through an interface or superclass is reported, not followed. */
     static final int DEFAULT_MAX_IMPLEMENTATIONS = 3;
 
     @Singular
     List<Path> mainSources;
     @Singular
     List<Path> testSources;
-    /** The jars (or class folders) the code compiles against: from the build, or listed by a person. */
     @Singular("classpathEntry")
     List<Path> classpath;
-    /** Folders whose properties, YAML and XML files are read for the settings that addresses name. */
     @Singular("settingsFolder")
     List<Path> settings;
     Path rules;

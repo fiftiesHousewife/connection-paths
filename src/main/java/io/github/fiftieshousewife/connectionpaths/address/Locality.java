@@ -2,6 +2,7 @@ package io.github.fiftieshousewife.connectionpaths.address;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -12,7 +13,7 @@ import java.util.regex.Pattern;
  */
 public final class Locality {
 
-    /** A prefix, or pattern, and why an address matching it is local. */
+    // A prefix, or pattern, and why an address matching it is local.
     private record Local(Pattern pattern, String because) {
     }
 
@@ -25,6 +26,9 @@ public final class Locality {
         rule("([a-z][a-z0-9+.-]*:(//)?)?([^@/]*@)?(localhost|127\\.0\\.0\\.1|\\[?::1]?|0\\.0\\.0\\.0)([:/].*)?",
             "this machine"));
 
+    private static final Map<String, String> LOCAL_SOURCES = Map.of(Address.CLASSPATH_RESOURCE, "a classpath resource",
+        Address.LOCAL_FILE, "a file", Address.DNS, "the machine's DNS servers");
+
     private Locality() {
     }
 
@@ -32,10 +36,8 @@ public final class Locality {
         return new Local(Pattern.compile(regex), because);
     }
 
-    /** A path with no scheme or host: for a URL, a file or a classpath resource. */
     private static final Pattern PATH = Pattern.compile("\\.{0,2}/[^/].*");
 
-    /** Words in a setting's key that say it holds an address of this machine to listen on, not another's. */
     private static final Pattern LISTEN_WORDS = Pattern.compile("interface|bind|listen", Pattern.CASE_INSENSITIVE);
 
     /** Why an address is local, or empty if it may reach another machine. */
@@ -48,19 +50,20 @@ public final class Locality {
         return path ? Optional.of("a file or a classpath resource") : of(address);
     }
 
-    /** A setting such as {@code network.interface} or {@code server.bind-address}. */
+    // A setting such as network.interface or server.bind-address.
     private static boolean isListenSetting(final Address address) {
         return Address.SETTING.equals(address.getSource()) && LISTEN_WORDS.matcher(address.getValue()).find();
     }
 
     private static Optional<String> of(final Address address) {
-        return switch (address.getSource()) {
-            case Address.CLASSPATH_RESOURCE -> Optional.of("a classpath resource");
-            case Address.LOCAL_FILE -> Optional.of("a file");
-            case Address.DNS -> Optional.of("the machine's DNS servers");
-            case Address.SETTING -> ofValue(address.getSettingValue());
-            default -> address.isLiteral() ? ofValue(address.getValue()) : Optional.empty();
-        };
+        final Optional<String> bySource = Optional.ofNullable(LOCAL_SOURCES.get(address.getSource()));
+        if (bySource.isPresent()) {
+            return bySource;
+        }
+        if (Address.SETTING.equals(address.getSource())) {
+            return ofValue(address.getSettingValue());
+        }
+        return address.isLiteral() ? ofValue(address.getValue()) : Optional.empty();
     }
 
     private static Optional<String> ofValue(final String value) {

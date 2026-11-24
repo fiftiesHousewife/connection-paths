@@ -1,13 +1,9 @@
 package io.github.fiftieshousewife.connectionpaths.settings;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
@@ -22,26 +18,18 @@ public final class XmlSettings {
     }
 
     static void read(final Path file, final SettingsFiles.Found found) throws IOException {
-        final XMLInputFactory factory = XMLInputFactory.newFactory();
-        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-        factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
-        try (InputStream in = Files.newInputStream(file)) {
-            final XMLStreamReader reader = factory.createXMLStreamReader(in);
-            try {
-                new Walk(found).through(reader);
-            } finally {
-                reader.close();
-            }
+        try {
+            XmlFiles.walk(file, new Walk(found));
         } catch (XMLStreamException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
     }
 
-    /** Tracks the element path, and reports an element's text when it has no child elements. */
-    private static final class Walk {
+    // Tracks the element path, and reports an element's text when it has no child elements.
+    private static final class Walk implements XmlFiles.Handler {
         private final SettingsFiles.Found found;
         private final Deque<String> path = new ArrayDeque<>();
-        private final StringBuilder text = new StringBuilder();
+        private final StringBuilder characters = new StringBuilder();
         private int line;
         private boolean hasChildren;
 
@@ -49,28 +37,22 @@ public final class XmlSettings {
             this.found = found;
         }
 
-        void through(final XMLStreamReader reader) throws XMLStreamException {
-            while (reader.hasNext()) {
-                final int event = reader.next();
-                if (event == XMLStreamConstants.START_ELEMENT) {
-                    start(reader.getLocalName(), reader.getLocation().getLineNumber());
-                } else if (event == XMLStreamConstants.CHARACTERS || event == XMLStreamConstants.CDATA) {
-                    text.append(reader.getText());
-                } else if (event == XMLStreamConstants.END_ELEMENT) {
-                    end();
-                }
-            }
-        }
-
-        private void start(final String name, final int at) {
-            path.addLast(name);
-            text.setLength(0);
+        @Override
+        public void start(final XMLStreamReader element) {
+            path.addLast(element.getLocalName());
+            characters.setLength(0);
             hasChildren = false;
-            line = at;
+            line = element.getLocation().getLineNumber();
         }
 
-        private void end() {
-            final String value = text.toString().strip();
+        @Override
+        public void text(final String more) {
+            characters.append(more);
+        }
+
+        @Override
+        public void end(final String name) {
+            final String value = characters.toString().strip();
             if (!hasChildren && !value.isEmpty()) {
                 final String full = String.join(".", path);
                 found.setting(full, value, line);
@@ -79,7 +61,7 @@ public final class XmlSettings {
                 }
             }
             path.removeLast();
-            text.setLength(0);
+            characters.setLength(0);
             hasChildren = true;
         }
     }

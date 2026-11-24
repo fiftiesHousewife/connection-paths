@@ -5,6 +5,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Recognises a call made on a mock only to stub or verify it, by the names Mockito and its BDD form use:
@@ -13,9 +14,7 @@ import java.util.Set;
  */
 public final class Mocks {
 
-    /** Calls whose arguments are being stubbed. */
     private static final Set<String> STUBBING = Set.of("when", "given");
-    /** Calls whose result the stubbed or verified call is made on; {@code when} also needs its one argument. */
     private static final Set<String> ON_A_MOCK = Set.of("verify", "should");
 
     private Mocks() {
@@ -34,18 +33,16 @@ public final class Mocks {
             .orElse(false);
     }
 
-    /** Whether the call is, or is inside, an argument of {@code when(...)} or {@code given(...)}. */
+    // Whether the call is, or is inside, an argument of when(...) or given(...).
     private static boolean isStubbed(final MethodCallExpr call) {
-        Node child = call;
-        Optional<Node> parent = call.getParentNode();
-        while (parent.isPresent() && parent.get() instanceof Expression) {
-            if (parent.get() instanceof MethodCallExpr outer && STUBBING.contains(outer.getNameAsString())
-                && outer.getArguments().contains(child)) {
-                return true;
-            }
-            child = parent.get();
-            parent = child.getParentNode();
-        }
-        return false;
+        return expressionsAround(call).filter(MethodCallExpr.class::isInstance).map(MethodCallExpr.class::cast)
+            .filter(outer -> STUBBING.contains(outer.getNameAsString()))
+            .anyMatch(outer -> outer.getArguments().stream().anyMatch(a -> a.equals(call) || a.isAncestorOf(call)));
+    }
+
+    // The expressions a node is part of, nearest first, up to the statement that holds them.
+    private static Stream<Node> expressionsAround(final Node node) {
+        return Stream.iterate(node.getParentNode(), p -> p.filter(Expression.class::isInstance).isPresent(),
+            p -> p.get().getParentNode()).map(Optional::get);
     }
 }

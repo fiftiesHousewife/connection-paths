@@ -4,12 +4,15 @@ import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** The facts for the example repo in src/test/resources/example, read once, and what its tests look up in them. */
+// The facts for the example repo in src/test/resources/example, read once, and what its tests look up in them.
 final class ExampleRepo {
 
     static final String ORDERS_TEST = "com.example.orders.OrderServiceTest";
@@ -47,5 +50,15 @@ final class ExampleRepo {
         final List<Facts.Reach> reaches = REACHING.get(test).getReaches();
         assertThat(reaches).hasSize(1);
         return reaches.get(0);
+    }
+
+    // The known answers in src/test/resources/expected: one a line, with # for a comment.
+    static List<String> expected(final String file) {
+        try {
+            return Files.readAllLines(Path.of("src/test/resources/expected", file)).stream()
+                .filter(line -> !line.isBlank() && !line.startsWith("#")).toList();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

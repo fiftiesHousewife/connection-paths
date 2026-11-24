@@ -16,17 +16,18 @@ public final class InheritedTests {
     }
 
     static void spread(final SourceModel model, final Set<String> abstractTypes) {
-        final List<Map.Entry<MethodKey, SourceModel.Location>> declared = new ArrayList<>(model.getTests().entrySet());
-        final List<String> testTypes = model.getTestTypes().stream().sorted().toList();
+        final List<Map.Entry<MethodKey, SourceModel.Location>> declared =
+            new ArrayList<>(model.tests().all().entrySet());
+        final List<String> testTypes = model.tests().testTypes().stream().sorted().toList();
         for (final Map.Entry<MethodKey, SourceModel.Location> test : declared) {
             final MethodKey method = test.getKey();
             final List<String> runners = testTypes.stream()
-                .filter(type -> !abstractTypes.contains(type) && model.ancestors(type).contains(method.type()))
+                .filter(type -> !abstractTypes.contains(type) && model.types().ancestors(type).contains(method.type()))
                 .filter(type -> !model.getDeclared().contains(method.inType(type)))
                 .toList();
-            runners.forEach(type -> model.inheritedTest(method.inType(type), method, test.getValue()));
+            runners.forEach(type -> model.tests().inheritedTest(method.inType(type), method, test.getValue()));
             if (abstractTypes.contains(method.type()) && !runners.isEmpty()) {
-                model.dropTest(method);
+                model.tests().dropTest(method);
             }
         }
     }

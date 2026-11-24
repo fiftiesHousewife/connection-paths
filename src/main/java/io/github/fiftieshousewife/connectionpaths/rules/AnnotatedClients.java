@@ -1,7 +1,8 @@
 package io.github.fiftieshousewife.connectionpaths.rules;
 
 import io.github.fiftieshousewife.connectionpaths.address.Address;
-import io.github.fiftieshousewife.connectionpaths.address.NameTracer;
+import io.github.fiftieshousewife.connectionpaths.address.Declarations;
+import io.github.fiftieshousewife.connectionpaths.address.SettingAnnotations;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -11,11 +12,11 @@ import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Clients that are only an interface in the source, made at run time by a library from its annotations: Feign's
@@ -25,7 +26,6 @@ import java.util.regex.Matcher;
  */
 public final class AnnotatedClients {
 
-    /** The members holding a client's address: Feign's and Spring's {@code url}, MicroProfile's {@code baseUri}. */
     private static final Set<String> URL_MEMBERS = Set.of("url", "baseUri");
 
     /** A rule matched, and the address the annotation gives. */
@@ -54,7 +54,7 @@ public final class AnnotatedClients {
 
     private Optional<Match> match(final MethodDeclaration method) {
         final List<AnnotationExpr> annotations = new ArrayList<>(method.getAnnotations());
-        NameTracer.enclosingType(method).ifPresent(type -> annotations.addAll(type.getAnnotations()));
+        Declarations.enclosingType(method).ifPresent(type -> annotations.addAll(type.getAnnotations()));
         for (final AnnotationExpr annotation : annotations) {
             final Set<String> names = qualifiedNames(annotation);
             final Optional<ConnectionRules.Rule> rule =
@@ -66,27 +66,29 @@ public final class AnnotatedClients {
         return Optional.empty();
     }
 
-    /** The names an annotation may stand for: as written if qualified, else through its file's imports and package. */
+    // The names an annotation may stand for: as written if qualified, else through its file's imports and package.
     static Set<String> qualifiedNames(final AnnotationExpr annotation) {
         final String written = annotation.getNameAsString();
         if (written.contains(".")) {
             return Set.of(written);
         }
-        final Set<String> names = new HashSet<>();
         final Optional<CompilationUnit> file = annotation.findCompilationUnit();
-        for (final ImportDeclaration imported : file.map(unit -> List.copyOf(unit.getImports())).orElse(List.of())) {
-            if (imported.isAsterisk() && !imported.isStatic()) {
-                names.add(imported.getNameAsString() + "." + written);
-            } else if (imported.getName().getIdentifier().equals(written)) {
-                names.add(imported.getNameAsString());
-            }
-        }
-        file.flatMap(CompilationUnit::getPackageDeclaration)
-            .ifPresent(declared -> names.add(declared.getNameAsString() + "." + written));
-        return names;
+        final Stream<String> imported = file.stream().flatMap(unit -> unit.getImports().stream())
+            .map(declaration -> importedAs(declaration, written)).flatMap(Optional::stream);
+        final Stream<String> samePackage = file.flatMap(CompilationUnit::getPackageDeclaration).stream()
+            .map(declared -> declared.getNameAsString() + "." + written);
+        return Stream.concat(imported, samePackage).collect(Collectors.toSet());
     }
 
-    /** The annotation's {@code url} or {@code baseUri}: a {@code ${key}} setting or a literal, else given in code. */
+    private static Optional<String> importedAs(final ImportDeclaration imported, final String written) {
+        if (imported.isAsterisk() && !imported.isStatic()) {
+            return Optional.of(imported.getNameAsString() + "." + written);
+        }
+        return imported.getName().getIdentifier().equals(written) ? Optional.of(imported.getNameAsString())
+            : Optional.empty();
+    }
+
+    // The annotation's url or baseUri: a ${key} setting or a literal, else given in code.
     private static Address addressOf(final AnnotationExpr annotation) {
         final String via = "@" + annotation.getName().getIdentifier();
         final Optional<String> url = annotation instanceof NormalAnnotationExpr normal
@@ -94,12 +96,7 @@ public final class AnnotatedClients {
                 .map(MemberValuePair::getValue).filter(StringLiteralExpr.class::isInstance)
                 .map(value -> ((StringLiteralExpr) value).asString()).findFirst()
             : Optional.empty();
-        if (url.isEmpty()) {
-            return Address.builtBy("the base URL given where the " + via + " client is made");
-        }
-        final Matcher setting = NameTracer.PLACEHOLDER.matcher(url.get());
-        return setting.matches()
-            ? Address.builder().source(Address.SETTING).value(setting.group(1)).via(via).build()
-            : Address.of(Address.LITERAL, url.get());
+        return url.map(text -> SettingAnnotations.settingOrLiteral(text, via))
+            .orElse(Address.builtBy("the base URL given where the " + via + " client is made"));
     }
 }

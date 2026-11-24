@@ -51,7 +51,6 @@ public class Facts {
         int callsNotResolved;
         int tests;
         int testsReaching;
-        // Snake case would join the one-letter word to the next: tests_starting_aframework.
         @JsonProperty(FRAMEWORK_TESTS)
         int testsStartingAFramework;
     }
@@ -65,9 +64,7 @@ public class Facts {
         String method;
         String file;
         int line;
-        /** Where the address the call connects to comes from, as far as the source shows. */
         Address address;
-        /** Why the connection stays on this machine, if it does: then it is part of no system. */
         @JsonInclude(JsonInclude.Include.NON_NULL)
         String local;
     }
@@ -80,24 +77,15 @@ public class Facts {
     @Builder
     public static class ExternalSystem {
         String name;
-        /** host, setting, environment-variable, system-property, jndi-name or class. */
         String namedBy;
         @Singular
         List<String> kinds;
-        /** The address of its first connection point. */
         Address address;
-        /** The methods that open or use the connection. */
         @Singular
         List<String> points;
-        /**
-         * Systems reached through the same interface or superclass method: implementations a program chooses between,
-         * so a test reaches one of them, not all.
-         */
         @Singular
         List<String> alternatives;
-        /** How many tests may reach it. */
         int tests;
-        /** The calls every one of those tests goes through on its way to the system, nearest the test first. */
         @Singular("sharedStep")
         List<String> sharedChain;
     }
@@ -111,7 +99,6 @@ public class Facts {
         int line;
         @Singular("reach")
         List<Reach> reaches;
-        /** The systems it may reach. */
         @Singular
         List<String> systems;
     }
@@ -126,9 +113,7 @@ public class Facts {
         String test;
         String file;
         int line;
-        /** The annotation that starts it, as written: {@code @SpringBootTest}. */
         String framework;
-        /** The class the annotation is on: the test's own, a superclass or a class around it. */
         String annotatedOn;
     }
 

@@ -17,7 +17,6 @@ import java.util.Set;
 public final class ConnectionRules {
 
     static final String WILDCARD = "*";
-    /** The method of a rule naming an annotation rather than a type's method. */
     static final String ANNOTATED = "@";
     private static final String BUILT_IN = "/connection-rules.txt";
 
@@ -28,11 +27,9 @@ public final class ConnectionRules {
             return WILDCARD.equals(method) ? !MethodKey.CONSTRUCTOR.equals(name) : method.equals(name);
         }
 
-        /**
-         * Through a supertype, a {@code *} rule matches only the methods that supertype declares, so a template's
-         * own setters aren't taken for its queries; but every method, where it declares none (a marker such as
-         * Spring Data's {@code Repository}) or what it declares isn't known.
-         */
+        // Through a supertype, a * rule matches only the methods that supertype declares, so a template's
+        // own setters aren't taken for its queries; but every method, where it declares none (a marker such as
+        // Spring Data's Repository) or what it declares isn't known.
         boolean matchesThrough(final String name, final Set<String> declared) {
             final boolean anyDeclared = !WILDCARD.equals(method) || declared.isEmpty() || declared.contains(name);
             return anyDeclared && matchesMethod(name);
@@ -107,14 +104,17 @@ public final class ConnectionRules {
         if (parts.length != 2) {
             return Optional.empty();
         }
-        final String target = parts[1];
-        if (target.startsWith(ANNOTATED)) {
-            return target.length() > 1 ? Optional.of(new Rule(parts[0], target.substring(1), ANNOTATED))
-                : Optional.empty();
-        }
+        return parts[1].startsWith(ANNOTATED) ? annotationRule(parts[0], parts[1]) : methodRule(parts[0], parts[1]);
+    }
+
+    private static Optional<Rule> annotationRule(final String kind, final String target) {
+        return target.length() > 1 ? Optional.of(new Rule(kind, target.substring(1), ANNOTATED)) : Optional.empty();
+    }
+
+    private static Optional<Rule> methodRule(final String kind, final String target) {
         final int hash = target.indexOf('#');
         return hash <= 0 || hash == target.length() - 1 ? Optional.empty()
-            : Optional.of(new Rule(parts[0], target.substring(0, hash), target.substring(hash + 1)));
+            : Optional.of(new Rule(kind, target.substring(0, hash), target.substring(hash + 1)));
     }
 
     private static List<Rule> builtIn() {

@@ -18,7 +18,7 @@ public final class Unresolved {
     private final Map<String, String> examples = new HashMap<>();
     private int total;
 
-    /** Records a failure; similar messages share a reason, with names of types and symbols taken out. */
+    // Records a failure; similar messages share a reason, with names of types and symbols taken out.
     void add(final Throwable failure, final SourceModel.Location at) {
         final String message = String.valueOf(failure.getMessage()).replaceAll("\\s+", " ").strip();
         final String reason = failure.getClass().getSimpleName() + ": " + generalise(message);
@@ -41,10 +41,8 @@ public final class Unresolved {
             .toList();
     }
 
-    /**
-     * A missing type keeps its name, also where it is a call's scope, so the report shows which library is missing;
-     * messages about whole expressions and quoted names are made general, so they group.
-     */
+    // A missing type keeps its name, also where it is a call's scope, so the report shows which library is missing;
+    // messages about whole expressions and quoted names are made general, so they group.
     static String generalise(final String message) {
         final String general = message
             .replaceAll("^Unsolved symbol in .* : ((?:[a-z0-9_$]+\\.)*[A-Z][A-Za-z0-9_$]*)$", "Unsolved symbol : $1")

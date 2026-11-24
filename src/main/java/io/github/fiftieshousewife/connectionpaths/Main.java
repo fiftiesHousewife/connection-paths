@@ -4,6 +4,7 @@ import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,18 +31,28 @@ public final class Main {
             log.info(OptionsParser.USAGE);
             return args.isEmpty() ? WRONG_ARGUMENTS : OK;
         }
-        final Options options;
+        return parsed(args).filter(Main::hasASourceFolder).map(Main::findAndWrite).orElse(WRONG_ARGUMENTS);
+    }
+
+    private static Optional<Options> parsed(final List<String> args) {
         try {
-            options = OptionsParser.parse(args);
+            return Optional.of(OptionsParser.parse(args));
         } catch (IllegalArgumentException | UncheckedIOException e) {
             log.error("{}\n\n{}", e.getMessage(), OptionsParser.USAGE);
-            return WRONG_ARGUMENTS;
+            return Optional.empty();
         }
-        if (Stream.concat(options.getMainSources().stream(), options.getTestSources().stream())
-            .noneMatch(Files::isDirectory)) {
+    }
+
+    private static boolean hasASourceFolder(final Options options) {
+        final boolean any = Stream.concat(options.getMainSources().stream(), options.getTestSources().stream())
+            .anyMatch(Files::isDirectory);
+        if (!any) {
             log.error("None of the source folders exists: {} {}", options.getMainSources(), options.getTestSources());
-            return WRONG_ARGUMENTS;
         }
+        return any;
+    }
+
+    private static int findAndWrite(final Options options) {
         try {
             final Facts facts = ConnectionPaths.find(options);
             ConnectionPaths.write(facts, options.getOut());

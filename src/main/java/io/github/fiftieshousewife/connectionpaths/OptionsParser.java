@@ -8,7 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.stream.IntStream;
 
 /** Reads the command line into {@link Options}. */
 public final class OptionsParser {
@@ -36,6 +40,11 @@ public final class OptionsParser {
         """.replace("{separator}", File.pathSeparator)
         .replace("{max}", String.valueOf(Options.DEFAULT_MAX_IMPLEMENTATIONS));
 
+    private static final Map<String, BiConsumer<Options.OptionsBuilder, String>> VALUE_FLAGS = Map.of(
+        "--classpath", (options, value) -> classpath(value).forEach(options::classpathEntry),
+        "--rules", (options, value) -> options.rules(Path.of(value)),
+        "--max-implementations", (options, value) -> options.maxImplementations(positive(value)),
+        "--out", (options, value) -> options.out(Path.of(value)));
     private static final Set<String> FOLDER_FLAGS = Set.of("--module", "--main", "--test", "--settings");
 
     private OptionsParser() {
@@ -43,15 +52,15 @@ public final class OptionsParser {
 
     /** Parses the arguments; throws {@link IllegalArgumentException} with a message for the person if they're wrong. */
     public static Options parse(final List<String> args) {
-        final Options.OptionsBuilder options = Options.builder();
-        for (int i = 0; i < args.size(); i += 2) {
-            final String flag = args.get(i);
-            if (i + 1 >= args.size()) {
-                throw new IllegalArgumentException(flag + " needs a value");
-            }
-            apply(options, flag, args.get(i + 1));
+        if (args.size() % 2 != 0) {
+            throw new IllegalArgumentException(args.get(args.size() - 1) + " needs a value");
         }
-        final Options parsed = options.build();
+        final Options.OptionsBuilder options = Options.builder();
+        IntStream.range(0, args.size() / 2).forEach(i -> apply(options, args.get(2 * i), args.get(2 * i + 1)));
+        return withASourceFolder(options.build());
+    }
+
+    private static Options withASourceFolder(final Options parsed) {
         if (parsed.getMainSources().isEmpty() && parsed.getTestSources().isEmpty()) {
             throw new IllegalArgumentException("Give at least one --module, --main or --test folder");
         }
@@ -63,13 +72,9 @@ public final class OptionsParser {
             folder(options, flag, Path.of(value));
             return;
         }
-        switch (flag) {
-            case "--classpath" -> classpath(value).forEach(options::classpathEntry);
-            case "--rules" -> options.rules(Path.of(value));
-            case "--max-implementations" -> options.maxImplementations(positive(flag, value));
-            case "--out" -> options.out(Path.of(value));
-            default -> throw new IllegalArgumentException("Unknown option " + flag);
-        }
+        Optional.ofNullable(VALUE_FLAGS.get(flag))
+            .orElseThrow(() -> new IllegalArgumentException("Unknown option " + flag))
+            .accept(options, value);
     }
 
     private static void folder(final Options.OptionsBuilder options, final String flag, final Path folder) {
@@ -101,7 +106,8 @@ public final class OptionsParser {
         return entries;
     }
 
-    private static int positive(final String flag, final String value) {
+    private static int positive(final String value) {
+        final String flag = "--max-implementations";
         try {
             final int number = Integer.parseInt(value);
             if (number < 1) {

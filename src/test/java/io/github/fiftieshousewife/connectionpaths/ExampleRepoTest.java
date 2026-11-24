@@ -2,15 +2,11 @@ package io.github.fiftieshousewife.connectionpaths;
 
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import io.github.fiftieshousewife.connectionpaths.source.Unresolved;
-import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.CONFIG_TEST;
-import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.DB_MANAGER_TEST;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.FACTS;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.ORDERS_TEST;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.REACHING;
-import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.STORES_TEST;
 import static io.github.fiftieshousewife.connectionpaths.ExampleRepo.onlyReach;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.Test;
@@ -20,75 +16,13 @@ class ExampleRepoTest {
 
     @Test
     void findsEachConnectionPointWithItsKind() {
-        assertThat(FACTS.getConnectionPoints())
-            .extracting(Facts.Point::getMethod, Facts.Point::getKind)
-            .containsExactlyInAnyOrder(
-                tuple("com.example.db.Database#open()", "database"),
-                tuple("com.example.events.AuditListener#changed(String)", "socket"),
-                tuple("com.example.report.ReportClient#fetch()", "url"),
-                tuple("com.example.tools.Shell#list()", "process"),
-                tuple("com.example.docs.DocumentReader#read(URL)", "url"),
-                tuple("com.example.mail.SmtpMailer#send(String)", "mail"),
-                tuple("com.example.mail.SmtpMailer#send(String)", "mail"),
-                tuple("com.example.mail.MailLogin#check(String,String)", "mail"),
-                tuple("com.example.addresses.CrmClient#open()", "socket"),
-                tuple("com.example.addresses.LedgerStore#open()", "database"),
-                tuple("com.example.addresses.OrdersLookup#connect(InitialContext)",
-                    "database"),
-                tuple("com.example.addresses.PaymentsClient#balances()", "url"),
-                tuple("com.example.addresses.PoolFactory#connect(SimpleDataSource)",
-                    "database"),
-                tuple("com.example.addresses.RegionClient#prices(String)", "url"),
-                tuple("com.example.addresses.WarehouseClient#stock()", "url"),
-                tuple("com.example.alt.DefaultProvider#getConnection()", "database"),
-                tuple("com.example.alt.JndiProvider#getConnection()", "database"),
-                tuple("com.example.alt.EmbeddedProvider#getConnection()", "database"),
-                tuple("com.example.alt.LocalThings#readBundledFile()", "url"),
-                tuple("com.example.alt.LocalThings#talkToTheAgentOnThisMachine()",
-                    "socket"),
-                tuple("com.example.alt.LocalThings#readOwnJar()", "url"),
-                tuple("com.example.addresses.DirectoryClient#users()", "http"),
-                tuple("com.example.addresses.Notifier.Sender#open()", "socket"),
-                tuple("com.example.addresses.SecureChannel#open()", "socket"),
-                tuple("com.example.addresses.Fetcher#fetch()", "url"),
-                tuple("com.example.overloads.RemoteLoader#load(URL)", "url"),
-                tuple("com.example.jdbc.Customers#count()", "database"),
-                tuple("com.example.jdbc.Customers#named(String)", "database"),
-                tuple("com.example.clients.Shop#orderCount()", "http"),
-                tuple("com.example.clients.Shop#priceList()", "http"),
-                tuple("com.example.addresses.ListenAddress#toListenOn()", "host-lookup"),
-                tuple("com.example.addresses.ListenAddress#partner()", "host-lookup"),
-                tuple("com.example.addresses.OrdersReplica#open()", "database"),
-                tuple("org.apache.commons.dbcp.BasicDataSource#<bean reportsDataSource>()", "database"),
-                tuple("org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>()", "database"));
+        assertThat(FACTS.getConnectionPoints()).extracting(p -> p.getMethod() + " " + p.getKind())
+            .containsExactlyInAnyOrderElementsOf(ExampleRepo.expected("connection-points.txt"));
     }
 
     @Test
     void listsOnlyTheTestsThatMayReachAConnection() {
-        assertThat(REACHING.keySet()).containsExactlyInAnyOrder(
-            ORDERS_TEST + ".countsOrders",
-            "com.example.report.ReportJobTest.runsTheReport",
-            "com.example.ledger.LedgerTest.countsEntries",
-            "com.example.tools.ShellTest.lists",
-            "com.example.legacy.AuditTest.testAudits",
-            "com.example.orders.ArchiverTest.archives",
-            STORES_TEST + ".namesTheStore",
-            STORES_TEST + ".sizesTheCache",
-            CONFIG_TEST + ".readsASetting",
-            CONFIG_TEST + ".sizesThePool",
-            "com.example.greet.GreetingsTest.says",
-            "com.example.ledger.LedgerNestedTest.WhenEmpty.hasNoEntries",
-            "com.example.ledger.LedgerTestNgTest.countsEntries",
-            "com.example.ledger.LedgerCleanupTest.startsClean",
-            "com.example.mail.SmtpMailerTest.sends",
-            "com.example.mail.MailLoginTest.checksAUser",
-            DB_MANAGER_TEST,
-            "com.example.overloads.LoaderTest.loadsFromAUrl",
-            "com.example.jdbc.CustomersTest.counts",
-            "com.example.jdbc.CustomersTest.findsByName",
-            "com.example.clients.ShopTest.countsOrders",
-            "com.example.clients.ShopTest.listsPrices",
-            "com.example.inherited.LedgerResourceTest.isReady");
+        assertThat(REACHING.keySet()).containsExactlyInAnyOrderElementsOf(ExampleRepo.expected("tests-reaching.txt"));
     }
 
     @Test

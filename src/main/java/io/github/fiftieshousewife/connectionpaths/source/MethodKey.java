@@ -45,7 +45,7 @@ public record MethodKey(String type, String name, String parameters) implements 
         return inType + "#" + name + "/" + parameterCount();
     }
 
-    /** The class's simple name and the method's, as people read a stack trace: {@code OrderStore.save}. */
+    // The class's simple name and the method's, as people read a stack trace: OrderStore.save.
     String shortName() {
         return type.substring(type.lastIndexOf('.') + 1) + "." + name;
     }

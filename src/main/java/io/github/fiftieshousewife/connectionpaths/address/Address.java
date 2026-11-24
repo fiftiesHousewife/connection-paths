@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.address;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Comparator;
 import java.util.Map;
@@ -30,28 +31,19 @@ public class Address {
     static final String UNKNOWN_PART = "{?}";
 
     private static final Set<String> NAMED = Set.of(SETTING, ENVIRONMENT_VARIABLE, SYSTEM_PROPERTY, JNDI_NAME);
-    /** How much each source says about where a connection goes; a literal with no unknown parts says most. */
     private static final Map<String, Integer> RANKS = Map.of(SETTING, 8, JNDI_NAME, 7, ENVIRONMENT_VARIABLE, 7,
         SYSTEM_PROPERTY, 7, CLASSPATH_RESOURCE, 6, LOCAL_FILE, 6, DNS, 6, LITERAL, 5, PARAMETER, 2);
     private static final int FULL_LITERAL = 9;
     private static final int LEAST = 1;
 
-    /** Most informative first, for choosing between the values a variable is given. */
     static final Comparator<Address> MOST_INFORMATIVE = Comparator.comparingInt(Address::rank).reversed();
 
-    /** One of the constants above. */
     String source;
-    /** The literal, the setting's, variable's or JNDI name, the parameter, or the code that builds it. */
     String value;
-    /** For a setting: the method or annotation that reads it, such as {@code JiveGlobals.getProperty}. */
     String via;
-    /** For a setting: its value in the repo's settings files, if it has one there. */
     String settingValue;
-    /** For a setting: the file that holds that value. */
     String settingFile;
-    /** For a setting: the line in that file. */
     int settingLine;
-    /** For a setting: its value looks like a placeholder for a person to fill in. */
     boolean placeholder;
 
     public static Address of(final String source, final String value) {
@@ -62,15 +54,18 @@ public class Address {
         return of(BUILT_AT_RUN_TIME, code);
     }
 
+    @JsonIgnore
     public boolean isLiteral() {
         return LITERAL.equals(source);
     }
 
+    @JsonIgnore
     boolean isFullLiteral() {
         return isLiteral() && !value.contains(UNKNOWN_PART);
     }
 
     /** Whether it names a setting, variable or JNDI name, by which a system can be known when its address isn't. */
+    @JsonIgnore
     public boolean isNamed() {
         return NAMED.contains(source);
     }

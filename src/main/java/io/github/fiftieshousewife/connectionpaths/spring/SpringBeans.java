@@ -1,7 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.spring;
 
 import io.github.fiftieshousewife.connectionpaths.address.Address;
-import io.github.fiftieshousewife.connectionpaths.address.NameTracer;
+import io.github.fiftieshousewife.connectionpaths.address.SettingAnnotations;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
@@ -14,7 +14,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
 
 /**
  * Spring XML beans whose class is a connection client, such as a {@code DataSource} with a {@code url} property: a
@@ -23,7 +22,6 @@ import java.util.regex.Matcher;
  */
 public final class SpringBeans {
 
-    /** Properties that hold a client's address, most specific first. */
     private static final List<String> ADDRESS_PROPERTIES = List.of("url", "jdbcUrl", "URL", "serverURL", "serverUrl",
         "brokerURL", "brokerUrl", "providerUrl", "uri", "baseUrl", "serviceUrl", "connectionString", "host",
         "serverName");
@@ -60,7 +58,7 @@ public final class SpringBeans {
         return new MethodKey(bean.getType(), "<bean" + id + ">", "");
     }
 
-    /** The first rule naming the bean's class or one of its supertypes. */
+    // The first rule naming the bean's class or one of its supertypes.
     private Optional<ConnectionRules.Rule> rule(final String type) {
         final Set<String> types = typeAndAncestors(type);
         return rules.getRules().stream().filter(rule -> !rule.isAnnotation() && types.contains(rule.type()))
@@ -84,16 +82,11 @@ public final class SpringBeans {
         return all;
     }
 
-    /** The first address property's value: a {@code ${key}} setting or a literal; else, given at run time. */
+    // The first address property's value: a ${key} setting or a literal; else, given at run time.
     static Address addressOf(final SpringXml.Bean bean) {
         final Optional<String> value = ADDRESS_PROPERTIES.stream().map(bean.getProperties()::get)
             .filter(v -> v != null && !v.isBlank()).findFirst();
-        if (value.isEmpty()) {
-            return Address.builtBy("the properties of bean " + bean.getId());
-        }
-        final Matcher setting = NameTracer.PLACEHOLDER.matcher(value.get());
-        return setting.matches()
-            ? Address.builder().source(Address.SETTING).value(setting.group(1)).via(VIA).build()
-            : Address.of(Address.LITERAL, value.get());
+        return value.map(text -> SettingAnnotations.settingOrLiteral(text, VIA))
+            .orElse(Address.builtBy("the properties of bean " + bean.getId()));
     }
 }

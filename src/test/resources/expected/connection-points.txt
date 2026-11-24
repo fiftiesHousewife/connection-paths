@@ -1,0 +1,36 @@
+# Each connection point the example repo has: its method, then its kind.
+com.example.db.Database#open() database
+com.example.events.AuditListener#changed(String) socket
+com.example.report.ReportClient#fetch() url
+com.example.tools.Shell#list() process
+com.example.docs.DocumentReader#read(URL) url
+com.example.mail.SmtpMailer#send(String) mail
+com.example.mail.SmtpMailer#send(String) mail
+com.example.mail.MailLogin#check(String,String) mail
+com.example.addresses.CrmClient#open() socket
+com.example.addresses.LedgerStore#open() database
+com.example.addresses.OrdersLookup#connect(InitialContext) database
+com.example.addresses.PaymentsClient#balances() url
+com.example.addresses.PoolFactory#connect(SimpleDataSource) database
+com.example.addresses.RegionClient#prices(String) url
+com.example.addresses.WarehouseClient#stock() url
+com.example.alt.DefaultProvider#getConnection() database
+com.example.alt.JndiProvider#getConnection() database
+com.example.alt.EmbeddedProvider#getConnection() database
+com.example.alt.LocalThings#readBundledFile() url
+com.example.alt.LocalThings#talkToTheAgentOnThisMachine() socket
+com.example.alt.LocalThings#readOwnJar() url
+com.example.addresses.DirectoryClient#users() http
+com.example.addresses.Notifier.Sender#open() socket
+com.example.addresses.SecureChannel#open() socket
+com.example.addresses.Fetcher#fetch() url
+com.example.overloads.RemoteLoader#load(URL) url
+com.example.jdbc.Customers#count() database
+com.example.jdbc.Customers#named(String) database
+com.example.clients.Shop#orderCount() http
+com.example.clients.Shop#priceList() http
+com.example.addresses.ListenAddress#toListenOn() host-lookup
+com.example.addresses.ListenAddress#partner() host-lookup
+com.example.addresses.OrdersReplica#open() database
+org.apache.commons.dbcp.BasicDataSource#<bean reportsDataSource>() database
+org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>() database

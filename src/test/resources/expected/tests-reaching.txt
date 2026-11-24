@@ -1,0 +1,24 @@
+# Each test in the example repo that may reach a connection.
+com.example.orders.OrderServiceTest.countsOrders
+com.example.report.ReportJobTest.runsTheReport
+com.example.ledger.LedgerTest.countsEntries
+com.example.tools.ShellTest.lists
+com.example.legacy.AuditTest.testAudits
+com.example.orders.ArchiverTest.archives
+com.example.stores.StoresTest.namesTheStore
+com.example.stores.StoresTest.sizesTheCache
+com.example.config.ConfigTest.readsASetting
+com.example.config.ConfigTest.sizesThePool
+com.example.greet.GreetingsTest.says
+com.example.ledger.LedgerNestedTest.WhenEmpty.hasNoEntries
+com.example.ledger.LedgerTestNgTest.countsEntries
+com.example.ledger.LedgerCleanupTest.startsClean
+com.example.mail.SmtpMailerTest.sends
+com.example.mail.MailLoginTest.checksAUser
+com.example.alt.DbManagerTest.connects
+com.example.overloads.LoaderTest.loadsFromAUrl
+com.example.jdbc.CustomersTest.counts
+com.example.jdbc.CustomersTest.findsByName
+com.example.clients.ShopTest.countsOrders
+com.example.clients.ShopTest.listsPrices
+com.example.inherited.LedgerResourceTest.isReady

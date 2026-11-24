@@ -1,0 +1,71 @@
+package io.github.fiftieshousewife.connectionpaths.settings;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+// The properties, YAML and XML files under some folders that may hold settings, outside build output and tool files,
+// and no larger than a megabyte, in the order their settings are kept: production before test, a file without a
+// Spring profile (application.yml) before one with (application-dev.yml), then by name.
+final class SettingsFileFinder {
+
+    private static final Set<String> SKIPPED_FOLDERS =
+        Set.of("build", "target", ".git", ".gradle", ".idea", "node_modules", "out");
+    private static final Set<String> SKIPPED_FILES = Set.of("pom.xml", "build.xml", "ivy.xml", "checkstyle.xml");
+    private static final Set<String> EXTENSIONS = Set.of("properties", "yml", "yaml", "xml");
+    private static final long LARGEST = 1_000_000;
+    private static final Pattern PROFILE_FILE = Pattern.compile("(application|bootstrap)-[^.]+\\.(properties|ya?ml)");
+
+    private SettingsFileFinder() {
+    }
+
+    static List<Path> filesIn(final List<Path> folders) {
+        return folders.stream().filter(Files::isDirectory).flatMap(SettingsFileFinder::settingsFilesIn)
+            .sorted(Comparator.comparing(SettingsFileFinder::isTestSettings)
+                .thenComparing(SettingsFileFinder::isProfileFile).thenComparing(Comparator.naturalOrder()))
+            .toList();
+    }
+
+    private static Stream<Path> settingsFilesIn(final Path folder) {
+        try (Stream<Path> paths = Files.walk(folder)) {
+            return paths.filter(SettingsFileFinder::isSettingsFile).toList().stream();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Can't read " + folder, e);
+        }
+    }
+
+    private static boolean isSettingsFile(final Path path) {
+        final String name = String.valueOf(path.getFileName());
+        final boolean wanted = EXTENSIONS.contains(name.substring(name.lastIndexOf('.') + 1))
+            && !SKIPPED_FILES.contains(name);
+        return wanted && Files.isRegularFile(path) && !inSkippedFolder(path) && smallEnough(path);
+    }
+
+    private static boolean inSkippedFolder(final Path path) {
+        return StreamSupport.stream(path.spliterator(), false)
+            .anyMatch(part -> SKIPPED_FOLDERS.contains(part.toString()));
+    }
+
+    private static boolean smallEnough(final Path path) {
+        try {
+            return Files.size(path) <= LARGEST;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private static boolean isTestSettings(final Path file) {
+        return file.toString().replace('\\', '/').contains("/src/test/");
+    }
+
+    private static boolean isProfileFile(final Path file) {
+        return PROFILE_FILE.matcher(String.valueOf(file.getFileName())).matches();
+    }
+}

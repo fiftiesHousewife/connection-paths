@@ -30,7 +30,7 @@ public final class Signatures {
         return String.join(",", names);
     }
 
-    /** From the declaration in the source where there is one, so both sides of a call read the same way. */
+    // From the declaration in the source where there is one, so both sides of a call read the same way.
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.AvoidCatchingThrowable"})
     static String of(final ResolvedMethodLikeDeclaration resolved) {
         final Optional<Node> declaration = declarationOf(resolved);
@@ -57,7 +57,7 @@ public final class Signatures {
         }
     }
 
-    /** Drops leading annotations, as in {@code @NonNull String}; arguments to them hold no spaces in practice. */
+    // Drops leading annotations, as in @NonNull String; arguments to them hold no spaces in practice.
     private static String withoutAnnotations(final String type) {
         String text = type.strip();
         while (text.startsWith("@") && text.indexOf(' ') > 0) {
@@ -92,7 +92,7 @@ public final class Signatures {
         return UNKNOWN.equals(type) || "Object".equals(type) || isTypeVariable(type.replace("[]", ""));
     }
 
-    /** A type variable such as {@code T} or {@code E2}, which an override names as the type it stands for. */
+    // A type variable such as T or E2, which an override names as the type it stands for.
     private static boolean isTypeVariable(final String name) {
         return !name.isEmpty() && name.length() <= 2 && Character.isUpperCase(name.charAt(0))
             && name.chars().allMatch(c -> Character.isUpperCase(c) || Character.isDigit(c));

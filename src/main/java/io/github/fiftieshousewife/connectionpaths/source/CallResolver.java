@@ -41,23 +41,17 @@ public final class CallResolver {
     }
 
     void collect(final MethodKey caller, final Node body, final String file) {
-        for (final MethodCallExpr call : body.findAll(MethodCallExpr.class)) {
-            if (!Mocks.isStubbedOrVerified(call)) {
-                record(caller, () -> call.resolve(), new Site(call, file));
-            }
-        }
-        for (final ExplicitConstructorInvocationStmt call : body.findAll(ExplicitConstructorInvocationStmt.class)) {
-            record(caller, () -> call.resolve(), new Site(call, file));
-        }
-        for (final ObjectCreationExpr create : body.findAll(ObjectCreationExpr.class)) {
-            record(caller, () -> create.resolve(), new Site(create, file));
-        }
-        for (final MethodReferenceExpr reference : body.findAll(MethodReferenceExpr.class)) {
-            record(caller, () -> reference.resolve(), new Site(reference, file));
-        }
+        body.findAll(MethodCallExpr.class).stream().filter(call -> !Mocks.isStubbedOrVerified(call))
+            .forEach(call -> record(caller, call::resolve, new Site(call, file)));
+        body.findAll(ExplicitConstructorInvocationStmt.class)
+            .forEach(call -> record(caller, call::resolve, new Site(call, file)));
+        body.findAll(ObjectCreationExpr.class)
+            .forEach(create -> record(caller, create::resolve, new Site(create, file)));
+        body.findAll(MethodReferenceExpr.class)
+            .forEach(reference -> record(caller, reference::resolve, new Site(reference, file)));
     }
 
-    /** Where a call is, for the unresolved report. */
+    // Where a call is, for the unresolved report.
     private record Site(Node node, String file) {
         SourceModel.Location location() {
             return new SourceModel.Location(file, node.getBegin().map(p -> p.line).orElse(0));
@@ -92,7 +86,7 @@ public final class CallResolver {
             constructor ? MethodKey.CONSTRUCTOR : resolved.getName(), Signatures.of(resolved));
     }
 
-    /** A type's supertypes, each with the names of the methods it declares (empty where they can't be read). */
+    // A type's supertypes, each with the names of the methods it declares (empty where they can't be read).
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.AvoidCatchingThrowable"})
     private Map<String, Set<String>> supertypes(final ResolvedReferenceTypeDeclaration type) {
         return supertypesOf.computeIfAbsent(type.getQualifiedName(), name -> {
@@ -119,7 +113,7 @@ public final class CallResolver {
     }
 
     private Optional<Set<String>> ancestorsFromSource(final String type) {
-        final Set<String> fromSource = model.ancestors(type);
+        final Set<String> fromSource = model.types().ancestors(type);
         return fromSource.isEmpty() ? Optional.empty() : Optional.of(fromSource);
     }
 }

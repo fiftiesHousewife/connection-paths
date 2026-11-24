@@ -25,11 +25,11 @@ public final class TestChains {
 
     public static Optional<TestChain> of(final SourceModel model, final MethodKey test,
                                   final Map<MethodKey, MethodKey> next) {
-        final MethodKey declared = model.declarationOf(test);
+        final MethodKey declared = model.tests().declarationOf(test);
         if (next.containsKey(declared)) {
             return Optional.of(new TestChain(CallGraph.chain(declared, next), false));
         }
-        return model.setUpOf(test.type()).stream()
+        return model.tests().setUpOf(test.type()).stream()
             .filter(next::containsKey)
             .findFirst()
             .map(setUp -> {

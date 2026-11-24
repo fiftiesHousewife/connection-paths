@@ -4,9 +4,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>
-        Rules for this repository: the cleancode plugin's curated rule, complexity limits, streams rather than
-        for-each loops, and the test standard that a test with more than one assertion wraps them in assertAll.
-        See AGENTS.md.
+        Rules for this repository: the cleancode plugin's curated rule, complexity limits, and the test standard that a test with more than one assertion wraps them in assertAll.
+        See AGENTS.md. Advice that is reported but doesn't fail the build is in advice.xml.
     </description>
 
     <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingMethodName"/>
@@ -29,22 +28,6 @@
     <rule ref="category/java/design.xml/ExcessiveParameterList">
         <properties>
             <property name="minimum" value="4"/>
-        </properties>
-    </rule>
-
-    <rule name="UseStreamsNotForEachLoops"
-          language="java"
-          message="Use a stream, or forEach, instead of a for-each loop"
-          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
-        <description>
-            A for-each loop over a collection or array reads better as a stream or a forEach call. Where it can't be
-            one, such as a body that throws a checked exception, suppress this rule on the method and say why.
-        </description>
-        <priority>1</priority>
-        <properties>
-            <property name="xpath">
-                <value><![CDATA[//ForeachStatement]]></value>
-            </property>
         </properties>
     </rule>
 

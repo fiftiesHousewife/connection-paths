@@ -18,7 +18,6 @@ public final class Frameworks {
         "DataLdapTest", "DataR2dbcTest", "WebMvcTest", "WebFluxTest", "RestClientTest", "GraphQlTest",
         "ContextConfiguration", "SpringJUnitConfig", "SpringJUnitWebConfig", "WebAppConfiguration", "Testcontainers",
         "QuarkusTest", "QuarkusIntegrationTest", "QuarkusMainTest", "MicronautTest");
-    /** The annotations that name a runner or extension, and the runners and extensions that start a framework. */
     private static final Set<String> RUN_WITH = Set.of("RunWith", "ExtendWith");
     private static final Set<String> RUNNERS = Set.of("SpringRunner", "SpringJUnit4ClassRunner", "SpringExtension",
         "QuarkusTestExtension", "MicronautJunit5Extension", "Arquillian", "ArquillianExtension");
@@ -26,19 +25,18 @@ public final class Frameworks {
     private Frameworks() {
     }
 
-    /** The annotation on a type that starts a framework, as written: {@code @SpringBootTest}. */
+    // The annotation on a type that starts a framework, as written: @SpringBootTest.
     static Optional<String> startedBy(final TypeDeclaration<?> type) {
-        for (final AnnotationExpr annotation : type.getAnnotations()) {
-            final String name = annotation.getName().getIdentifier();
-            if (STARTERS.contains(name)) {
-                return Optional.of("@" + name);
-            }
-            final Optional<String> runner = RUN_WITH.contains(name) ? runnerIn(annotation) : Optional.empty();
-            if (runner.isPresent()) {
-                return Optional.of("@" + name + "(" + runner.get() + ".class)");
-            }
+        return type.getAnnotations().stream().map(Frameworks::started).flatMap(Optional::stream).findFirst();
+    }
+
+    private static Optional<String> started(final AnnotationExpr annotation) {
+        final String name = annotation.getName().getIdentifier();
+        if (STARTERS.contains(name)) {
+            return Optional.of("@" + name);
         }
-        return Optional.empty();
+        return RUN_WITH.contains(name) ? runnerIn(annotation).map(runner -> "@" + name + "(" + runner + ".class)")
+            : Optional.empty();
     }
 
     private static Optional<String> runnerIn(final AnnotationExpr annotation) {
