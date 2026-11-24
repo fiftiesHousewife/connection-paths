@@ -33,12 +33,26 @@ final class Reaches {
 
     List<Facts.Reach> of(final MethodKey test, final Map<String, Map<MethodKey, MethodKey>> reachedByKind) {
         final List<Facts.Reach> reaches = reachedByKind.entrySet().stream()
-            .map(kind -> TestChains.of(model, test, kind.getValue()).map(c -> reachOf(test, kind.getKey(), c)))
+            .map(kind -> reach(test, kind.getKey(), kind.getValue()))
             .flatMap(Optional::stream).filter(reach -> runsFor(test, reach)).toList();
         return reaches.stream().filter(r -> DATABASE.equals(r.getKind())).findFirst()
             .filter(Reaches::cannotConnect)
             .map(database -> reaches.stream().map(r -> behind(r, database)).toList())
             .orElse(reaches);
+    }
+
+    // Through the test's own body, unless that goes to an address known only at run time and its set-up reaches the
+    // same kind of connection at a host or on this machine: a client the set-up connects, then the test uses.
+    private Optional<Facts.Reach> reach(final MethodKey test, final String kind, final Map<MethodKey, MethodKey> next) {
+        final Optional<Facts.Reach> first = TestChains.of(model, test, next).map(c -> reachOf(test, kind, c));
+        final boolean runTime = first.filter(r -> TestAddresses.RUN_TIME.equals(r.getAddressForTests())).isPresent();
+        return runTime ? Optional.of(TestChains.throughSetUp(model, test, next).map(c -> reachOf(test, kind, c))
+            .filter(r -> isKnown(r) && runsFor(test, r)).orElse(first.get())) : first;
+    }
+
+    private static boolean isKnown(final Facts.Reach reach) {
+        return TestAddresses.HOST.equals(reach.getAddressForTests())
+            || TestAddresses.LOCAL.equals(reach.getAddressForTests());
     }
 
     private Facts.Reach reachOf(final MethodKey test, final String kind, final TestChains.TestChain chain) {

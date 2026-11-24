@@ -98,7 +98,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 * What runs with a test counts as part of it: set-up and tear-down methods (JUnit 3, 4 and 5, and TestNG), the test
   class's constructors and fields, its superclasses', and, for a `@Nested` class, those of the classes around it.
   JUnit 3 tests are found by their superclass. A test a class inherits is listed under each class that runs it, with
-  that class's set-up, and not under an abstract class that declares it.
+  that class's set-up, and not under an abstract class that declares it. A test's chain for each kind starts in its
+  own body, unless that goes to an address known only at run time and its set-up connects the same kind to a host or
+  to this machine, such as a client the set-up connects and the test then uses.
 * A call made only to stub or verify a mock (`when(store.all())`, `verify(store).all()`) is not counted as a call.
 * A `super.m()` call runs only the method it names, never one that overrides it.
 * A call through an interface or superclass reaches only the overriding methods of classes the program creates (with

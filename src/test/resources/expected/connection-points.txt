@@ -57,3 +57,5 @@ org.apache.commons.dbcp.BasicDataSource#<bean ledgerDataSource>() database
 com.example.jobs.RemoteJob#prepare() url
 com.example.lookups.Peers#gateway() host-lookup
 com.example.lookups.Peers#byAddress(String) host-lookup
+com.example.transfers.FileServerClient#connect(String) socket
+com.example.transfers.FileServerClient#list() socket

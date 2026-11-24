@@ -45,3 +45,4 @@ com.example.spring.ReportsContextSubclassTest.loadsTheBeansItsSuperclassNames
 com.example.spring.LedgerContextTest.loadsTheBeansItsContextImports
 com.example.lookups.PeersTest.findsAPeerByItsAddress
 com.example.pages.PageInSetUpTest.hasAPage
+com.example.transfers.FileServerClientTest.listsTheFiles

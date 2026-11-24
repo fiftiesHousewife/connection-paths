@@ -29,6 +29,13 @@ public final class TestChains {
         if (next.containsKey(declared)) {
             return Optional.of(new TestChain(CallGraph.chain(declared, next), false));
         }
+        return throughSetUp(model, test, next);
+    }
+
+    /** How a test reaches what {@link CallGraph#reachBack} walked back from through what runs with it, if it does. */
+    public static Optional<TestChain> throughSetUp(final SourceModel model, final MethodKey test,
+                                                   final Map<MethodKey, MethodKey> next) {
+        final MethodKey declared = model.tests().declarationOf(test);
         return model.tests().setUpOf(test.type()).stream()
             .filter(next::containsKey)
             .findFirst()
