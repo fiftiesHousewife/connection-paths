@@ -52,6 +52,7 @@ public final class SourceReader {
             .filter(e -> model.types().ancestors(e.getKey().type()).stream().anyMatch(TypeHeads::isJunit3Base))
             .forEach(e -> model.tests().test(e.getKey(), e.getValue()));
         InheritedTests.spread(model, abstractTestTypes);
+        StartedServers.addTo(model);
         // Creating an object first runs its superclass's constructor (super() unless it says otherwise), and so the
         // superclass's field initialisers.
         superclasses.forEach((type, superclass) -> {

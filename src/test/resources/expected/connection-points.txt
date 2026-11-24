@@ -43,3 +43,4 @@ com.example.lookups.MachineName#peerName(Socket) host-lookup
 com.example.lookups.ServiceRecords#find(String) directory
 com.example.lookups.Dialler#open() socket
 com.example.lookups.Dialler#open() socket
+com.example.boot.LedgerEntries#open() database

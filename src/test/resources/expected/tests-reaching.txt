@@ -30,3 +30,5 @@ com.example.addresses.CrmClientTest.opens
 com.example.mail.MailLoginWithGreenMailTest.checksAUser
 com.example.plugins.ExportersTest.exports
 com.example.directory.LdapConnectorTest.connects
+com.example.report.ReportClientWithServerTest.fetches
+com.example.boot.LedgerContainerTest.storesAnEntry
