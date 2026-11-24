@@ -19,7 +19,8 @@ import java.util.stream.Stream;
 final class NameTracer {
 
     private static final Set<String> ADDRESS_SETTERS = Set.of("setUrl", "setURL", "setJdbcUrl", "setHost", "setUri",
-        "setURI", "setServerName", "setServerUrl", "setProviderUrl", "setConnectionString");
+        "setURI", "setServerName", "setServerUrl", "setProviderUrl", "setConnectionString", "add");
+    private static final Set<String> TABLE_PUTS = Set.of("put", "setProperty", "addToEnvironment");
 
     private final AddressTracer expressions;
 
@@ -51,7 +52,17 @@ final class NameTracer {
                 .map(ReturnStmt::getExpression).flatMap(Optional::stream).toList())
             .orElse(List.of());
         return returned.isEmpty() ? Optional.empty()
-            : Optional.of(follow(returned, trace)).filter(AddressText::saysSomething);
+            : Optional.of(follow(returned, trace)).filter(AddressText::saysSomething)
+                .or(() -> Declarations.of(call).flatMap(method -> fromFieldsRead(method, trace)));
+    }
+
+    // A value built in ways that can't be followed, such as a URL appended host by host, still comes from the fields
+    // its method reads: the setting one of them is filled from names it.
+    private Optional<Address> fromFieldsRead(final Node method, final Trace trace) {
+        return Declarations.enclosingType(method).flatMap(type -> method.findAll(NameExpr.class).stream()
+            .map(NameExpr::getNameAsString).distinct()
+            .filter(id -> type.getFieldByName(id).isPresent() && valuesIn(method, id).isEmpty())
+            .map(id -> fieldIn(type, id, trace)).filter(Address::isNamed).findFirst());
     }
 
     Address field(final FieldAccessExpr access, final Trace trace) {
@@ -86,12 +97,26 @@ final class NameTracer {
             .map(AssignExpr::getValue);
         final Stream<Expression> set = scope.findAll(MethodCallExpr.class, c -> isAddressSetterOn(c, id)).stream()
             .map(c -> c.getArgument(0));
-        return Stream.of(initialised, assigned, set).flatMap(s -> s).toList();
+        final Stream<Expression> put = scope.findAll(MethodCallExpr.class, c -> isProviderUrlPutOn(c, id)).stream()
+            .map(c -> c.getArgument(1));
+        return Stream.of(initialised, assigned, set, put).flatMap(s -> s).toList();
     }
 
     private static boolean isAddressSetterOn(final MethodCallExpr call, final String id) {
         return ADDRESS_SETTERS.contains(call.getNameAsString()) && !call.getArguments().isEmpty()
             && call.getScope().map(s -> id.equals(targetName(s))).orElse(false);
+    }
+
+    // A JNDI or JMS environment table given its provider URL: env.put(Context.PROVIDER_URL, url).
+    private static boolean isProviderUrlPutOn(final MethodCallExpr call, final String id) {
+        final boolean onTheTable = call.getScope().map(s -> id.equals(targetName(s))).orElse(false);
+        return onTheTable && TABLE_PUTS.contains(call.getNameAsString()) && call.getArguments().size() == 2
+            && isProviderUrlKey(call.getArgument(0));
+    }
+
+    private static boolean isProviderUrlKey(final Expression key) {
+        return key.toString().endsWith("PROVIDER_URL")
+            || Declarations.constant(key).filter("java.naming.provider.url"::equals).isPresent();
     }
 
     private static String targetName(final Expression target) {

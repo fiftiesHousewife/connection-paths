@@ -5,6 +5,7 @@ import io.github.fiftieshousewife.connectionpaths.address.Locality;
 import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -19,16 +20,27 @@ final class TestAddresses {
 
     private final Map<String, Address> byPoint;
     private final SettingsFiles settings;
+    private final ArgumentTracer arguments;
 
     TestAddresses(final SourceModel model, final SettingsFiles settings) {
         this.settings = settings.onTheTestClasspath();
+        this.arguments = new ArgumentTracer(model);
         this.byPoint = model.getPoints().stream().collect(Collectors.toMap(
             point -> point.method() + " " + point.kind(), model::addressOf, (first, second) -> first));
     }
 
-    String of(final MethodKey point, final String kind) {
-        final Address address = settings.withValue(byPoint.get(point + " " + kind));
-        return classify(address, kind);
+    // Where a reach's test would connect. A point whose address is one of its parameters is followed back along the
+    // test's chain, to the argument each caller passes, as far as the test.
+    String of(final List<MethodKey> chain, final String kind) {
+        Address address = byPoint.get(chain.get(chain.size() - 1) + " " + kind);
+        for (int step = chain.size() - 1; step > 0 && ArgumentTracer.parameterOf(address).isPresent(); step--) {
+            final String parameter = ArgumentTracer.parameterOf(address).orElseThrow();
+            address = arguments.passedBy(chain.get(step - 1), chain.get(step), parameter).orElse(address);
+            if (ArgumentTracer.parameterOf(address).filter(parameter::equals).isPresent()) {
+                break;
+            }
+        }
+        return classify(settings.withValue(address), kind);
     }
 
     private static String classify(final Address address, final String kind) {

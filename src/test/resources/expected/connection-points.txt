@@ -36,3 +36,4 @@ org.apache.commons.dbcp.BasicDataSource#<bean reportsDataSource>() database
 org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>() database
 com.example.addresses.AuditFeed#read() url
 com.example.plugins.FtpExporter#export(String) socket
+com.example.directory.DirectoryContext#<init>(Hashtable) directory

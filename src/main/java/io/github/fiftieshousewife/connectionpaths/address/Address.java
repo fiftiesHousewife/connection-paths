@@ -36,7 +36,7 @@ public class Address {
     private static final int FULL_LITERAL = 9;
     private static final int LEAST = 1;
 
-    static final Comparator<Address> MOST_INFORMATIVE = Comparator.comparingInt(Address::rank).reversed();
+    public static final Comparator<Address> MOST_INFORMATIVE = Comparator.comparingInt(Address::rank).reversed();
 
     String source;
     String value;

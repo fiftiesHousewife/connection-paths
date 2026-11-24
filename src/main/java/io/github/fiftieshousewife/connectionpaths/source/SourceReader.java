@@ -41,6 +41,7 @@ public final class SourceReader {
             .setSymbolResolver(new JavaSymbolSolver(solver)));
         this.calls = new CallResolver(model, rules);
         this.members = new MemberReader(model, calls);
+        model.rereadWith(file -> parse(file).getResult());
     }
 
     /** Reads the production and test source folders. */

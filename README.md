@@ -128,6 +128,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   what runs with it, or a test-source helper they call) is kept, and marked at that step. Where the test would
   connect comes from the settings on the test classpath, test resources before main ones: a setting none of
   them gives means the test can't reach the system. See [the decision](docs/decisions/0010-each-reach-says-whether-it-runs-a-mock-and-where-the-tests-own-settings-send-it.md).
+  A point whose address is a parameter is followed back along each test's chain to the argument its caller passes;
+  a JNDI environment table's address is its `Context.PROVIDER_URL`, and a value built in ways that can't be
+  followed comes from the settings-backed fields its method reads.
 * A test that starts a framework is listed by the annotation that starts it, on its class, a superclass or a class
   around it. See [the decision](docs/decisions/0009-tests-that-start-a-framework-are-listed-by-their-annotation-apart-from-the-tests-that-reach-a-connection.md).
 * A test is listed if it may reach a connection. "May": measurement, the first run of the tests, confirms or clears

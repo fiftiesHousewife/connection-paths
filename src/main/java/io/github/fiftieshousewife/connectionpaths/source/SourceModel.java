@@ -1,12 +1,16 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
 import io.github.fiftieshousewife.connectionpaths.address.Address;
+import com.github.javaparser.ast.CompilationUnit;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 /** Everything read from the source: methods, the calls each makes, types' supertypes, tests, and connection points. */
 public final class SourceModel {
@@ -24,6 +28,8 @@ public final class SourceModel {
     private final Map<MethodKey, Location> locations = new HashMap<>();
     private final Set<ConnectionPoint> points = new LinkedHashSet<>();
     private final Set<String> createdTypes = new HashSet<>();
+    private final Map<String, Optional<CompilationUnit>> rereadFiles = new HashMap<>();
+    private Function<Path, Optional<CompilationUnit>> parser = file -> Optional.empty();
     private final Map<ConnectionPoint, Location> pointLocations = new HashMap<>();
     private final Map<ConnectionPoint, Address> pointAddresses = new HashMap<>();
     private final TypeHierarchy hierarchy = new TypeHierarchy();
@@ -56,6 +62,15 @@ public final class SourceModel {
         pointAddresses.putIfAbsent(point, address);
     }
 
+    void rereadWith(final Function<Path, Optional<CompilationUnit>> fileParser) {
+        this.parser = fileParser;
+    }
+
+    /** A source file read again, with calls resolved as when it was first read, to look closer at one of its calls. */
+    public Optional<CompilationUnit> reread(final String file) {
+        return rereadFiles.computeIfAbsent(file, name -> parser.apply(Path.of(name)));
+    }
+
     /** A type the program creates objects of, with new, by name, or through a framework. */
     public void created(final String type) {
         createdTypes.add(type);
@@ -85,7 +100,8 @@ public final class SourceModel {
         return Collections.unmodifiableMap(calls);
     }
 
-    Location locationOf(final MethodKey method) {
+    /** Where a method is declared. */
+    public Location locationOf(final MethodKey method) {
         return locations.get(method);
     }
 

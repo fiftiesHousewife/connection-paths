@@ -32,7 +32,7 @@ public record MethodKey(String type, String name, String parameters) implements 
         return CONSTRUCTOR.equals(name);
     }
 
-    int parameterCount() {
+    public int parameterCount() {
         return parameters.isEmpty() ? 0 : parameters.split(",", -1).length;
     }
 

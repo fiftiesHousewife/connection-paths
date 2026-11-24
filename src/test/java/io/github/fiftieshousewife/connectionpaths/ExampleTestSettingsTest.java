@@ -35,9 +35,14 @@ class ExampleTestSettingsTest {
     }
 
     @Test
-    void saysRunTimeForAnAddressTheSourceDoesNotGive() {
+    void followsAParameterBackToTheAddressTheTestItselfPasses() {
         assertThat(onlyReach("com.example.overloads.LoaderTest.loadsFromAUrl").getAddressForTests())
-            .isEqualTo("run-time");
+            .isEqualTo("host");
+    }
+
+    @Test
+    void saysRunTimeForAnAddressTheSourceDoesNotGive() {
+        assertThat(onlyReach("com.example.clients.ShopTest.listsPrices").getAddressForTests()).isEqualTo("run-time");
     }
 
     @Test
@@ -49,5 +54,11 @@ class ExampleTestSettingsTest {
     @Test
     void namesNoStandInForATestThatStartsNone() {
         assertThat(REACHING.get("com.example.mail.MailLoginTest.checksAUser").getStandIns()).isEmpty();
+    }
+
+    @Test
+    void followsAParameterBackToTheArgumentItsCallerPassesAndThroughAnEnvironmentTable() {
+        assertThat(onlyReach("com.example.directory.LdapConnectorTest.connects").getAddressForTests())
+            .isEqualTo("none");
     }
 }

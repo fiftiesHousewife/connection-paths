@@ -142,7 +142,7 @@ public final class FactsBuilder {
             .point(point.toString())
             .throughSetUp(chain.throughSetUp())
             .throughMock(mocks.throughMock(test, steps).map(MethodKey::toString).orElse(null))
-            .addressForTests(testAddresses.of(point, kind))
+            .addressForTests(testAddresses.of(steps, kind))
             .chain(steps.stream().map(MethodKey::toString).toList())
             .build();
     }

@@ -11,9 +11,9 @@ ways of building it gets a [decision record](decisions/README.md).
    tests, which connect to a server on localhost, can't be told local. Following a value through a setter into a
    field and out through a getter, across calls, and giving each test the address its own chain passes, would. Done
    when jsoup's tests that use its local test server are local.
-2. **A parameter's address, from the arguments its callers pass.** Where a point's address is a parameter
-   (`DocumentReader#read(URL)`), follow each test's chain back to the argument passed, a bounded number of steps,
-   and give the address on that test's reach.
+2. **A parameter's address, for the connection point itself.** Each test's reach follows a parameter back to the
+   argument its caller passes (`address_for_tests`), but the point's own `address` still says `parameter`: give
+   it the addresses all its callers pass.
 3. **Tests that load a Spring XML context.** A bean in Spring XML is a connection point, but no test reaches it: a
    test whose `@ContextConfiguration` names the file, or that builds a `ClassPathXmlApplicationContext` on it,
    could reach each of its beans.

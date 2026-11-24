@@ -64,6 +64,11 @@ public final class AddressTracer {
             .orElse(Address.builtBy(AddressText.shorten(call)));
     }
 
+    /** The address an expression gives, such as an argument passed to a method whose parameter is the address. */
+    public Address expression(final Expression expression) {
+        return expression(expression, new Trace());
+    }
+
     Address expression(final Expression expression, final Trace trace) {
         if (trace.tooLong()) {
             return Address.builtBy(AddressText.shorten(expression));
