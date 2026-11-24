@@ -1,9 +1,8 @@
 package org.eclipse.jetty.server;
 
-public class Server {
-    public Server(int port) {
-    }
+import org.eclipse.jetty.util.component.AbstractLifeCycle;
 
-    public void start() {
+public class Server extends AbstractLifeCycle {
+    public Server(int port) {
     }
 }

@@ -15,6 +15,12 @@ class ExampleStandInsTest {
     }
 
     @Test
+    void namesAServerATestStartsItself() {
+        assertThat(REACHING.get("com.example.report.ReportClientStartingItsServerTest.fetches").getStandIns())
+            .containsExactly("org.eclipse.jetty.server.Server");
+    }
+
+    @Test
     void namesAContainerTheTestClassStarts() {
         assertThat(REACHING.get("com.example.boot.LedgerContainerTest.storesAnEntry").getStandIns())
             .containsExactly("org.testcontainers.containers.PostgreSQLContainer");
