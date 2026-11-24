@@ -19,7 +19,6 @@ choice between ways of building it gets a [decision record](decisions/README.md)
      (`AbstractDependencyInjectionSpringContextTests` and the like) in `getConfigLocations()` or `getConfigPaths()`;
    * `classpath*:` locations and patterns (`spring/*-context.xml`), and telling apart files of the same name in
      different folders;
-   * `<import resource=...>`, to any depth;
    * `${name}` and `${name:default}` looked up in the files a `property-placeholder`, `PropertyPlaceholderConfigurer`
      or `util:properties` names, and the default used where none sets it;
    * `<beans profile=...>` counting only for an active profile;

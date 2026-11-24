@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-// Code that loads a Spring XML file as a context, and so makes its beans: a test class whose
-// @ContextConfiguration names the file, as its set-up, and a method that makes a ClassPathXmlApplicationContext,
-// FileSystemXmlApplicationContext or GenericXmlApplicationContext on it. Each file is a step of its own,
-// ApplicationContext#<xml applicationContext.xml>, that calls each of its beans; files are matched by name.
-final class XmlContexts {
+/**
+ * Code that loads a Spring XML file as a context, and so makes its beans: a test class whose
+ * {@code @ContextConfiguration} names the file, as its set-up, and a method that makes a
+ * {@code ClassPathXmlApplicationContext}, {@code FileSystemXmlApplicationContext} or
+ * {@code GenericXmlApplicationContext} on it. Each file is a step of its own,
+ * {@code ApplicationContext#<xml applicationContext.xml>}, that calls each of its beans; files are matched by name.
+ */
+public final class XmlContexts {
 
     private static final Set<String> NAMING = Set.of("ContextConfiguration", "SpringJUnitConfig",
         "SpringJUnitWebConfig", "ImportResource");
@@ -22,7 +25,8 @@ final class XmlContexts {
     private XmlContexts() {
     }
 
-    static MethodKey contextOf(final String file) {
+    /** The step that stands for a Spring XML file, matched by its name: {@code ApplicationContext#<xml app.xml>}. */
+    public static MethodKey contextOf(final String file) {
         return new MethodKey("org.springframework.context.ApplicationContext", "<xml " + fileName(file) + ">", "");
     }
 

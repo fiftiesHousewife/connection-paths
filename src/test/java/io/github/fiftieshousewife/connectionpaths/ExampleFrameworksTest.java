@@ -24,6 +24,8 @@ class ExampleFrameworksTest {
                     "com.example.boot.OrdersApplicationTest"),
                 tuple("com.example.boot.OrdersOverHttpTest.showsAnOrder",
                     "@SpringBootTest(webEnvironment = RANDOM_PORT)", "com.example.boot.OrdersOverHttpTest"),
+                tuple("com.example.spring.LedgerContextTest.loadsTheBeansItsContextImports", "@ContextConfiguration",
+                    "com.example.spring.LedgerContextTest"),
                 tuple("com.example.spring.ReportsContextSubclassTest.loadsTheBeansItsSuperclassNames",
                     "@ContextConfiguration", "com.example.spring.ReportsContextBase"),
                 tuple("com.example.spring.ReportsContextTest.loadsTheReportBeans", "@ContextConfiguration",
@@ -32,6 +34,6 @@ class ExampleFrameworksTest {
 
     @Test
     void countsThemInTheSummary() {
-        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(6);
+        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(7);
     }
 }

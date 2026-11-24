@@ -24,6 +24,12 @@ class ExampleSpringXmlContextsTest {
     }
 
     @Test
+    void reachesTheBeansOfAFileTheContextImports() {
+        assertThat(reachOf("com.example.spring.LedgerContextTest.loadsTheBeansItsContextImports", "database")
+            .getPoint()).isEqualTo(BEAN + "ledgerDataSource>()");
+    }
+
+    @Test
     void reachesTheBeansOfTheContextCodeLoads() {
         assertThat(reachOf("com.example.spring.LegacyLauncherTest.starts", "database").getChain())
             .contains("com.example.spring.LegacyLauncher#start()").last().asString().startsWith(BEAN);

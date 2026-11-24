@@ -5,6 +5,7 @@ import io.github.fiftieshousewife.connectionpaths.address.SettingAnnotations;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import io.github.fiftieshousewife.connectionpaths.source.XmlContexts;
 import com.github.javaparser.resolution.model.SymbolReference;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
@@ -46,6 +47,9 @@ public final class SpringBeans {
             model.point(bean.point(), bean.at(), bean.address());
             model.xmlContextHolds(bean.at().file(), bean.point().method());
         });
+        // A file that imports another makes the imported file's beans too, to any depth.
+        SpringXml.imports(files).forEach((file, imported) -> imported.stream().filter(resource -> !resource.contains("*"))
+            .forEach(resource -> model.xmlContextHolds(file, XmlContexts.contextOf(resource))));
         beans.stream().map(SpringXml.Bean::getType).filter(Objects::nonNull).forEach(model::created);
     }
 

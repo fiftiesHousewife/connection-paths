@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 import javax.xml.stream.XMLStreamReader;
@@ -18,6 +19,7 @@ final class BeanWalk implements XmlFiles.Handler {
 
     private final String file;
     private final List<SpringXml.Bean> found = new ArrayList<>();
+    private final List<String> imported = new ArrayList<>();
     private final Deque<SpringXml.Bean.BeanBuilder> open = new ArrayDeque<>();
     private final Deque<Map<String, String>> properties = new ArrayDeque<>();
     private final StringBuilder characters = new StringBuilder();
@@ -32,12 +34,18 @@ final class BeanWalk implements XmlFiles.Handler {
         return "beans".equals(root) ? found : List.of();
     }
 
+    List<String> imports() {
+        return "beans".equals(root) ? imported : List.of();
+    }
+
     @Override
     public void start(final XMLStreamReader element) {
         characters.setLength(0);
         final String name = element.getLocalName();
         root = root == null ? name : root;
-        if ("bean".equals(name)) {
+        if ("import".equals(name)) {
+            Optional.ofNullable(element.getAttributeValue(null, "resource")).ifPresent(imported::add);
+        } else if ("bean".equals(name)) {
             open.push(bean(element));
         } else if ("property".equals(name) && !open.isEmpty()) {
             property = element.getAttributeValue(null, "name");

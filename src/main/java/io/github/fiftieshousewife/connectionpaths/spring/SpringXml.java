@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import javax.xml.stream.XMLStreamException;
 import lombok.Builder;
 import lombok.Value;
@@ -40,14 +41,30 @@ public final class SpringXml {
         return beans;
     }
 
+    /** The files each Spring XML file imports, by {@code <import resource="..."/>}, keyed by the importing file. */
+    public static Map<String, List<String>> imports(final List<Path> files) {
+        final Map<String, List<String>> imports = new TreeMap<>();
+        files.stream().filter(file -> file.toString().endsWith(".xml"))
+            .forEach(file -> imports.put(nameOf(file), walked(file).imports()));
+        return imports;
+    }
+
     private static List<Bean> read(final Path file) {
-        final BeanWalk walk = new BeanWalk(file.toString().replace('\\', '/'));
+        return walked(file).beans();
+    }
+
+    private static BeanWalk walked(final Path file) {
+        final BeanWalk walk = new BeanWalk(nameOf(file));
         try {
             XmlFiles.walk(file, walk);
-            return walk.beans();
         } catch (IOException | XMLStreamException e) {
             log.debug("No beans read from {}: {}", file, e.getMessage());
-            return List.of();
+            return new BeanWalk(nameOf(file));
         }
+        return walk;
+    }
+
+    private static String nameOf(final Path file) {
+        return file.toString().replace('\\', '/');
     }
 }
