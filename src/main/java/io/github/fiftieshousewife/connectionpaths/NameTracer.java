@@ -12,6 +12,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.stmt.ReturnStmt;
@@ -28,6 +29,7 @@ final class NameTracer {
     private static final Set<String> ADDRESS_SETTERS = Set.of("setUrl", "setURL", "setJdbcUrl", "setHost", "setUri",
         "setURI", "setServerName", "setServerUrl", "setProviderUrl", "setConnectionString");
     /** Spring's {@code ${key}} or {@code ${key:default}}. */
+    private static final Set<String> PREFIX_MEMBERS = Set.of("prefix", "value");
     static final Pattern PLACEHOLDER = Pattern.compile("^\\$\\{([^}:]+)(:.*)?}$");
 
     private final AddressTracer expressions;
@@ -134,7 +136,8 @@ final class NameTracer {
             .flatMap(f -> f.getAnnotations().stream())
             .map(NameTracer::settingFromValueAnnotation)
             .flatMap(Optional::stream)
-            .findFirst();
+            .findFirst()
+            .or(() -> boundSetting(type, id));
         if (annotated.isPresent()) {
             return annotated.get();
         }
@@ -172,6 +175,28 @@ final class NameTracer {
             return name.getNameAsString();
         }
         return target instanceof FieldAccessExpr field ? field.getNameAsString() : "";
+    }
+
+    /**
+     * A field of a class annotated {@code @ConfigurationProperties("orders-db")}, which Spring fills from the settings:
+     * the setting {@code orders-db.<field>}.
+     */
+    private static Optional<Address> boundSetting(final TypeDeclaration<?> type, final String id) {
+        if (type.getFieldByName(id).isEmpty()) {
+            return Optional.empty();
+        }
+        return type.getAnnotationByName("ConfigurationProperties").flatMap(NameTracer::prefixOf)
+            .map(prefix -> Address.builder().source(Address.SETTING).value(prefix + "." + id)
+                .via("@ConfigurationProperties").build());
+    }
+
+    private static Optional<String> prefixOf(final AnnotationExpr annotation) {
+        if (annotation instanceof SingleMemberAnnotationExpr single) {
+            return constant(single.getMemberValue());
+        }
+        return annotation instanceof NormalAnnotationExpr normal ? normal.getPairs().stream()
+            .filter(pair -> PREFIX_MEMBERS.contains(pair.getNameAsString())).findFirst()
+            .flatMap(pair -> constant(pair.getValue())) : Optional.empty();
     }
 
     /** Spring's {@code @Value("${orders.db.url}")} on a field: the setting it reads. */

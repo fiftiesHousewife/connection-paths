@@ -16,9 +16,9 @@ ways of building it gets a [decision record](decisions/README.md).
    and give the address on that test's reach.
 3. **Spring XML beans.** A `<bean class="...DataSource">` with a `url` property opens a connection the source never
    shows. Read bean definitions as connection points, with the property as the address.
-4. **Settings, more precisely.** Spring's profiles (`application-test.yml` over `application.yml`), relaxed names
-   (`SPRING_DATASOURCE_URL`), `@ConfigurationProperties` prefixes, and a `Properties` loaded from a named file.
-   Today the first file in name order holds the value.
+4. **Settings loaded from a named file.** A `Properties` loaded from `orders.properties` and read with
+   `getProperty("url")` should be looked up in that file, not in every settings file. Spring profiles are read
+   after the files without one; a test's own profile (`application-test.yml`) could give the value its tests use.
 5. **Dispatch points.** Give how many places call each one, and put the few with most calls in the summary.
 
 ## How it is run

@@ -112,7 +112,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 * An address is traced from the connection call's first argument, or what the call is made on, back through
   variables, fields, constructors, builder chains, the JDK's helpers and the source's own methods, to a literal or a
   name. A call passing a dotted key (`crowd.server.url`) reads a setting, which is looked up in the settings files
-  under `--module` and `--settings` folders. See [the decision](docs/decisions/0006-each-connections-address-is-traced-in-the-source-and-looked-up-in-the-repos-settings-files.md).
+  under `--module` and `--settings` folders: production settings before test ones, a file without a Spring profile
+  before one with, and keys matched loosely, as Spring matches them (`jdbcUrl`, `jdbc-url`, `JDBC_URL`). A field
+  of a `@ConfigurationProperties("orders-db")` class reads the setting `orders-db.<field>`. See [the decision](docs/decisions/0006-each-connections-address-is-traced-in-the-source-and-looked-up-in-the-repos-settings-files.md).
 * A system is the points that go to one host, else to one setting, variable or JNDI name, else those opened in one
   class. Databases in memory or in files, files, jars, classpath resources and localhost are local and part of no
   system; so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen

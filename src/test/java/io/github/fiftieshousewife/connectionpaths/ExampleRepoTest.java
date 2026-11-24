@@ -55,7 +55,8 @@ class ExampleRepoTest {
                 tuple("com.example.clients.Shop#orderCount()", "http"),
                 tuple("com.example.clients.Shop#priceList()", "http"),
                 tuple("com.example.addresses.ListenAddress#toListenOn()", "host-lookup"),
-                tuple("com.example.addresses.ListenAddress#partner()", "host-lookup"));
+                tuple("com.example.addresses.ListenAddress#partner()", "host-lookup"),
+                tuple("com.example.addresses.OrdersReplica#open()", "database"));
     }
 
     @Test
@@ -162,7 +163,7 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(102),
+            () -> assertThat(summary.getFiles()).isEqualTo(104),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
             // The abstract ResourceContractTest's one test is counted twice, under each subclass, not under itself.
             () -> assertThat(summary.getTests()).isEqualTo(37),

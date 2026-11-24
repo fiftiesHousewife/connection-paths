@@ -1,3 +1,5 @@
 warehouse:
   # Filled in for each place it runs.
   url: https://YOUR-WAREHOUSE/api
+orders-db:
+  jdbc-url: jdbc:postgresql://orders-replica.internal/orders

@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,7 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * The settings in a repo's properties, YAML and XML files, by dotted key. YAML and XML are flattened to the path of
  * their keys or elements: {@code <database><serverURL>} is {@code database.serverURL}, with and without the root
- * element. Where a key is in more than one file, the first in file-name order is kept.
+ * element. Where a key is in more than one file, the value kept is from production settings before test ones, then
+ * a file without a profile ({@code application.yml}) before one with ({@code application-dev.yml}), then file-name
+ * order. Keys are matched loosely, as Spring matches them: {@code jdbcUrl}, {@code jdbc-url} and {@code JDBC_URL}
+ * are one key.
  */
 @Slf4j
 final class SettingsFiles {
@@ -35,20 +39,45 @@ final class SettingsFiles {
     private static final Pattern PLACEHOLDER = Pattern.compile(".*(YOUR[-_]|<[^>]+>|\\$\\{|CHANGE[-_ ]?ME|TODO|XXX"
         + "|(?i:example\\.(com|org|net)|changeme|placeholder|//(undefined|unset|invalid)\\b)).*");
 
+    /** A Spring profile's file, which holds settings only for when that profile is on. */
+    private static final Pattern PROFILE_FILE = Pattern.compile("(application|bootstrap)-[^.]+\\.(properties|ya?ml)");
+
     private final Map<String, Setting> settings = new TreeMap<>();
+    private final Map<String, Setting> loosely = new TreeMap<>();
 
     private SettingsFiles() {
     }
 
     static SettingsFiles read(final List<Path> folders) {
         final SettingsFiles files = new SettingsFiles();
-        folders.stream().filter(Files::isDirectory).flatMap(SettingsFiles::settingsFilesIn).sorted()
+        folders.stream().filter(Files::isDirectory).flatMap(SettingsFiles::settingsFilesIn)
+            .sorted(Comparator.comparing(SettingsFiles::isTestSettings).thenComparing(SettingsFiles::isProfileFile)
+                .thenComparing(Comparator.naturalOrder()))
             .forEach(files::readFile);
         return files;
     }
 
     Optional<Setting> get(final String key) {
-        return Optional.ofNullable(settings.get(key));
+        return Optional.ofNullable(settings.get(key)).or(() -> Optional.ofNullable(loosely.get(loose(key))));
+    }
+
+    /** A key as Spring compares keys: without dashes, with underscores as dots, in lower case. */
+    private static String loose(final String key) {
+        final StringBuilder text = new StringBuilder(key.length());
+        for (final char c : key.toCharArray()) {
+            if (c != '-') {
+                text.append(c == '_' ? '.' : Character.toLowerCase(c));
+            }
+        }
+        return text.toString();
+    }
+
+    private static boolean isTestSettings(final Path file) {
+        return file.toString().replace('\\', '/').contains("/src/test/");
+    }
+
+    private static boolean isProfileFile(final Path file) {
+        return PROFILE_FILE.matcher(String.valueOf(file.getFileName())).matches();
     }
 
     int size() {
@@ -126,6 +155,7 @@ final class SettingsFiles {
 
     private void add(final String key, final Setting setting) {
         settings.putIfAbsent(key, setting);
+        loosely.putIfAbsent(loose(key), setting);
     }
 
     /** Receives each setting a file holds. */

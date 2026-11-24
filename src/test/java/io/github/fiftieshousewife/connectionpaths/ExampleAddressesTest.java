@@ -65,6 +65,21 @@ class ExampleAddressesTest {
     }
 
     @Test
+    void takesASettingFromTheFileWithoutAProfileOverOneWithAProfile() {
+        assertThat(addressOf("com.example.addresses.CrmClient#open()").getSettingFile())
+            .endsWith("/application.properties");
+    }
+
+    @Test
+    void readsAConfigurationPropertiesFieldAsTheSettingItsPrefixAndNameGiveMatchedLoosely() {
+        final Address replica = addressOf("com.example.addresses.OrdersReplica#open()");
+        assertAll(
+            () -> assertThat(replica.getValue()).isEqualTo("orders-db.jdbcUrl"),
+            () -> assertThat(replica.getVia()).isEqualTo("@ConfigurationProperties"),
+            () -> assertThat(replica.getSettingValue()).isEqualTo("jdbc:postgresql://orders-replica.internal/orders"));
+    }
+
+    @Test
     void flagsASettingWhoseValueIsAPlaceholder() {
         final Address warehouse = addressOf("com.example.addresses.WarehouseClient#stock()");
         assertAll(
