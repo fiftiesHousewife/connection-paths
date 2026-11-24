@@ -115,7 +115,8 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   under `--module` and `--settings` folders. See [the decision](docs/decisions/0006-each-connections-address-is-traced-in-the-source-and-looked-up-in-the-repos-settings-files.md).
 * A system is the points that go to one host, else to one setting, variable or JNDI name, else those opened in one
   class. Databases in memory or in files, files, jars, classpath resources and localhost are local and part of no
-  system; so are host look-ups and processes. Systems reached through the same interface method are alternatives.
+  system; so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen
+  on (`network.interface`) is local too. Systems reached through the same interface method are alternatives.
   See [the decision](docs/decisions/0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md).
 * A sibling module's class folder on the classpath (`../i18n/target/classes`) is read from its source.
 * A test that starts a framework is listed by the annotation that starts it, on its class, a superclass or a class

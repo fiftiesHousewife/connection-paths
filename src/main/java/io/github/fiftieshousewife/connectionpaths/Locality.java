@@ -7,7 +7,8 @@ import java.util.regex.Pattern;
 
 /**
  * Whether an address stays on the machine: an in-memory or file database, a file, a jar or a classpath resource,
- * the machine's own host name, or its DNS servers. A connection like that needs no stand-in system.
+ * the machine's own host name, an address of its own to listen on, or its DNS servers. A connection like that needs
+ * no stand-in system.
  */
 final class Locality {
 
@@ -34,11 +35,22 @@ final class Locality {
     /** A path with no scheme or host: for a URL, a file or a classpath resource. */
     private static final Pattern PATH = Pattern.compile("\\.{0,2}/[^/].*");
 
+    /** Words in a setting's key that say it holds an address of this machine to listen on, not another's. */
+    private static final Pattern LISTEN_WORDS = Pattern.compile("interface|bind|listen", Pattern.CASE_INSENSITIVE);
+
     /** Why an address is local, or empty if it may reach another machine. */
     static Optional<String> of(final Address address, final String kind) {
+        if ("host-lookup".equals(kind) && isListenSetting(address)) {
+            return Optional.of("an address of this machine, to listen on");
+        }
         final boolean path = "url".equals(kind) && address.isLiteral()
             && PATH.matcher(address.getValue()).matches();
         return path ? Optional.of("a file or a classpath resource") : of(address);
+    }
+
+    /** A setting such as {@code network.interface} or {@code server.bind-address}. */
+    private static boolean isListenSetting(final Address address) {
+        return Address.SETTING.equals(address.getSource()) && LISTEN_WORDS.matcher(address.getValue()).find();
     }
 
     private static Optional<String> of(final Address address) {
