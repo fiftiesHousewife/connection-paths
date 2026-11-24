@@ -9,6 +9,7 @@ import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
 import io.github.fiftieshousewife.connectionpaths.source.TestModel;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 // Where a test would connect, from the settings on the test classpath: to a host; on this machine; nowhere, as no
@@ -37,6 +38,19 @@ final class TestAddresses {
     // Where a reach's test would connect. A point whose address is one of its parameters is followed back along the
     // test's chain, to the argument each caller passes, as far as the test.
     String of(final List<MethodKey> chain, final String kind) {
+        final String graded = graded(chain, kind);
+        return RUN_TIME.equals(graded) && chain.size() > 1 ? fromTheTest(chain, kind).orElse(graded) : graded;
+    }
+
+    // Where the reach's own address leaves it unknown, what the test's call into its chain says, if that names a host
+    // or this machine: an address handed in, held by a builder and read back as the connection is made.
+    private Optional<String> fromTheTest(final List<MethodKey> chain, final String kind) {
+        return arguments.atTheTestsCall(chain.get(0), chain.get(1), kind)
+            .map(address -> classify(settings.withValue(address), kind))
+            .filter(grade -> HOST.equals(grade) || LOCAL.equals(grade));
+    }
+
+    private String graded(final List<MethodKey> chain, final String kind) {
         final Address address = alongTheChain(chain, byPoint.get(chain.get(chain.size() - 1) + " " + kind));
         if (address.isRelativePath() && servesOnAPort(chain.get(0).type())) {
             return LOCAL;

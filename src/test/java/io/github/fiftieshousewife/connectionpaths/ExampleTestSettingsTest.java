@@ -43,6 +43,12 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void takesTheAddressATestHandsABuilderWhereTheChainLeavesItUnknown() {
+        assertThat(reachOf("com.example.pages.PageRequestTest.fetchesAPage", "url").getAddressForTests())
+            .isEqualTo("host");
+    }
+
+    @Test
     void takesASettingOnlyTheMainResourcesGiveAsTheTestsToo() {
         assertThat(onlyReach("com.example.clients.ShopTest.countsOrders").getAddressForTests()).isEqualTo("host");
     }

@@ -135,6 +135,10 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   them gives means the test can't reach the system. See [the decision](docs/decisions/0010-each-reach-says-whether-it-runs-a-mock-and-where-the-tests-own-settings-send-it.md).
   A path such as `/owners/1`, in a test that serves the application on a port
   (`@SpringBootTest(webEnvironment = RANDOM_PORT)` or `DEFINED_PORT`), goes to it on this machine, and is local.
+  Where a reach's own address leaves it unknown, the test's own call into its chain is traced, and taken if it
+  names a host or this machine: `Jsoup.connect("https://jsoup.org/").get()` hands the address to a builder that
+  holds it until the connection is made. A method that returns what it built from a parameter gives the argument
+  its call passes, and fluent `url(...)` and `uri(...)` setters set an address.
   A point whose address is a parameter is followed back along each test's chain to the argument its caller passes;
   a JNDI environment table's address is its `Context.PROVIDER_URL`, and a value built in ways that can't be
   followed comes from the settings-backed fields its method reads. Code that runs only once a database connection is

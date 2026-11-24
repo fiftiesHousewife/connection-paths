@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 final class NameTracer {
 
     private static final Set<String> ADDRESS_SETTERS = Set.of("setUrl", "setURL", "setJdbcUrl", "setHost", "setUri",
-        "setURI", "setServerName", "setServerUrl", "setProviderUrl", "setConnectionString", "add");
+        "setURI", "setServerName", "setServerUrl", "setProviderUrl", "setConnectionString", "add", "url", "uri");
     private static final Set<String> TABLE_PUTS = Set.of("put", "setProperty", "addToEnvironment");
 
     private final AddressTracer expressions;

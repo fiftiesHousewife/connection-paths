@@ -34,6 +34,12 @@ final class ArgumentTracer {
             .min(Address.MOST_INFORMATIVE).orElse(null)));
     }
 
+    // The address a test's own call into its chain gives, such as Jsoup.connect("https://jsoup.org/").get().
+    Optional<Address> atTheTestsCall(final MethodKey test, final MethodKey first, final String kind) {
+        return declaration(test).map(body -> callsIn(body, first).map(call -> tracer.trace((Node) call, kind))
+            .min(Address.MOST_INFORMATIVE).orElse(null));
+    }
+
     private Optional<CallableDeclaration<?>> declaration(final MethodKey method) {
         final SourceModel.Location at = model.locationOf(method);
         return at == null ? Optional.empty() : model.reread(at.file()).flatMap(unit -> unit

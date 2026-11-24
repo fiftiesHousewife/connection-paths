@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.address;
 
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import java.util.Optional;
@@ -42,7 +43,21 @@ final class CallTracer {
 
     private Optional<Address> returned(final MethodCallExpr call, final Trace trace) {
         final boolean jdk = JDK_HELPERS.contains(scopeText(call)) || Declarations.declaredInJdk(call);
-        return jdk ? Optional.empty() : names.returnedBy(call, trace);
+        return jdk ? Optional.empty() : names.returnedBy(call, trace).map(a -> argumentFor(call, a, trace));
+    }
+
+    // What a method returns built from one of its parameters is built from the argument this call passes for it.
+    private Address argumentFor(final MethodCallExpr call, final Address returned, final Trace trace) {
+        if (!Address.PARAMETER.equals(returned.getSource())) {
+            return returned;
+        }
+        final String parameter = returned.getValue().substring(0, returned.getValue().indexOf(" of "));
+        return Declarations.of(call).filter(CallableDeclaration.class::isInstance)
+            .map(d -> ((CallableDeclaration<?>) d).getParameters().stream().map(p -> p.getNameAsString()).toList())
+            .filter(names -> returned.getValue().endsWith(" of " + call.getNameAsString()))
+            .map(names -> names.indexOf(parameter))
+            .filter(i -> i >= 0 && i < call.getArguments().size())
+            .map(i -> expressions.expression(call.getArgument(i), trace)).orElse(returned);
     }
 
     private Optional<Address> fromParts(final MethodCallExpr call, final Trace trace) {
