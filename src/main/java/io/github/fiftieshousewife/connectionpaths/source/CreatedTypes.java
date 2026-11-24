@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import io.github.fiftieshousewife.connectionpaths.source.syntax.TypeHeads;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;

@@ -2,7 +2,7 @@ package io.github.fiftieshousewife.connectionpaths.graph;
 
 import io.github.fiftieshousewife.connectionpaths.source.Mark;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
-import io.github.fiftieshousewife.connectionpaths.source.Signatures;
+import io.github.fiftieshousewife.connectionpaths.source.syntax.Signatures;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
 import java.util.ArrayDeque;
 import java.util.ArrayList;

@@ -1,5 +1,5 @@
 // under-test-external-calls: finds where Java code opens external connections, and which tests reach them, from source.
-// The code standards come from build-logic's java-conventions; see AGENTS.md.
+// The code standards come from the java-conventions plugin; see AGENTS.md.
 
 plugins {
     id("io.github.fiftieshousewife.java-conventions")
@@ -14,8 +14,10 @@ dependencies {
     implementation(libs.jackson3.databind)
     compileOnly(libs.spotbugs.annotations)
     testCompileOnly(libs.spotbugs.annotations)
-    // SpotBugs logs through slf4j-simple; its plugin otherwise picks an older one.
-    spotbugsSlf4j(libs.slf4j.simple)
+}
+
+underTest {
+    spotbugsExcludeFilter = layout.projectDirectory.file("config/spotbugs-exclude.xml")
 }
 
 // Built with the toolchain's JDK, but runs on Java 17 and later: the machines that run it often have an older JDK.
@@ -70,8 +72,4 @@ configure<nmcp.NmcpAggregationExtension> {
 }
 dependencies {
     "nmcpAggregation"(project(":"))
-}
-
-tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
-    excludeFilter = layout.projectDirectory.file("config/quality/spotbugs/exclude.xml")
 }

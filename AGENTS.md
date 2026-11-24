@@ -24,22 +24,23 @@ follows: no repurposed words, no dates in text, things referred to by name.
 | [`docs/decisions/`](docs/decisions/README.md) | This repo's decisions, in MADR form |
 | [`docs/backlog.md`](docs/backlog.md) | What it doesn't do yet, most useful first |
 | [`docs/evaluations/`](docs/evaluations/) | Comparisons with other tools that decisions rest on, with what's needed to run them again |
-| `build-logic/`, `config/quality/` | The Gradle conventions and quality rules, from which under-test's shared java-conventions plugin is seeded; `io.github.fiftieshousewife.publishing` is how it is published |
+| `build-logic/` | `io.github.fiftieshousewife.publishing`: how it is published. The code standards come from under-test's [java-conventions](https://github.com/fiftiesHousewife/under-test-java-conventions) plugin, pinned in `settings.gradle.kts` |
+| `config/spotbugs-exclude.xml` | The SpotBugs findings this repo doesn't treat as bugs, each with its reason |
 | [`.github/workflows/`](.github/workflows/) | Build: `./gradlew check` on every pull request, and the jar run on Java 17. Release: a tag such as `v1.2.3` publishes to Maven Central and GitHub |
 | [`.github/skills/`](.github/skills/) | This repo's AI assistant skills (below) |
 
 ## Code standards (enforced by `./gradlew check`)
-Each of these fails the build:
+They come from the java-conventions plugin, whose README says why each is what it is. Each of these fails the build:
 - **Size:** methods of 20 lines or fewer, not counting blank ones; files of 150 lines or fewer; lines of 120 characters
   or fewer.
-- **Simplicity:** cyclomatic complexity of 6 or less and cognitive complexity of 7 or less for each method; boolean
-  expressions of at most three parts; no copy-pasted code.
+- **Simplicity:** cyclomatic complexity of 5 or less and cognitive complexity of 6 or less for each method; boolean
+  expressions of at most three parts; no copy-pasted code of 50 tokens or more.
 - **Parameters:** no more than three for a method or constructor (use a Lombok `@Builder`), and no more than three
   components in a record.
-- **Packages** by area, each with a public entry point and package-private helpers.
-- **Comments:** no comment on a field (name it so it needs none, or say it on the class or method); Javadoc only on a
-  public type and its public members, and `//` comments elsewhere.
-- **Tests:** at least 80% line coverage; each test makes one assertion, or one `assertAll` holding several.
+- **Packages** by area, each with a public entry point and package-private helpers, and no more than 20 classes.
+- **Comments:** no comment on a field or an enum entry (name it so it needs none, or say it on the class or method);
+  Javadoc only on a public type and its public members, and `//` comments elsewhere.
+- **Tests:** at least 80% line coverage; each test makes exactly one assertion, or one `assertAll` holding several.
 - **Code:** logging through Lombok `@Slf4j`, never `System.out`; no forbidden JDK APIs; SpotBugs with FindSecBugs
   clean; final locals, braces always, no star imports.
 

@@ -30,12 +30,14 @@ public final class Declarations {
             .<TypeDeclaration<?>>map(n -> (TypeDeclaration<?>) n);
     }
 
-    static Optional<CallableDeclaration<?>> enclosingMethod(final Node node) {
+    /** The method, constructor or initialiser nearest around a node. */
+    public static Optional<CallableDeclaration<?>> enclosingMethod(final Node node) {
         return ancestors(node).filter(CallableDeclaration.class::isInstance)
             .<CallableDeclaration<?>>map(n -> (CallableDeclaration<?>) n).findFirst();
     }
 
-    private static Stream<Node> ancestors(final Node node) {
+    /** The nodes around a node, nearest first. */
+    public static Stream<Node> ancestors(final Node node) {
         return Stream.iterate(node.getParentNode(), Optional::isPresent, at -> at.get().getParentNode())
             .map(Optional::get);
     }

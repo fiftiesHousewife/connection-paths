@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import io.github.fiftieshousewife.connectionpaths.source.syntax.TypeHeads;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.expr.ClassExpr;

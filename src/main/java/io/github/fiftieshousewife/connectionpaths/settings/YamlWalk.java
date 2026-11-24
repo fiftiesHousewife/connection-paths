@@ -26,13 +26,18 @@ final class YamlWalk {
             return;
         }
         final int indent = line.length() - line.stripLeading().length();
-        while (!path.isEmpty() && path.peek().indent() >= indent) {
-            path.pop();
-        }
+        leaveLevelsAt(indent);
         if (opens) {
             path.push(new Level(indent, text.substring(0, text.length() - 1).strip()));
         } else {
             found.setting(keyOf(text.substring(0, colon).strip()), unquoted(text.substring(colon + 2)), number);
+        }
+    }
+
+    // Leaves the keys a line at this indent, or less, is no longer under.
+    private void leaveLevelsAt(final int indent) {
+        while (!path.isEmpty() && path.peek().indent() >= indent) {
+            path.pop();
         }
     }
 

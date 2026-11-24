@@ -46,12 +46,13 @@ public final class Locality {
     /** Why an address is local, or empty if it may reach another machine. */
     public static Optional<String> of(final Address address, final String kind) {
         final Optional<String> lookup = "host-lookup".equals(kind) ? ofLookup(address) : Optional.empty();
-        if (lookup.isPresent()) {
-            return lookup;
-        }
-        final boolean path = "url".equals(kind) && address.isLiteral()
-            && PATH.matcher(address.getValue()).matches();
-        return path ? Optional.of("a file or a classpath resource") : of(address);
+        return lookup.or(() -> isPathOpened(address, kind) ? Optional.of("a file or a classpath resource")
+            : of(address));
+    }
+
+    // A URL opened on a path alone, such as /config/app.json: a file or a resource on this machine.
+    private static boolean isPathOpened(final Address address, final String kind) {
+        return "url".equals(kind) && address.isLiteral() && PATH.matcher(address.getValue()).matches();
     }
 
     // A look-up of an address of this machine to listen on, or of a numeric address (IPv4, or IPv6 in hexadecimal and

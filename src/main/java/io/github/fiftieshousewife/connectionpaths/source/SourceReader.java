@@ -1,5 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import io.github.fiftieshousewife.connectionpaths.source.syntax.TypeHeads;
+import io.github.fiftieshousewife.connectionpaths.source.syntax.AnonymousClasses;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;

@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import io.github.fiftieshousewife.connectionpaths.source.syntax.Signatures;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ClassExpr;

@@ -1,8 +1,12 @@
 pluginManagement {
+    // build-logic holds only how this repo is published; the code standards come from java-conventions.
     includeBuild("build-logic")
     repositories {
         gradlePluginPortal()
         mavenCentral()
+    }
+    plugins {
+        id("io.github.fiftieshousewife.java-conventions") version "0.1.0"
     }
 }
 

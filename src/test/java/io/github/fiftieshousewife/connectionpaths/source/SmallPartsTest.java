@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import io.github.fiftieshousewife.connectionpaths.source.syntax.Signatures;
 import io.github.fiftieshousewife.connectionpaths.ConnectionPaths;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;

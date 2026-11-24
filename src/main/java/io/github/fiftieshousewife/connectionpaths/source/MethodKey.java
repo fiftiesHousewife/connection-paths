@@ -1,5 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import io.github.fiftieshousewife.connectionpaths.source.syntax.Signatures;
+
 /**
  * A method or constructor: the type that declares it, its name, and its parameter types as simple names without
  * generics ({@code URL,String}). Constructors are named {@code <init>}; a type's instance field initialisers and

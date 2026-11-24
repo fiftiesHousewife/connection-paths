@@ -1,5 +1,9 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import io.github.fiftieshousewife.connectionpaths.source.syntax.Mocks;
+import io.github.fiftieshousewife.connectionpaths.source.syntax.Signatures;
+import io.github.fiftieshousewife.connectionpaths.source.syntax.TypeHeads;
+import io.github.fiftieshousewife.connectionpaths.source.syntax.AnonymousClasses;
 import io.github.fiftieshousewife.connectionpaths.address.AddressTracer;
 import io.github.fiftieshousewife.connectionpaths.rules.AnnotatedClients;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
@@ -20,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 /**
@@ -43,11 +46,11 @@ public final class CallResolver {
     }
 
     void collect(final MethodKey caller, final Node body, final String file) {
-        callsIn(body, MethodCallExpr.class).filter(call -> !Mocks.isStubbedOrVerified(call))
+        AnonymousClasses.callsIn(body, MethodCallExpr.class).filter(call -> !Mocks.isStubbedOrVerified(call))
             .forEach(call -> record(caller, call::resolve, new Site(call, file)));
-        callsIn(body, ExplicitConstructorInvocationStmt.class)
+        AnonymousClasses.callsIn(body, ExplicitConstructorInvocationStmt.class)
             .forEach(call -> record(caller, call::resolve, new Site(call, file)));
-        callsIn(body, ObjectCreationExpr.class).forEach(create -> {
+        AnonymousClasses.callsIn(body, ObjectCreationExpr.class).forEach(create -> {
             record(caller, create::resolve, new Site(create, file));
             XmlContexts.loadedBy(create).forEach(xml -> model.call(caller, XmlContexts.contextOf(xml)));
             final String created = TypeHeads.qualifiedName(create.getType());
@@ -55,13 +58,8 @@ public final class CallResolver {
                 model.createdBy(caller, created);
             }
         });
-        callsIn(body, MethodReferenceExpr.class)
+        AnonymousClasses.callsIn(body, MethodReferenceExpr.class)
             .forEach(reference -> record(caller, reference::resolve, new Site(reference, file)));
-    }
-
-    // The calls of a kind in a member's body, leaving out those in the anonymous classes it makes: they are its own.
-    private static <T extends Node> Stream<T> callsIn(final Node body, final Class<T> kind) {
-        return body.findAll(kind).stream().filter(call -> !AnonymousClasses.isInsideAnonymousClassIn(call, body));
     }
 
     // Where a call is, for the unresolved report.
