@@ -13,14 +13,15 @@ import java.util.regex.Pattern;
 // Groups connection points by the system they go to: by host where the address shows one, else by the setting,
 // variable or JNDI name it comes from, else by the class that opens it. A point with no address of its own, such as
 // sending on a connection opened in the same method or class, belongs to that connection's system. Local
-// connections, host look-ups and processes belong to no system.
+// connections, host look-ups and processes belong to no system. A host's name may be internationalised
+// (räksmörgås.josefsson.org), so its parts are letters and digits of any script.
 final class PointGroups {
 
     private static final Set<String> NOT_SYSTEMS = Set.of("host-lookup", "process");
     private static final String CLASS = "class";
-    private static final Pattern HOST = Pattern.compile(
-        "(?:[a-z][a-z0-9+.:-]*?(?:://|:@))?(?:[^@/]*@)?([a-z0-9-]+(?:\\.[a-z0-9-]+)+|[a-z0-9-]+)(?::\\d+)?(?:[/;?].*)?",
-        Pattern.CASE_INSENSITIVE);
+    private static final String PART = "[\\p{L}\\p{N}-]+";
+    private static final Pattern HOST = Pattern.compile("(?:[a-z][a-z0-9+.:-]*?(?:://|:@))?(?:[^@/]*@)?(" + PART
+        + "(?:\\." + PART + ")+|" + PART + ")(?::\\d+)?(?:[/;?].*)?", Pattern.CASE_INSENSITIVE);
 
     // One system while it is being built: its name, how it is named, and its points.
     record Group(String name, String namedBy, List<Facts.Point> points) {

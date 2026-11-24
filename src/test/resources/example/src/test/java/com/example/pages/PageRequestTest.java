@@ -7,4 +7,9 @@ class PageRequestTest {
     void fetchesAPage() {
         PageRequest.connect("https://pages.internal/home").get();
     }
+
+    @Test
+    void fetchesAPageWithAnInternationalName() {
+        PageRequest.connect("https://bücher.internal/home").get();
+    }
 }

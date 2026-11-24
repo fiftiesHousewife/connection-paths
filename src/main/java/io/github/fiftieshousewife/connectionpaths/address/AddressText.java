@@ -14,7 +14,7 @@ final class AddressText {
 
     private static final int SHORT = 60;
     private static final Pattern SCHEME = Pattern.compile("[a-zA-Z][a-zA-Z0-9+.-]*:.*");
-    private static final Pattern NAME_CHARACTERS = Pattern.compile("[\\w.-]+");
+    private static final Pattern NAME_CHARACTERS = Pattern.compile("[\\w.-]+", Pattern.UNICODE_CHARACTER_CLASS);
     private static final Set<String> HOST_ENDINGS = Set.of("com", "org", "net", "io", "internal", "local");
 
     private AddressText() {

@@ -49,6 +49,12 @@ class ExampleTestSettingsTest {
     }
 
     @Test
+    void takesAnInternationalHostNameAsAHost() {
+        assertThat(reachOf("com.example.pages.PageRequestTest.fetchesAPageWithAnInternationalName", "url")
+            .getAddressForTests()).isEqualTo("host");
+    }
+
+    @Test
     void takesASettingOnlyTheMainResourcesGiveAsTheTestsToo() {
         assertThat(onlyReach("com.example.clients.ShopTest.countsOrders").getAddressForTests()).isEqualTo("host");
     }
