@@ -24,10 +24,11 @@ localhost. They need no stand-in.
 Proposed: group in under-test-external-calls.
 
 * **Local, part of no system** (`local` on the point, saying why): an HSQLDB, H2 or Derby database in memory or in a
-  file, SQLite, a `file:`, `jar:` or `classpath:` address, localhost, a classpath resource, a class's own jar, a
-  path given to a URL, and an address that is a parameter no code in the source passes.
+  file, SQLite, a `file:`, `jar:` or `classpath:` address, localhost, a classpath resource, a class's own jar, and a
+  path given to a URL.
 * **Not a system either**: host look-ups and processes, which the safety inventory covers.
-* **Not local**: a look-up on the machine's DNS servers, such as JNDI's DNS provider finding a domain's service
+* **Not local**: an address that can't be followed, such as a parameter no code in the source passes. Counting it
+  local hid a library's every public entry point; unknown is never local. Nor is a look-up on the machine's DNS servers, such as JNDI's DNS provider finding a domain's service
   records. The servers are other machines, and a test that looks a remote domain up reaches them.
 * **A system** is the points that go to one host; failing that, to one setting, variable or JNDI name; failing that,
   those opened in one class. A point with no address of its own joins the system of another point in the same

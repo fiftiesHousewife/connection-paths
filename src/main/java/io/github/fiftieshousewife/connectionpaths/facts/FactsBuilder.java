@@ -11,7 +11,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -91,23 +90,10 @@ public final class FactsBuilder {
             .file(call.at().file()).line(call.at().line()).address(address).local(localBecause(p, address)).build();
     }
 
-    // Why a point stays on this machine, if it does. A point whose address is a parameter no code in the source passes
-    // can't be followed further, and is left to a person, as local.
-    private String localBecause(final SourceModel.ConnectionPoint point, final Address address) {
-        final Optional<String> local = Locality.of(address, point.kind());
-        if (local.isPresent()) {
-            return local.get();
-        }
-        final boolean parameterNobodyPasses = isOwnParameter(address, point.method())
-            && graph.reachBack(Set.of(point.method())).size() == 1;
-        return parameterNobodyPasses ? "its address is a parameter no code in the source passes" : null;
-    }
-
-    // A parameter of the point's own method, named as the tracer names it: url of read, environment of Context.
-    private static boolean isOwnParameter(final Address address, final MethodKey method) {
-        final String name = method.isConstructor() ? method.type().substring(method.type().lastIndexOf('.') + 1)
-            : method.name();
-        return Address.PARAMETER.equals(address.getSource()) && address.getValue().endsWith(" of " + name);
+    // Why a point stays on this machine, if it does. An address that can't be followed, such as a parameter no code in
+    // the source passes, is unknown, never local.
+    private static String localBecause(final SourceModel.ConnectionPoint point, final Address address) {
+        return Locality.of(address, point.kind()).orElse(null);
     }
 
     private List<Facts.FrameworkTest> testsStartingAFramework() {

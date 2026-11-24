@@ -130,7 +130,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 * A system is the points that go to one host, else to one setting, variable or JNDI name, else those opened in one
   class. Databases in memory or in files, files, jars, classpath resources and localhost are local and part of no
   system (a look-up on the machine's DNS servers is not: they are other machines); so are host look-ups and processes. A look-up of a setting that names an address of this machine to listen
-  on (`network.interface`) is local too, and so is a look-up of a numeric address, which looks nothing up. Systems reached through the same interface method are alternatives.
+  on (`network.interface`) is local too, and so is a look-up of a numeric address, which looks nothing up. An address
+  that can't be followed, such as a parameter no code in the source passes, is never local: in a library, its public
+  entry points are systems named by their class. Systems reached through the same interface method are alternatives.
   See [the decision](docs/decisions/0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md).
 * A chain that calls an instance method of a type the test mocks (a `@Mock` field, or `mock(T.class)` in the test,
   what runs with it, or a test-source helper they call) is kept, and marked at that step. Where the test would
