@@ -39,5 +39,5 @@ through a type with more than three implementations are dispatch points, reporte
 
 ## More Information
 
-* under-test: [Connections and the test paths to them are found by connection-paths, a JavaParser tool in its own repo](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0072-connections-and-the-test-paths-to-them-are-found-by-connection-paths-a-javaparser-tool-in-its-own-repo.md)
+* under-test: [Connections and the test paths to them are found by under-test-external-calls, a JavaParser tool in its own repo](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0072-connections-and-the-test-paths-to-them-are-found-by-under-test-external-calls-a-javaparser-tool-in-its-own-repo.md)
 * under-test: [A repo may be built, without running its tests, before the safety gate](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0073-a-repo-may-be-built-without-running-its-tests-before-the-safety-gate.md)

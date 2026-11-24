@@ -1,8 +1,8 @@
-"""Walks OpenRewrite's call graph with connection-paths' rules, and compares the result with connection-paths' facts.
+"""Walks OpenRewrite's call graph with under-test-external-calls' rules, and compares the result with under-test-external-calls' facts.
 
-Usage: python3 compare_rewrite.py <datatables folder> <connection-paths facts .json> [<connection-rules.txt>]
+Usage: python3 compare_rewrite.py <datatables folder> <under-test-external-calls facts .json> [<connection-rules.txt>]
 The rules default to this repo's built-in ones. Calls through an interface or superclass are followed through
-OpenRewrite's class hierarchy, as connection-paths does: not through java. or javax. types, and not where more than
+OpenRewrite's class hierarchy, as under-test-external-calls does: not through java. or javax. types, and not where more than
 three methods override.
 """
 import collections, csv, json, os, re, sys
@@ -81,7 +81,7 @@ for r in calls:
     for k,typ,m in rules:
         if r['toClass']==typ and (m==r['toName'] or (m=='*' and r['toName']!='<init>')):
             rwpts.setdefault(f"{r['fromClass']}#{r['fromName'] or '<fields>'}",set()).add((k,f"{typ}#{m}"))
-print('points only connection-paths found:'); [print('  ',m.rsplit('.',1)[-1],sorted(v)) for m,v in sorted(ourpts.items()) if m not in rwpts]
+print('points only under-test-external-calls found:'); [print('  ',m.rsplit('.',1)[-1],sorted(v)) for m,v in sorted(ourpts.items()) if m not in rwpts]
 print('points only OpenRewrite found:'); [print('  ',m.rsplit('.',1)[-1],sorted(v)) for m,v in sorted(rwpts.items()) if m not in ourpts]
 print('our unresolved, top 8:'); [print('  ',r['count'],r['reason'][:110],'|',r['example'][:90]) for r in facts['not_resolved'][:8]]
 print('summary:',facts['summary'])

@@ -1,7 +1,7 @@
-# connection-paths
+# under-test-external-calls
 
-[![Build](https://github.com/fiftiesHousewife/connection-paths/actions/workflows/build.yml/badge.svg)](https://github.com/fiftiesHousewife/connection-paths/actions/workflows/build.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.fiftieshousewife.connectionpaths/connection-paths)](https://central.sonatype.com/artifact/io.github.fiftieshousewife.connectionpaths/connection-paths)
+[![Build](https://github.com/fiftiesHousewife/under-test-external-calls/actions/workflows/build.yml/badge.svg)](https://github.com/fiftiesHousewife/under-test-external-calls/actions/workflows/build.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.fiftieshousewife.undertest/under-test-external-calls)](https://central.sonatype.com/artifact/io.github.fiftieshousewife.undertest/under-test-external-calls)
 [![Java 17+](https://img.shields.io/badge/java-17%2B-blue)](#running-it)
 [![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
 [![Decisions](https://img.shields.io/badge/decisions-MADR-informational)](docs/decisions/README.md)
@@ -12,7 +12,7 @@ queues, sockets, other programs), where each one goes, and which tests can reach
 Before an old repo's tests are run for the first time, you want to know which of them may reach a real database or
 service. Searching the tests finds the ones that name a host. It misses the ones that reach a connection through the
 production code: a test of `OrderService` that ends up in `JdbcOrderStore`, which opens a database connection three
-calls down. connection-paths builds a call graph from the source and walks it back from every place a connection is
+calls down. under-test-external-calls builds a call graph from the source and walks it back from every place a connection is
 opened to the tests, and writes down the chain of calls for each. It traces each connection's address to a host, or to
 the setting, environment variable or JNDI name that holds it, and groups the connections into the systems a test may
 reach, leaving out those that never leave the machine.
@@ -23,12 +23,12 @@ properly tested; its connection-list step runs it. It reads and writes files onl
 ## Running it
 
 Java 17 or later. The runnable jar is on Maven Central as
-`io.github.fiftieshousewife.connectionpaths:connection-paths`, classifier `all` (so it comes through a package
-repository that mirrors Maven Central), and on the [releases](https://github.com/fiftiesHousewife/connection-paths/releases)
-page as `connection-paths.jar`. Each comes with a CycloneDX bill of materials.
+`io.github.fiftieshousewife.undertest:under-test-external-calls`, classifier `all` (so it comes through a package
+repository that mirrors Maven Central), and on the [releases](https://github.com/fiftiesHousewife/under-test-external-calls/releases)
+page as `under-test-external-calls.jar`. Each comes with a CycloneDX bill of materials.
 
 ```bash
-java -jar connection-paths.jar --module path/to/module --classpath @classpath.txt --out connection-paths.json
+java -jar under-test-external-calls.jar --module path/to/module --classpath @classpath.txt --out under-test-external-calls.json
 ```
 
 `--classpath` gives the jars the code compiles against. Without them most calls into libraries can't be resolved; the
@@ -39,7 +39,7 @@ runs:
 | Build | Command |
 |---|---|
 | Maven | `mvn -q -pl <module> -am test-compile dependency:build-classpath -Dmdep.includeScope=test -Dmdep.outputFile=classpath.txt` |
-| Gradle | `gradle -q --init-script tools/print-classpath.gradle connectionPathsClasspath` (compiles the tests and runs none; prints where it wrote the file) |
+| Gradle | `gradle -q --init-script tools/print-classpath.gradle underTestExternalCallsClasspath` (compiles the tests and runs none; prints where it wrote the file) |
 
 The classpath from the build is better than one read from the build files by hand, which misses jars that come in
 through other jars. If the build can't give one:
@@ -53,7 +53,7 @@ through other jars. If the build can't give one:
   proxies want them up front. Run the build where the proxy isn't needed, or through the organisation's package
   repository.
 
-`java -jar connection-paths.jar --help` lists every option, including `--main` and `--test` for source folders outside
+`java -jar under-test-external-calls.jar --help` lists every option, including `--main` and `--test` for source folders outside
 the usual layout (`--module`, `--main` and `--test` can each be given more than once), `--settings` for folders of
 settings files outside the module, `--rules` for more connection rules, and `--max-implementations`.
 
@@ -153,7 +153,7 @@ do yet is in the [backlog](docs/backlog.md).
 
 ## Building
 
-`./gradlew check` runs the tests and the code standards; `./gradlew allInOneJar` builds `build/libs/connection-paths.jar`.
+`./gradlew check` runs the tests and the code standards; `./gradlew allInOneJar` builds `build/libs/under-test-external-calls.jar`.
 GitHub Actions runs both on every pull request and runs the jar on Java 17; a tag such as `v1.2.3` publishes it
 (see [the decision](docs/decisions/0002-every-change-is-checked-on-github-actions-and-a-version-tag-publishes-the-jar.md)).
 The decisions behind the tool are in [docs/decisions](docs/decisions/README.md); [AGENTS.md](AGENTS.md) is the guide

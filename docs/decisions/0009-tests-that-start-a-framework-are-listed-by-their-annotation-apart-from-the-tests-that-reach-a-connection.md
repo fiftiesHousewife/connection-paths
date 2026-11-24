@@ -24,7 +24,7 @@ whatever calls it makes itself.
 
 ## Decision Outcome
 
-Proposed: a list of its own, with a count in the summary, in schema `connection-paths/3`. The annotation is looked
+Proposed: a list of its own, with a count in the summary, in schema `under-test-external-calls/3`. The annotation is looked
 for on the test's class, its superclasses in the source, and the classes around a `@Nested` class. `tests` keeps its
 meaning, and a test can be in both lists.
 
@@ -32,7 +32,7 @@ meaning, and a test can be in both lists.
 
 * A person sees which tests may connect through a framework, and by which annotation, without the tool following the
   framework.
-* under-test's schema has to accept `connection-paths/3` before it can read the facts.
+* under-test's schema has to accept `under-test-external-calls/3` before it can read the facts.
 * An annotation of the project's own that carries `@SpringBootTest` (a meta-annotation) isn't recognised.
 
 ## More Information

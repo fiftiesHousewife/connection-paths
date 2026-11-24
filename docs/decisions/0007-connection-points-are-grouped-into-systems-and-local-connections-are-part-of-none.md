@@ -16,12 +16,12 @@ localhost. They need no stand-in.
 
 ## Considered Options
 
-* **Group in connection-paths, by what the address shows**
+* **Group in under-test-external-calls, by what the address shows**
 * **Leave grouping to the connection-list skill**: a person's judgement each time, for something a rule decides
 
 ## Decision Outcome
 
-Proposed: group in connection-paths.
+Proposed: group in under-test-external-calls.
 
 * **Local, part of no system** (`local` on the point, saying why): an HSQLDB, H2 or Derby database in memory or in a
   file, SQLite, a `file:`, `jar:` or `classpath:` address, localhost, a classpath resource, a class's own jar, a

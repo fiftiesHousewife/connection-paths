@@ -11,7 +11,7 @@ decision-makers: Maintainers
 
 A person planning a stand-in for a connection needs to know where it goes: a host, or the setting, environment
 variable or JNDI name that holds the host. under-test's connection-list step asked a person to read the code for this.
-Most of it a program can decide, which under-test's decision gives to connection-paths.
+Most of it a program can decide, which under-test's decision gives to under-test-external-calls.
 
 ## Considered Options
 
@@ -56,4 +56,4 @@ How it traces:
 ## More Information
 
 * Builds on: [It reads source with JavaParser and takes the classpath from the build](0001-it-reads-source-with-javaparser-and-takes-the-classpath-from-the-build.md)
-* under-test: [connection-paths does everything a program can decide, and the connection-list skill only what needs judgement](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0074-connection-paths-does-everything-a-program-can-decide-and-the-connection-list-skill-only-what-needs-judgement.md)
+* under-test: [under-test-external-calls does everything a program can decide, and the connection-list skill only what needs judgement](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0074-under-test-external-calls-does-everything-a-program-can-decide-and-the-connection-list-skill-only-what-needs-judgement.md)

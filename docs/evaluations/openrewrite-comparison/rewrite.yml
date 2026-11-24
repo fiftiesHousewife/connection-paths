@@ -1,4 +1,4 @@
-# For comparing OpenRewrite's call graph with connection-paths on this module. Search only: changes nothing.
+# For comparing OpenRewrite's call graph with under-test-external-calls on this module. Search only: changes nothing.
 type: specs.openrewrite.org/v1beta/recipe
 name: com.example.CallGraphComparison
 displayName: Call graph and class hierarchy, for comparison

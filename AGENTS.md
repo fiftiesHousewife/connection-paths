@@ -2,7 +2,7 @@
 
 Guidance for any AI coding assistant working in this repo, and for the people directing it.
 
-**What this repo is:** connection-paths, a command-line tool that finds where Java code opens external connections and
+**What this repo is:** under-test-external-calls, a command-line tool that finds where Java code opens external connections and
 which tests reach them, from source. It is a tool of [under-test](https://github.com/fiftiesHousewife/under-test),
 whose plain-English rules ([GLOSSARY.md](https://github.com/fiftiesHousewife/under-test/blob/main/GLOSSARY.md)) it
 follows: no repurposed words, no dates in text, things referred to by name.

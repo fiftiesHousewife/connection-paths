@@ -26,7 +26,7 @@ public class Options {
     @Builder.Default
     int maxImplementations = DEFAULT_MAX_IMPLEMENTATIONS;
     @Builder.Default
-    Path out = Path.of("connection-paths.json");
+    Path out = Path.of("under-test-external-calls.json");
 
     Optional<Path> extraRules() {
         return Optional.ofNullable(rules);

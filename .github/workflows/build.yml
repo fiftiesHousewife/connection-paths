@@ -32,8 +32,8 @@ jobs:
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v7
         with:
-          name: connection-paths-jar
-          path: build/libs/connection-paths.jar
+          name: under-test-external-calls-jar
+          path: build/libs/under-test-external-calls.jar
           if-no-files-found: error
 
   runs-on-java-17:
@@ -48,10 +48,10 @@ jobs:
           java-version: "17"
       - uses: actions/download-artifact@v8
         with:
-          name: connection-paths-jar
+          name: under-test-external-calls-jar
       - name: Run it on the example repo
         run: |
-          java -jar connection-paths.jar \
+          java -jar under-test-external-calls.jar \
             --main src/test/resources/example/src/main/java \
             --test src/test/resources/example/src/test/java \
             --out example.json

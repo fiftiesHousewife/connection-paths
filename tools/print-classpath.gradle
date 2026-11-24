@@ -1,16 +1,16 @@
-// Writes each project's test compile classpath to build/connection-paths-classpath.txt, for
-// connection-paths --classpath @<file>. It compiles the code and the tests first, as Maven's step does, so the
+// Writes each project's test compile classpath to build/under-test-external-calls-classpath.txt, for
+// under-test-external-calls --classpath @<file>. It compiles the code and the tests first, as Maven's step does, so the
 // classpath is the one that compile used; no test runs.
-//   gradle -q --init-script print-classpath.gradle connectionPathsClasspath
+//   gradle -q --init-script print-classpath.gradle underTestExternalCallsClasspath
 allprojects {
-    tasks.register('connectionPathsClasspath') {
+    tasks.register('underTestExternalCallsClasspath') {
         dependsOn tasks.matching { it.name == 'testClasses' }
         doLast {
             def sourceSets = project.extensions.findByName('sourceSets')
             if (sourceSets == null || sourceSets.findByName('test') == null) {
                 return
             }
-            def out = new File(project.layout.buildDirectory.get().asFile, 'connection-paths-classpath.txt')
+            def out = new File(project.layout.buildDirectory.get().asFile, 'under-test-external-calls-classpath.txt')
             out.parentFile.mkdirs()
             out.text = sourceSets.test.compileClasspath.files.join(File.pathSeparator)
             println out

@@ -18,9 +18,9 @@ import java.util.stream.IntStream;
 public final class OptionsParser {
 
     static final String USAGE = """
-        connection-paths: finds where Java code opens external connections, and which tests reach them.
+        under-test-external-calls: finds where Java code opens external connections, and which tests reach them.
 
-        java -jar connection-paths.jar [--module <dir>]... [--main <dir>]... [--test <dir>]...
+        java -jar under-test-external-calls.jar [--module <dir>]... [--main <dir>]... [--test <dir>]...
                                        [--classpath <jars, separated by {separator}> | --classpath @<file>]
                                        [--settings <dir>]... [--rules <file>] [--max-implementations <n>]
                                        [--out <file>]
@@ -36,7 +36,7 @@ public final class OptionsParser {
           --rules <file>            more connection rules, in the form of the built-in connection-rules.txt
           --max-implementations <n> calls through a type with more implementations are reported, not followed
                                     (default {max})
-          --out <file>              where to write the facts (default connection-paths.json)
+          --out <file>              where to write the facts (default under-test-external-calls.json)
         """.replace("{separator}", File.pathSeparator)
         .replace("{max}", String.valueOf(Options.DEFAULT_MAX_IMPLEMENTATIONS));
 

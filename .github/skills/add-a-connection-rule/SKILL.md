@@ -1,6 +1,6 @@
 ---
 name: add-a-connection-rule
-description: Add a call that opens or uses a connection to connection-paths' built-in rules (src/main/resources/connection-rules.txt), with a case that shows it. Use when a library's client (a database driver, an HTTP, mail, queue, directory or cloud client) is missing from the rules.
+description: Add a call that opens or uses a connection to under-test-external-calls' built-in rules (src/main/resources/connection-rules.txt), with a case that shows it. Use when a library's client (a database driver, an HTTP, mail, queue, directory or cloud client) is missing from the rules.
 ---
 
 # Adding a connection rule

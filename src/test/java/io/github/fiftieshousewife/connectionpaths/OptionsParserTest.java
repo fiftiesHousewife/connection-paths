@@ -21,7 +21,7 @@ class OptionsParserTest {
             () -> assertThat(options.getMainSources()).containsExactly(Path.of("server/src/main/java")),
             () -> assertThat(options.getTestSources()).containsExactly(Path.of("server/src/test/java")),
             () -> assertThat(options.getMaxImplementations()).isEqualTo(Options.DEFAULT_MAX_IMPLEMENTATIONS),
-            () -> assertThat(options.getOut()).isEqualTo(Path.of("connection-paths.json")));
+            () -> assertThat(options.getOut()).isEqualTo(Path.of("under-test-external-calls.json")));
     }
 
     @Test

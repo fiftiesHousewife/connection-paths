@@ -1,4 +1,4 @@
-// How connection-paths is published: to Maven Central (through its Central Portal, by nmcp), with sources, Javadoc,
+// How under-test-external-calls is published: to Maven Central (through its Central Portal, by nmcp), with sources, Javadoc,
 // a CycloneDX software bill of materials and signatures; and to a local repository in the build folder
 // (publishAllPublicationsToLocalRepository), to look at what would be published.
 //
@@ -63,7 +63,7 @@ publishing {
     }
     publications.withType<MavenPublication>().configureEach {
         pom {
-            url = "https://github.com/fiftiesHousewife/connection-paths"
+            url = "https://github.com/fiftiesHousewife/under-test-external-calls"
             licenses {
                 license {
                     name = "Apache License 2.0"
@@ -73,14 +73,14 @@ publishing {
             developers {
                 developer {
                     id = "fiftieshousewife"
-                    name = "connection-paths maintainers"
+                    name = "under-test-external-calls maintainers"
                     url = "https://github.com/fiftiesHousewife"
                 }
             }
             scm {
-                url = "https://github.com/fiftiesHousewife/connection-paths"
-                connection = "scm:git:https://github.com/fiftiesHousewife/connection-paths.git"
-                developerConnection = "scm:git:https://github.com/fiftiesHousewife/connection-paths.git"
+                url = "https://github.com/fiftiesHousewife/under-test-external-calls"
+                connection = "scm:git:https://github.com/fiftiesHousewife/under-test-external-calls.git"
+                developerConnection = "scm:git:https://github.com/fiftiesHousewife/under-test-external-calls.git"
             }
         }
     }

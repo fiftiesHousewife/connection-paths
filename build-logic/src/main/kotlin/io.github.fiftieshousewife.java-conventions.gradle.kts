@@ -31,7 +31,7 @@ plugins {
     id("info.solidsoft.pitest")
 }
 
-group = "io.github.fiftieshousewife.connectionpaths"
+group = "io.github.fiftieshousewife.undertest"
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 fun version(alias: String) = libs.findVersion(alias).get().requiredVersion

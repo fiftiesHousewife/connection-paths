@@ -9,7 +9,7 @@ decision-makers: Maintainers
 
 ## Context and Problem Statement
 
-under-test's connection-list step runs connection-paths on a repo, often inside a locked-down network that reaches the
+under-test's connection-list step runs under-test-external-calls on a repo, often inside a locked-down network that reaches the
 internet only through the organisation's package repository, which mirrors Maven Central. A GitHub release can't be
 reached from there. Organisations that let a tool in check where it came from and what it is built from.
 
@@ -23,15 +23,15 @@ reached from there. Organisations that let a tool in check where it came from an
 
 ## Decision Outcome
 
-Proposed: Maven Central, as `io.github.fiftieshousewife.connectionpaths:connection-paths`, by the
+Proposed: Maven Central, as `io.github.fiftieshousewife.undertest:under-test-external-calls`, by the
 [Release](../../.github/workflows/release.yml) workflow. The publishing set-up is the build-logic convention
 `io.github.fiftieshousewife.publishing`, the same as under-test-airgap's.
 
 | What | Where |
 |---|---|
-| The library jar, its POM, sources and Javadoc | `connection-paths-<version>.jar` and beside it |
-| The runnable jar, with its libraries in it | `connection-paths-<version>-all.jar` |
-| The bill of materials | `connection-paths-<version>-cyclonedx.json` |
+| The library jar, its POM, sources and Javadoc | `under-test-external-calls-<version>.jar` and beside it |
+| The runnable jar, with its libraries in it | `under-test-external-calls-<version>-all.jar` |
+| The bill of materials | `under-test-external-calls-<version>-cyclonedx.json` |
 | Signatures | a `.asc` file beside each |
 
 ### Consequences
@@ -45,4 +45,4 @@ Proposed: Maven Central, as `io.github.fiftieshousewife.connectionpaths:connecti
 ## More Information
 
 * Builds on: [Every change is checked on GitHub Actions, and a version tag publishes the jar](0002-every-change-is-checked-on-github-actions-and-a-version-tag-publishes-the-jar.md)
-* under-test: [Connections and the test paths to them are found by connection-paths, a JavaParser tool in its own repo](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0072-connections-and-the-test-paths-to-them-are-found-by-connection-paths-a-javaparser-tool-in-its-own-repo.md)
+* under-test: [Connections and the test paths to them are found by under-test-external-calls, a JavaParser tool in its own repo](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0072-connections-and-the-test-paths-to-them-are-found-by-under-test-external-calls-a-javaparser-tool-in-its-own-repo.md)

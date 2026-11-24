@@ -25,7 +25,7 @@ Proposed: a class folder at `<module>/target/classes` or `<module>/build/classes
 `src/main/java` is read as production source, as if given with `--main`, and the classpath notes say so. Any other
 class folder is still skipped with a note.
 
-Rejected: in real use connection-paths is run on a whole repo whose modules are all given as source, or whose
+Rejected: in real use under-test-external-calls is run on a whole repo whose modules are all given as source, or whose
 siblings come as published jars, so a sibling's class folder doesn't appear on the classpath. The handling was
 removed, and a class folder on the classpath is skipped with a note, as any other.
 

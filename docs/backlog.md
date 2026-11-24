@@ -1,6 +1,6 @@
 # Backlog
 
-What connection-paths doesn't do yet, most useful first. Each item says what it would change and how to tell it's
+What under-test-external-calls doesn't do yet, most useful first. Each item says what it would change and how to tell it's
 done. A behaviour that is built gets a case in the example repo, as [AGENTS.md](../AGENTS.md) says; a choice between
 ways of building it gets a [decision record](decisions/README.md).
 

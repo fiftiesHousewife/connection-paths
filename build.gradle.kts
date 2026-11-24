@@ -1,4 +1,4 @@
-// connection-paths: finds where Java code opens external connections, and which tests reach them, from source.
+// under-test-external-calls: finds where Java code opens external connections, and which tests reach them, from source.
 // The code standards come from build-logic's java-conventions; see AGENTS.md.
 
 plugins {
@@ -27,11 +27,11 @@ application {
     mainClass = "io.github.fiftieshousewife.connectionpaths.Main"
 }
 
-// One jar with everything in it: java -jar connection-paths.jar ...
+// One jar with everything in it: java -jar under-test-external-calls.jar ...
 val allInOne = tasks.register<Jar>("allInOneJar") {
     group = "build"
     description = "Builds one runnable jar holding the tool and its libraries."
-    archiveFileName = "connection-paths.jar"
+    archiveFileName = "under-test-external-calls.jar"
     manifest { attributes("Main-Class" to application.mainClass.get(), "Implementation-Version" to project.version) }
     from(sourceSets.main.map { it.output })
     dependsOn(configurations.runtimeClasspath)
@@ -42,16 +42,16 @@ val allInOne = tasks.register<Jar>("allInOneJar") {
 }
 tasks.assemble { dependsOn(allInOne) }
 
-// Published as io.github.fiftieshousewife.connectionpaths:connection-paths: the library jar with its POM, and the
+// Published as io.github.fiftieshousewife.undertest:under-test-external-calls: the library jar with its POM, and the
 // runnable jar beside it with the classifier "all", for networks that only reach a package repository.
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = "connection-paths"
+            artifactId = "under-test-external-calls"
             from(components["java"])
             artifact(allInOne) { classifier = "all" }
             pom {
-                name = "connection-paths"
+                name = "under-test-external-calls"
                 description = "Finds where Java code opens external connections, and which tests reach them, from source."
             }
         }

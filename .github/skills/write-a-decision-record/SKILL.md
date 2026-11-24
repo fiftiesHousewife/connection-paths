@@ -1,6 +1,6 @@
 ---
 name: write-a-decision-record
-description: Draft or update a decision record in connection-paths' docs/decisions/, in MADR form. Use whenever a conversation settles a choice about how the tool works, is built or is released. Decisions about the toolkit as a whole belong in under-test.
+description: Draft or update a decision record in under-test-external-calls' docs/decisions/, in MADR form. Use whenever a conversation settles a choice about how the tool works, is built or is released. Decisions about the toolkit as a whole belong in under-test.
 ---
 
 # Writing a decision record

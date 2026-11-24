@@ -74,7 +74,7 @@ public final class TypeSolvers {
     }
 
     static Path withoutModuleInfo(final Path jar) throws IOException {
-        final Path copy = Files.createTempFile("connection-paths-", ".jar");
+        final Path copy = Files.createTempFile("under-test-external-calls-", ".jar");
         copy.toFile().deleteOnExit();
         try (ZipInputStream in = new ZipInputStream(Files.newInputStream(jar));
              ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(copy))) {

@@ -14,7 +14,7 @@ class MainTest {
 
     @Test
     void writesTheFactsFile(@TempDir final Path dir) throws IOException {
-        final Path out = dir.resolve("facts/connection-paths.json");
+        final Path out = dir.resolve("facts/under-test-external-calls.json");
         final int status = Main.run(List.of("--module", "src/test/resources/example", "--out", out.toString()));
         final String json = Files.readString(out);
         assertAll(

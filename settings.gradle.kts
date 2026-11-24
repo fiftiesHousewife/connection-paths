@@ -19,4 +19,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "connection-paths"
+rootProject.name = "under-test-external-calls"

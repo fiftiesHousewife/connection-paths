@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 # Publishes a release when a version tag (v1.2.3) is pushed, and only if every check passes first.
 #
-# Publishes io.github.fiftieshousewife.connectionpaths:connection-paths to Maven Central, with the runnable jar beside
+# Publishes io.github.fiftieshousewife.undertest:under-test-external-calls to Maven Central, with the runnable jar beside
 # it (classifier "all"), and makes a GitHub release with the runnable jar and its software bill of materials. Needs
 # these repository secrets:
 #   CENTRAL_PORTAL_USERNAME, CENTRAL_PORTAL_PASSWORD  a Central Portal user token
@@ -54,11 +54,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p release-assets
-          cp build/libs/connection-paths.jar release-assets/
-          cp build/reports/cyclonedx-direct/bom.json release-assets/connection-paths-cyclonedx.json
+          cp build/libs/under-test-external-calls.jar release-assets/
+          cp build/reports/cyclonedx-direct/bom.json release-assets/under-test-external-calls-cyclonedx.json
           {
-            echo "Published to Maven Central as io.github.fiftieshousewife.connectionpaths:connection-paths:${VERSION#v};"
-            echo "the runnable jar is beside it with the classifier \"all\", and attached here as connection-paths.jar,"
+            echo "Published to Maven Central as io.github.fiftieshousewife.undertest:under-test-external-calls:${VERSION#v};"
+            echo "the runnable jar is beside it with the classifier \"all\", and attached here as under-test-external-calls.jar,"
             echo "with its software bill of materials (CycloneDX)."
           } > release-notes.md
           gh release create "$VERSION" --title "$VERSION" --notes-file release-notes.md --verify-tag release-assets/*

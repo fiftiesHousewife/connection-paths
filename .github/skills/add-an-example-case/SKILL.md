@@ -1,6 +1,6 @@
 ---
 name: add-an-example-case
-description: Turn a fault connection-paths shows on a real repo (a missed connection, a test wrongly listed or missed, a wrong chain of calls, a call not resolved), or a new behaviour, into a small case in the example repo with a failing test, then fix it. Use before changing anything in what the tool finds.
+description: Turn a fault under-test-external-calls shows on a real repo (a missed connection, a test wrongly listed or missed, a wrong chain of calls, a call not resolved), or a new behaviour, into a small case in the example repo with a failing test, then fix it. Use before changing anything in what the tool finds.
 ---
 
 # Adding a case to the example repo

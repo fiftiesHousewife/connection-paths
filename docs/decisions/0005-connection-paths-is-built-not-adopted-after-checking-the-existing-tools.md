@@ -3,7 +3,7 @@ status: accepted
 decision-makers: Maintainers
 ---
 
-# connection-paths is built, not adopted, after checking the existing tools
+# under-test-external-calls is built, not adopted, after checking the existing tools
 
 **Decided by:** Maintainers · **Status:** accepted (chosen in discussion)
 
@@ -30,17 +30,17 @@ checked against that job.
 * **ArchUnit**: no export; calls through interfaces are a known gap
 * **Test-impact tools** (Teamscale, OpenClover): need the tests to have run
 * **Test-smell tools** (tsDetect, JNose): look only inside the test body
-* **Keep building connection-paths on JavaParser**
+* **Keep building under-test-external-calls on JavaParser**
 
 ## Decision Outcome
 
-Chosen in discussion: keep building connection-paths on JavaParser.
+Chosen in discussion: keep building under-test-external-calls on JavaParser.
 
 OpenRewrite's open-source recipes come closest. On Openfire 4.6.0's `xmppserver` module (788 files, 415 tests), with
-the same Maven classpath of 110 jars, OpenRewrite's call graph walked with connection-paths' own rules gives the same
+the same Maven classpath of 110 jars, OpenRewrite's call graph walked with under-test-external-calls' own rules gives the same
 answer on the tests that matter, but not the rest:
 
-| | connection-paths 0.1.0 | OpenRewrite (rewrite-maven-plugin 6.46.1, rewrite-all 1.28.1) |
+| | under-test-external-calls 0.1.0 | OpenRewrite (rewrite-maven-plugin 6.46.1, rewrite-all 1.28.1) |
 |---|---|---|
 | What it needs | the jar and a classpath file | Maven, its repositories, and a working build |
 | Time | 20 seconds, on Java 17 | 1 minute 45 seconds |
@@ -51,7 +51,7 @@ answer on the tests that matter, but not the rest:
 | Connection points | 54 | 37: only the repo's own class hierarchy, so rules can't match through a library's supertypes (a library `DataSource`, `CloseableHttpClient`) |
 | Addresses | can be traced in the syntax tree | nothing to trace them from |
 
-An adapter reading OpenRewrite's tables would have to rebuild most of connection-paths to fill those gaps. The
+An adapter reading OpenRewrite's tables would have to rebuild most of under-test-external-calls to fill those gaps. The
 [comparison](../evaluations/openrewrite-comparison/README.md) can be run again.
 
 ### Consequences
@@ -62,6 +62,6 @@ An adapter reading OpenRewrite's tables would have to rebuild most of connection
 ## More Information
 
 * Builds on: [It reads source with JavaParser and takes the classpath from the build](0001-it-reads-source-with-javaparser-and-takes-the-classpath-from-the-build.md)
-* under-test: [Connections and the test paths to them are found by connection-paths, a JavaParser tool in its own repo](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0072-connections-and-the-test-paths-to-them-are-found-by-connection-paths-a-javaparser-tool-in-its-own-repo.md)
+* under-test: [Connections and the test paths to them are found by under-test-external-calls, a JavaParser tool in its own repo](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0072-connections-and-the-test-paths-to-them-are-found-by-under-test-external-calls-a-javaparser-tool-in-its-own-repo.md)
 * under-test: [A repo may be built, without running its tests, before the safety gate](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0073-a-repo-may-be-built-without-running-its-tests-before-the-safety-gate.md)
-* under-test: [connection-paths does everything a program can decide, and the connection-list skill only what needs judgement](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0074-connection-paths-does-everything-a-program-can-decide-and-the-connection-list-skill-only-what-needs-judgement.md)
+* under-test: [under-test-external-calls does everything a program can decide, and the connection-list skill only what needs judgement](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0074-under-test-external-calls-does-everything-a-program-can-decide-and-the-connection-list-skill-only-what-needs-judgement.md)
