@@ -6,6 +6,6 @@ import org.junit.jupiter.api.Test;
 class WeatherLineTest {
     @Test
     void readsTheWeather() throws IOException {
-        WeatherLine.fetch();
+        new WeatherLine().fetch();
     }
 }

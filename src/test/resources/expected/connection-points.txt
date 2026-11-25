@@ -73,3 +73,4 @@ com.example.addresses.PriceFeeds#rates() url
 com.example.addresses.StatusClient#check() url
 com.example.lookups.ServiceRecords#zoneFile() url
 com.example.lines.LineClient#connect(String) socket
+com.example.lines.ProxyLineClient#connect(String) socket

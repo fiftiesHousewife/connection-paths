@@ -36,10 +36,7 @@ choice between ways of building it gets a [decision record](decisions/README.md)
    keep it to collections of strings once a real repo shows it matching something else.
 8. **Smaller faults from a review of the code**:
     * a point keeps one production caller's address: give every distinct one;
-    * a call through a superclass reaches an override in any subclass the program creates, not only the one the test
-      creates, such as a proxy client made only by an example program, whose system then counts the test;
-    * a class made in another class's code, where only a test makes that one, counts as made only by the test classes
-      that make it themselves;
+    * a class made only in a program's `main` counts for a test only if no chain goes through that `main`;
     * Spring XML is matched by bare file name, and `classpath*:` locations are dropped without a note;
     * every module's resources are merged: read the module analysed;
     * a dotted literal not ending in a few known endings (`db.acme.de`) counts as a setting key;

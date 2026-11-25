@@ -107,8 +107,8 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 * A `super.m()` call runs only the method it names, never one that overrides it.
 * A call through an interface or superclass reaches only the overriding methods of classes the program creates (with
   `new`, as an enum or test class, by a framework annotation, or by a name in the source or the settings). A `new`
-  in a class's own code counts only once that class is created, or in static code; one in a test class's code counts
-  only for that class's tests. See
+  in a class's own code counts only once that class is created, or in static code; for a test, only once its class
+  or the code it runs creates that class, and never in a program's `main`, which a test doesn't run. See
   [the decision](docs/decisions/0011-a-call-through-an-interface-reaches-only-the-classes-the-program-creates.md).
   They are matched by name and parameter types, where a type variable (`save(T)`) matches any type so that generic interfaces work, except:
   * through the JDK's own types (`Map`, `Runnable`...): following them joins every `Map.put` to every class that

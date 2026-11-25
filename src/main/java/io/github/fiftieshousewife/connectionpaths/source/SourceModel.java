@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import lombok.Getter;
 
 /** Everything read from the source: methods, the calls each makes, types' supertypes, tests, and connection points. */
 public final class SourceModel {
@@ -44,6 +45,7 @@ public final class SourceModel {
     private final TypeHierarchy hierarchy = new TypeHierarchy();
     private final TestModel testModel = new TestModel(hierarchy, declared);
     private final Unresolved unresolved = new Unresolved();
+    @Getter
     private final Counts counts = new Counts();
 
     void declare(final MethodKey method, final Location at) {
@@ -92,14 +94,17 @@ public final class SourceModel {
 
     // A type created with new in a method or initialiser, which is created only if that code runs.
     void createdBy(final MethodKey creator, final String type) {
-        testModel.createdIn(creator.type(), type);
         typesCreatedBy.computeIfAbsent(creator, k -> new HashSet<>()).add(type);
     }
 
-    /** The types created: by code that runs whatever else does, or a created type's; with or without tests' code. */
-    public Set<String> created(final boolean withTests) {
-        return CreatedTypes.live(this, createdTypes,
-            withTests ? typesCreatedBy : CreatedTypes.outsideTests(testModel, typesCreatedBy));
+    /** The types created: by code that runs whatever else does, or a created type's, the tests' code among it. */
+    public Set<String> created() {
+        return CreatedTypes.live(this, createdTypes, typesCreatedBy);
+    }
+
+    /** The types created as a test class's tests run: by its own code, and the code outside tests that then runs. */
+    public Set<String> createdFor(final String testClass) {
+        return CreatedTypes.live(this, createdTypes, CreatedTypes.forATest(this, typesCreatedBy, testClass));
     }
 
     /** The supertypes of the types in the source. */
@@ -140,9 +145,5 @@ public final class SourceModel {
     @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The model is shared on purpose")
     public Unresolved getUnresolved() {
         return unresolved;
-    }
-
-    public Counts getCounts() {
-        return counts;
     }
 }

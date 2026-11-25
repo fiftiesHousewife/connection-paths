@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -51,10 +52,19 @@ final class CreatedTypes {
         return live;
     }
 
-    // What each method or initialiser outside the test classes creates.
-    static Map<MethodKey, Set<String>> outsideTests(final TestModel tests, final Map<MethodKey, Set<String>> by) {
-        return by.entrySet().stream().filter(e -> !tests.isTestType(e.getKey().type()))
+    // What each method or initialiser creates that may run as a test class's tests do: one outside the test classes,
+    // or in that class or what runs with it; but not a program's main method, which a test doesn't run.
+    static Map<MethodKey, Set<String>> forATest(final SourceModel model, final Map<MethodKey, Set<String>> by,
+                                                final String testClass) {
+        final List<String> running = model.types().runningWith(testClass);
+        return by.entrySet().stream()
+            .filter(e -> !model.tests().isTestType(e.getKey().type()) || running.contains(e.getKey().type()))
+            .filter(e -> !isAProgramsMain(model, e.getKey()))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private static boolean isAProgramsMain(final SourceModel model, final MethodKey method) {
+        return "main".equals(method.name()) && method.parameterCount() == 1 && model.tests().isStaticMethod(method);
     }
 
     private static boolean runs(final SourceModel model, final MethodKey creator, final Set<String> running) {
