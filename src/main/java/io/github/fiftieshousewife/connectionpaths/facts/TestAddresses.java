@@ -78,6 +78,13 @@ final class TestAddresses {
         return ForTests.of(classify(withValue, kind), withValue);
     }
 
+    // The address a reach's chain gives its point, where the point's own address is one of its parameters: what the
+    // test's chain passes, as far as it can be followed.
+    Optional<Address> givenAlong(final List<MethodKey> chain, final String kind) {
+        final Address atThePoint = byPoint.get(chain.get(chain.size() - 1) + " " + kind);
+        return ArgumentTracer.parameterOf(atThePoint).map(p -> settings.withValue(alongTheChain(chain, atThePoint)));
+    }
+
     private Address alongTheChain(final List<MethodKey> chain, final Address atThePoint) {
         Address address = atThePoint;
         for (int step = chain.size() - 1; step > 0 && ArgumentTracer.parameterOf(address).isPresent(); step--) {

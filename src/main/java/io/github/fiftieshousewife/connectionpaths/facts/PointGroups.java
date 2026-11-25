@@ -62,6 +62,11 @@ final class PointGroups {
         return method.substring(0, method.indexOf('#'));
     }
 
+    // The name an address gives a system: its host, or the setting, variable or JNDI name it comes from.
+    static Optional<String> nameOf(final Address address) {
+        return hostOf(address).or(() -> address.isNamed() ? Optional.of(address.getValue()) : Optional.empty());
+    }
+
     static Optional<String> hostOf(final Address address) {
         return textOf(address).filter(text -> !address.isPlaceholder())
             .map(text -> HOST.matcher(text.strip()))

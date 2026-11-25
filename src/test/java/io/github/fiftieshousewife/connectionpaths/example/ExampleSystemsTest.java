@@ -12,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /** How the example repo's connection points are grouped into the systems tests may reach. */
@@ -25,6 +27,19 @@ class ExampleSystemsTest {
                 tuple("database", null, "com.example.alt.EmbeddedProvider#getConnection()"),
                 tuple("database", "java:comp/env/jdbc/app", "com.example.alt.JndiProvider#getConnection()"),
                 tuple("database", "main-db.internal", "com.example.alt.DefaultProvider#getConnection()"));
+    }
+
+    // A client every caller gives its own host is in the system of the host one caller passes; a test that passes
+    // another host, or one known only at run time, doesn't reach that system.
+    @Test
+    void namesForATestOnlyTheSystemItsOwnChainGivesTheAddressOf() {
+        assertThat(Stream.of("com.example.lines.WeatherLineTest.readsTheWeather",
+                "com.example.lines.LineClientTest.connectsToItsOwnHost",
+                "com.example.lines.LineClientTest.connectsToAHostKnownOnlyAtRunTime")
+            .map(test -> REACHING.get(test).getReaches()).toList())
+            .extracting(reaches -> reaches.stream().map(r -> r.getSystem() + " " + r.getHost()).toList())
+            .containsExactly(List.of("weather.internal weather.internal"), List.of("null lines.internal"),
+                List.of("null null"));
     }
 
     @Test

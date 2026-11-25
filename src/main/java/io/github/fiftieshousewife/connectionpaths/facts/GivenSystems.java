@@ -1,0 +1,48 @@
+package io.github.fiftieshousewife.connectionpaths.facts;
+
+import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
+import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+// A point whose address is one of its parameters is in the system of what its callers pass, so a test reaching it
+// reaches only the system its own chain gives the address of: where the chain passes a host or a name, that one's;
+// where it passes nothing that can be followed, the point's class's. A reach that names no system it may reach is
+// kept for its point, without a system.
+final class GivenSystems {
+
+    private final TestAddresses testAddresses;
+    private final Map<String, MethodKey> methods = new HashMap<>();
+
+    GivenSystems(final SourceModel model, final TestAddresses testAddresses) {
+        this.testAddresses = testAddresses;
+        model.getDeclared().forEach(method -> methods.put(method.toString(), method));
+    }
+
+    List<TestFacts.Reach> of(final List<TestFacts.Reach> reaches) {
+        final Map<String, List<TestFacts.Reach>> byPoint = new LinkedHashMap<>();
+        reaches.forEach(r -> byPoint.computeIfAbsent(r.getKind() + " " + r.getPoint(), k -> new ArrayList<>()).add(r));
+        final List<TestFacts.Reach> kept = new ArrayList<>();
+        byPoint.values().forEach(atAPoint -> {
+            final List<TestFacts.Reach> given = atAPoint.stream().filter(this::isGiven).toList();
+            kept.addAll(given.isEmpty() ? List.of(atAPoint.get(0).toBuilder().system(null).build()) : given);
+        });
+        return kept;
+    }
+
+    private boolean isGiven(final TestFacts.Reach reach) {
+        if (reach.getSystem() == null) {
+            return true;
+        }
+        final List<MethodKey> chain = reach.getChain().stream().map(methods::get).toList();
+        final Optional<String> name = chain.contains(null) ? Optional.of(reach.getSystem())
+            : testAddresses.givenAlong(chain, reach.getKind()).map(PointGroups::nameOf)
+                .orElse(Optional.of(reach.getSystem()));
+        return name.map(reach.getSystem()::equals)
+            .orElseGet(() -> reach.getSystem().equals(reach.getPoint().substring(0, reach.getPoint().indexOf('#'))));
+    }
+}

@@ -23,6 +23,7 @@ final class Reaches {
     private final MockedChains mocks;
     private final TestAddresses testAddresses;
     private final TestCalls testCalls;
+    private final GivenSystems givenSystems;
     private final RunsFor runs;
 
     Reaches(final SourceModel model, final SettingsFiles settings) {
@@ -30,6 +31,7 @@ final class Reaches {
         this.mocks = new MockedChains(model);
         this.testAddresses = new TestAddresses(model, settings);
         this.testCalls = new TestCalls(model);
+        this.givenSystems = new GivenSystems(model, testAddresses);
         this.runs = new RunsFor(model);
     }
 
@@ -39,7 +41,7 @@ final class Reaches {
                 .map(reach -> reach.toBuilder().system(target.system()).build()))
             .flatMap(Optional::stream).filter(reach -> runsFor(test, reach)).toList();
         final List<String> standIns = List.copyOf(model.tests().standInsOf(test.type()));
-        return behindTheDatabase(reaches).stream().map(reach -> graded(reach, standIns)).toList();
+        return behindTheDatabase(givenSystems.of(reaches)).stream().map(reach -> graded(reach, standIns)).toList();
     }
 
     // Where every database reach can't connect, the code that runs only on an open database can't either.
