@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -40,7 +41,17 @@ public final class Locality {
 
     private static final Pattern PATH = Pattern.compile("\\.{0,2}/[^/].*");
 
+    private static final Set<String> LISTENING_CALLS =
+        Set.of("java.net.ServerSocket#<init>", "com.sun.net.httpserver.HttpServer#create");
+
     private static final Pattern LISTEN_WORDS = Pattern.compile("interface|bind|listen", Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Why a call is local whatever its address: it listens on a port of this machine, and connects to no other one.
+     */
+    public static Optional<String> ofTheCall(final String call) {
+        return LISTENING_CALLS.contains(call) ? Optional.of("a port of this machine, to listen on") : Optional.empty();
+    }
 
     /** Why an address is local, or empty if it may reach another machine. */
     public static Optional<String> of(final Address address, final String kind) {

@@ -102,10 +102,10 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(178),
+            () -> assertThat(summary.getFiles()).isEqualTo(180),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
             // The abstract ResourceContractTest's one test is counted twice, under each subclass, not under itself.
-            () -> assertThat(summary.getTests()).isEqualTo(76),
-            () -> assertThat(summary.getTestsReaching()).isEqualTo(60));
+            () -> assertThat(summary.getTests()).isEqualTo(77),
+            () -> assertThat(summary.getTestsReaching()).isEqualTo(61));
     }
 }

@@ -11,6 +11,7 @@ import io.github.fiftieshousewife.connectionpaths.source.TestModel;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -24,6 +25,7 @@ final class TestAddresses {
     static final String RUN_TIME = "run-time";
 
     private final Map<String, Address> byPoint;
+    private final Set<String> listening;
     private final SettingsFiles settings;
     private final ArgumentTracer arguments;
     private final TestModel tests;
@@ -35,6 +37,10 @@ final class TestAddresses {
         this.byPoint = model.getPoints().stream().collect(Collectors.toMap(
             point -> point.method() + " " + point.kind(), point -> model.callsOf(point).get(0).address(),
             (first, second) -> first));
+        this.listening = model.getPoints().stream().collect(Collectors.groupingBy(
+            point -> point.method() + " " + point.kind(), Collectors.mapping(point -> Locality.ofTheCall(point.call())
+                .isPresent(), Collectors.reducing(true, Boolean::logicalAnd))))
+            .entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).collect(Collectors.toSet());
     }
 
     // Where a reach's test would connect. A point whose address is one of its parameters is followed back along the
@@ -63,8 +69,9 @@ final class TestAddresses {
     }
 
     private ForTests graded(final List<MethodKey> chain, final String kind) {
-        final Address address = alongTheChain(chain, byPoint.get(chain.get(chain.size() - 1) + " " + kind));
-        if (address.isRelativePath() && servesOnAPort(chain.get(0).type())) {
+        final String point = chain.get(chain.size() - 1) + " " + kind;
+        final Address address = alongTheChain(chain, byPoint.get(point));
+        if (listening.contains(point) || address.isRelativePath() && servesOnAPort(chain.get(0).type())) {
             return new ForTests(LOCAL, null);
         }
         final Address withValue = settings.withValue(address);

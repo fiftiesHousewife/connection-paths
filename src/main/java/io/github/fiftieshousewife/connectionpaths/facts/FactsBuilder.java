@@ -83,10 +83,10 @@ public final class FactsBuilder {
             .file(call.at().file()).line(call.at().line()).address(address).local(localBecause(p, address)).build();
     }
 
-    // Why a point stays on this machine, if it does. An address that can't be followed, such as a parameter no code in
-    // the source passes, is unknown, never local.
+    // Why a point stays on this machine, if it does: it listens, or its address is on this machine. An address that
+    // can't be followed, such as a parameter no code in the source passes, is unknown, never local.
     private static String localBecause(final SourceModel.ConnectionPoint point, final Address address) {
-        return Locality.of(address, point.kind()).orElse(null);
+        return Locality.ofTheCall(point.call()).or(() -> Locality.of(address, point.kind())).orElse(null);
     }
 
     private List<Facts.FrameworkTest> testsStartingAFramework() {

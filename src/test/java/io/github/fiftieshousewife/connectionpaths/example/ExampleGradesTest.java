@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.example;
 
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.REACHING;
+import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.onlyReach;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.reachOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -36,6 +37,13 @@ class ExampleGradesTest {
                 tuple("cannot-reach", "local"),
                 tuple("reaches", "host"),
                 tuple("may-reach", "run-time"));
+    }
+
+    @Test
+    void gradesAServerListeningOnThisMachineAsLocalAndPartOfNoSystem() {
+        assertThat(onlyReach("com.example.transfers.LocalFileServerTest.startsAndStops"))
+            .extracting(TestFacts.Reach::getSystem, TestFacts.Reach::getGrade, TestFacts.Reach::getReason)
+            .containsExactly(null, "cannot-reach", "local");
     }
 
     @Test
