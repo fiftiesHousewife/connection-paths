@@ -39,9 +39,9 @@ public final class AddressTracer {
     private final CallTracer calls = new CallTracer(this, names);
     private final List<Handler> handlers = List.of(
         new Handler(StringLiteralExpr.class::isInstance,
-            (e, t) -> Address.of(Address.LITERAL, ((StringLiteralExpr) e).asString())),
+            (e, t) -> WrittenAt.on(Address.of(Address.LITERAL, ((StringLiteralExpr) e).asString()), e)),
         new Handler(TextBlockLiteralExpr.class::isInstance,
-            (e, t) -> Address.of(Address.LITERAL, ((TextBlockLiteralExpr) e).asString().strip())),
+            (e, t) -> WrittenAt.on(Address.of(Address.LITERAL, ((TextBlockLiteralExpr) e).asString().strip()), e)),
         new Handler(EnclosedExpr.class::isInstance, (e, t) -> expression(((EnclosedExpr) e).getInner(), t)),
         new Handler(CastExpr.class::isInstance, (e, t) -> expression(((CastExpr) e).getExpression(), t)),
         new Handler(AddressTracer::isConcatenation, (e, t) -> joined((BinaryExpr) e, t)),
@@ -113,7 +113,8 @@ public final class AddressTracer {
             return right;
         }
         return left.isLiteral() || right.isLiteral()
-            ? Address.of(Address.LITERAL, part(left) + part(right)) : best(Stream.of(left, right));
+            ? WrittenAt.joined(part(left) + part(right), List.of(left, right), binary)
+            : best(Stream.of(left, right));
     }
 
     private Address eitherOf(final ConditionalExpr conditional, final Trace trace) {

@@ -3,6 +3,7 @@ package io.github.fiftieshousewife.connectionpaths.rules;
 import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.address.Declarations;
 import io.github.fiftieshousewife.connectionpaths.address.SettingAnnotations;
+import io.github.fiftieshousewife.connectionpaths.address.WrittenAt;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -91,12 +92,12 @@ public final class AnnotatedClients {
     // The annotation's url or baseUri: a ${key} setting or a literal, else given in code.
     private static Address addressOf(final AnnotationExpr annotation) {
         final String via = "@" + annotation.getName().getIdentifier();
-        final Optional<String> url = annotation instanceof NormalAnnotationExpr normal
+        final Optional<StringLiteralExpr> url = annotation instanceof NormalAnnotationExpr normal
             ? normal.getPairs().stream().filter(pair -> URL_MEMBERS.contains(pair.getNameAsString()))
                 .map(MemberValuePair::getValue).filter(StringLiteralExpr.class::isInstance)
-                .map(value -> ((StringLiteralExpr) value).asString()).findFirst()
+                .map(StringLiteralExpr.class::cast).findFirst()
             : Optional.empty();
-        return url.map(text -> SettingAnnotations.settingOrLiteral(text, via))
+        return url.map(text -> WrittenAt.on(SettingAnnotations.settingOrLiteral(text.asString(), via), text))
             .orElse(Address.builtBy("the base URL given where the " + via + " client is made"));
     }
 }

@@ -49,6 +49,7 @@ public class Address {
     String settingFile;
     int settingLine;
     boolean placeholder;
+    WrittenAt writtenAt;
 
     public static Address of(final String source, final String value) {
         return Address.builder().source(source).value(value).build();

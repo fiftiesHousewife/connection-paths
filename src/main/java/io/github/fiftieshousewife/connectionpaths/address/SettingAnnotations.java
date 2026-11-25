@@ -59,7 +59,7 @@ public final class SettingAnnotations {
         final boolean isValue = "Value".equals(annotation.getName().getIdentifier());
         return isValue && annotation instanceof SingleMemberAnnotationExpr single
             && single.getMemberValue() instanceof StringLiteralExpr text
-            ? Optional.of(settingOrLiteral(text.asString(), "@Value")) : Optional.empty();
+            ? Optional.of(WrittenAt.on(settingOrLiteral(text.asString(), "@Value"), text)) : Optional.empty();
     }
 
     private static Optional<Address> bound(final TypeDeclaration<?> type, final String id) {

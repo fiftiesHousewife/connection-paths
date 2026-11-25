@@ -47,6 +47,18 @@ class ExampleAddressesTest {
             "host of upgrade");
     }
 
+    // A literal says where it is written, so an address the main code holds is told from one a test gives.
+    @Test
+    void saysWhereEachLiteralAddressIsWritten() {
+        assertThat(FACTS.getConnectionPoints().stream()
+                .filter(point -> point.getMethod().equals("com.example.db.Database#open()")
+                    || point.getAddress().getValue().equals("ftp-mirror.internal"))
+                .map(point -> point.getAddress().getWrittenAt())
+                .map(at -> at.file().substring(at.file().indexOf("/src/") + 1) + ":" + at.line()))
+            .containsExactlyInAnyOrder("src/main/java/com/example/db/Database.java:9",
+                "src/test/java/org/apache/commons/net/SocketClientTest.java:11");
+    }
+
     @Test
     void followsABuilderChainAndAMethodsReturnToTheSettingItReads() {
         final Address directory = addressOf("com.example.addresses.DirectoryClient#users()");
@@ -122,12 +134,12 @@ class ExampleAddressesTest {
                 tuple("com.example.alt.LocalThings#talkToTheAgentOnThisMachine()", "this machine"),
                 tuple("com.example.alt.LocalThings#readOwnJar()", "a classpath resource"),
                 tuple("com.example.alt.LocalThings#openTheDatabaseOnThisMachine()", "this machine"),
-                tuple("com.example.addresses.ListenAddress#toListenOn()",
-                    "an address of this machine, to listen on"),
+                tuple("com.example.addresses.ListenAddress#toListenOn()", "an address of this machine, to listen on"),
                 tuple("com.example.lookups.Peers#gateway()", "a numeric address, which nothing looks up"),
                 tuple("com.example.transfers.LocalFileServer#<init>(int)", "a port of this machine, to listen on"),
                 tuple("com.example.lookups.Peers#onTheLink()", "a numeric address, which nothing looks up"),
                 tuple("com.example.lookups.Peers#byAddress(String)", "a numeric address, which nothing looks up"),
+                tuple("com.example.lookups.TimeClient#ask(InetAddress,int)", "this machine"),
                 tuple("com.example.lookups.TimeClient#ask(InetAddress,int)", "this machine"),
                 tuple("com.example.pages.PageClient#get(String)", "this machine"),
                 tuple("org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>()",

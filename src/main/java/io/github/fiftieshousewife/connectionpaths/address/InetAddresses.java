@@ -23,10 +23,11 @@ final class InetAddresses {
             return Optional.empty();
         }
         if ("getLoopbackAddress".equals(call.getNameAsString())) {
-            return Optional.of(Address.of(Address.LITERAL, LOOPBACK));
+            return Optional.of(WrittenAt.on(Address.of(Address.LITERAL, LOOPBACK), call));
         }
         return "getByAddress".equals(call.getNameAsString()) && !call.getArguments().isEmpty()
-            ? fromBytes(call.getArgument(call.getArguments().size() - 1)) : Optional.empty();
+            ? fromBytes(call.getArgument(call.getArguments().size() - 1)).map(a -> WrittenAt.on(a, call))
+            : Optional.empty();
     }
 
     private static Optional<Address> fromBytes(final Expression bytes) {
