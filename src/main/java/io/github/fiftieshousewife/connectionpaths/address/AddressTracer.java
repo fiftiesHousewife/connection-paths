@@ -63,8 +63,11 @@ public final class AddressTracer {
             return Address.of(Address.DNS, "the machine's DNS servers");
         }
         final Optional<Address> fromArgument = AddressText.firstArgument(call).map(a -> expression(a, new Trace()));
-        final Optional<Address> fromScope = AddressText.scopeOf(call).map(s -> expression(s, new Trace()));
         final boolean command = "process".equals(kind);
+        // What a call is made on gives a literal only if it looks like an address, or a command: not a protocol's name,
+        // such as TLS.
+        final Optional<Address> fromScope = AddressText.scopeOf(call).map(s -> expression(s, new Trace()))
+            .filter(a -> command || AddressText.isAnAddress(a));
         // A path such as /owners/1 is relative to the server what the call is made on was given, if that says one.
         final Optional<Address> argument = fromArgument.filter(a -> command || AddressText.isAnAddress(a));
         return argument.filter(a -> !AddressText.isRelativePath(a))

@@ -42,6 +42,12 @@ class ExampleAddressesTest {
     }
 
     @Test
+    void takesNoProtocolNameFromWhatACallIsMadeOnForAnAddress() {
+        assertAddress("com.example.addresses.SecureUpgrade#upgrade(Socket,String)", Address.PARAMETER,
+            "host of upgrade");
+    }
+
+    @Test
     void followsABuilderChainAndAMethodsReturnToTheSettingItReads() {
         final Address directory = addressOf("com.example.addresses.DirectoryClient#users()");
         assertAll(

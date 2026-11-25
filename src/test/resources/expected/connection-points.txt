@@ -24,6 +24,7 @@ com.example.alt.LocalThings#openTheDatabaseOnThisMachine() database
 com.example.addresses.DirectoryClient#users() http
 com.example.addresses.Notifier.Sender#open() socket
 com.example.addresses.SecureChannel#open() socket
+com.example.addresses.SecureUpgrade#upgrade(Socket,String) socket
 com.example.addresses.Fetcher#fetch() url
 com.example.overloads.RemoteLoader#load(URL) url
 com.example.jdbc.Customers#count() database

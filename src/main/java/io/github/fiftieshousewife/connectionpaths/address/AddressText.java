@@ -4,6 +4,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithArguments;
+import com.github.javaparser.resolution.types.ResolvedType;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.regex.Pattern;
 final class AddressText {
 
     private static final int SHORT = 60;
+    private static final Set<String> SOCKETS = Set.of("java.net.Socket", "javax.net.ssl.SSLSocket");
     private static final Pattern SCHEME = Pattern.compile("[a-zA-Z][a-zA-Z0-9+.-]*:.*");
     private static final Pattern NAME_CHARACTERS = Pattern.compile("[\\w.-]+", Pattern.UNICODE_CHARACTER_CLASS);
     private static final Set<String> HOST_ENDINGS = Set.of("com", "org", "net", "io", "internal", "local");
@@ -61,11 +63,23 @@ final class AddressText {
             && !HOST_ENDINGS.contains(text.substring(text.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT));
     }
 
+    // The first argument that isn't a socket: a socket upgraded to TLS is the connection, not its address.
     static Optional<Expression> firstArgument(final Node call) {
-        if (call instanceof NodeWithArguments<?> withArguments && !withArguments.getArguments().isEmpty()) {
-            return Optional.of(withArguments.getArguments().get(0));
+        if (call instanceof NodeWithArguments<?> withArguments) {
+            return withArguments.getArguments().stream().filter(argument -> !isASocket(argument)).findFirst();
         }
         return Optional.empty();
+    }
+
+    // The symbol solver reports anything it can't follow as an exception, of many kinds, and sometimes overflows.
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.AvoidCatchingThrowable"})
+    private static boolean isASocket(final Expression argument) {
+        try {
+            final ResolvedType type = argument.calculateResolvedType();
+            return type.isReferenceType() && SOCKETS.contains(type.asReferenceType().getQualifiedName());
+        } catch (RuntimeException | StackOverflowError e) {
+            return false;
+        }
     }
 
     static Optional<Expression> scopeOf(final Node call) {
