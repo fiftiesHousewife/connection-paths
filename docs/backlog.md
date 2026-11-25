@@ -35,7 +35,6 @@ choice between ways of building it gets a [decision record](decisions/README.md)
 7. **`add` as an address setter on anything.** It is one so a list of hosts built with `hosts.add(...)` is followed;
    keep it to collections of strings once a real repo shows it matching something else.
 8. **Smaller faults from a review of the code**:
-    * a point keeps one production caller's address: give every distinct one;
     * a class made only in a program's `main` counts for a test only if no chain goes through that `main`;
     * Spring XML is matched by bare file name, and `classpath*:` locations are dropped without a note;
     * every module's resources are merged: read the module analysed;
@@ -52,7 +51,7 @@ choice between ways of building it gets a [decision record](decisions/README.md)
 
 10. **What external-calls/2 leaves out.** A test's `profiles` from `@ActiveProfiles` and a YAML file's on-profile
     documents; a `client_field` declared in a superclass of the test class; a `first_call` for a chain that starts in
-    the test class's own field initialisers; and every address a point's callers pass, not only the first.
+    the test class's own field initialisers.
 
 ## How it is built
 

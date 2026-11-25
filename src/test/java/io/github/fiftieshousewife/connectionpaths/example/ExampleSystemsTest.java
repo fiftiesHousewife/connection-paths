@@ -29,6 +29,13 @@ class ExampleSystemsTest {
                 tuple("database", "main-db.internal", "com.example.alt.DefaultProvider#getConnection()"));
     }
 
+    @Test
+    void putsAPointInTheSystemOfEachHostItsCallersPass() {
+        assertThat(FACTS.getSystems())
+            .filteredOn(system -> system.getPoints().contains("com.example.lines.LineClient#connect(String)"))
+            .extracting(Facts.ExternalSystem::getName).containsExactlyInAnyOrder("news.internal", "weather.internal");
+    }
+
     // A client every caller gives its own host is in the system of the host one caller passes; a test that passes
     // another host, or one known only at run time, doesn't reach that system.
     @Test

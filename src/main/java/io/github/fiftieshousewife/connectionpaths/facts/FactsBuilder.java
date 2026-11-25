@@ -73,12 +73,14 @@ public final class FactsBuilder {
     private List<Facts.Point> points() {
         return model.getPoints().stream()
             .sorted((a, b) -> (a.method() + a.call()).compareTo(b.method() + b.call()))
-            .flatMap(p -> model.callsOf(p).stream().map(call -> point(p, call)))
+            .flatMap(p -> model.callsOf(p).stream().flatMap(call -> pointAddresses.of(p.method(), call.address())
+                .stream().distinct().map(address -> point(p, call, settings.withValue(address)))))
             .toList();
     }
 
-    private Facts.Point point(final SourceModel.ConnectionPoint p, final SourceModel.PointCall call) {
-        final Address address = settings.withValue(pointAddresses.of(p.method(), call.address()));
+    // A call whose address comes from what its callers pass is listed once for each distinct address they pass.
+    private Facts.Point point(final SourceModel.ConnectionPoint p, final SourceModel.PointCall call,
+                              final Address address) {
         return Facts.Point.builder().kind(p.kind()).call(p.call()).method(p.method().toString())
             .file(call.at().file()).line(call.at().line()).address(address).local(localBecause(p, address)).build();
     }
