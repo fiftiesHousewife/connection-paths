@@ -123,7 +123,7 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   address.
 * An address is traced from the connection call's first argument, or what the call is made on, back through
   variables, fields, constructors, builder chains, the JDK's helpers and the source's own methods, to a literal or a
-  name. A call passing a dotted key (`crowd.server.url`) reads a setting, which is looked up in the settings files
+  name. A call passing a dotted key (`crowd.server.url`) reads a setting, but for a JDK method that takes an address (`InetAddress.getByName("db.acme.de")`), which is looked up in the settings files
   under `--module` and `--settings` folders, but not those of a module inside one (a folder with a build file of its
   own): production settings before test ones, a file without a Spring profile
   before one with, and keys matched loosely, as Spring matches them (`jdbcUrl`, `jdbc-url`, `JDBC_URL`). A field

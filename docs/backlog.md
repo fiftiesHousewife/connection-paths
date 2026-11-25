@@ -36,7 +36,8 @@ choice between ways of building it gets a [decision record](decisions/README.md)
    keep it to collections of strings once a real repo shows it matching something else.
 8. **Smaller faults from a review of the code**:
     * a class made only in a program's `main` counts for a test only if no chain goes through that `main`;
-    * a dotted literal not ending in a few known endings (`db.acme.de`) counts as a setting key;
+    * a dotted literal not ending in a few known endings (`db.acme.de`) given to a method outside the JDK counts as a
+      setting key;
     * a settings or XML file that fails to read is warned about, but not listed in the output;
     * type variables are guessed from short capital names; any method named `setUp` counts as set-up; tests of an
       abstract class with no subclass are kept; symbol-solver failures outside calls aren't counted as not resolved.

@@ -4,6 +4,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ final class CallTracer {
         Set.of("File", "FileInputStream", "FileOutputStream", "FileReader", "RandomAccessFile");
     private static final Set<String> NOT_ADDRESSES =
         Set.of("getInstance", "forName", "getLogger", "getBundle", "valueOf", "getDefault");
+    private static final Set<String> JDK_SETTING_READERS = Set.of("getProperty", "getString", "getObject", "get");
     private static final Set<String> JDK_HELPERS = Set.of("String", "URI", "URL", "Paths", "Path", "Objects");
 
     private final AddressTracer expressions;
@@ -39,7 +41,14 @@ final class CallTracer {
     private static Optional<Address> named(final MethodCallExpr call) {
         final String scope = scopeText(call);
         return AddressText.firstArgument(call).flatMap(Declarations::constant)
-            .flatMap(text -> NamedLookups.lookedUp(scope, call.getNameAsString(), text));
+            .flatMap(text -> NamedLookups.lookedUp(scope, call.getNameAsString(), text))
+            .filter(address -> !Address.SETTING.equals(address.getSource()) || readsSettings(call));
+    }
+
+    // A dotted name passed to the JDK is an address, as InetAddress.getByName("db.acme.de") is, but for the JDK's own
+    // readers of settings, such as Properties.getProperty.
+    private static boolean readsSettings(final MethodCallExpr call) {
+        return JDK_SETTING_READERS.contains(call.getNameAsString()) || !Declarations.declaredInJdk(call);
     }
 
     private Optional<Address> returned(final MethodCallExpr call, final Trace trace) {
@@ -77,7 +86,22 @@ final class CallTracer {
             return Address.of(Address.LOCAL_FILE,
                 AddressText.firstArgument(creation).map(AddressText::shorten).orElse(type));
         }
-        return AddressText.firstArgument(creation).map(a -> expressions.expression(a, trace))
-            .orElse(Address.builtBy("new " + type));
+        final List<Address> arguments = creation.getArguments().stream().map(a -> expressions.expression(a, trace))
+            .toList();
+        if (arguments.isEmpty()) {
+            return Address.builtBy("new " + type);
+        }
+        return isANamePart(arguments) ? fromTheRest(arguments, type) : arguments.get(0);
+    }
+
+    // A first argument that is a literal but no address, such as a protocol's name, with more after it: new URL("jar",
+    // "", -1, entry) is made from its parts. A command, such as new ProcessBuilder("ls"), is its only argument.
+    private static boolean isANamePart(final List<Address> arguments) {
+        return arguments.size() > 1 && arguments.get(0).isLiteral() && !AddressText.isAnAddress(arguments.get(0));
+    }
+
+    private static Address fromTheRest(final List<Address> arguments, final String type) {
+        return arguments.stream().skip(1).filter(a -> AddressText.isAnAddress(a) && AddressText.saysSomething(a))
+            .findFirst().orElse(Address.builtBy("new " + type));
     }
 }

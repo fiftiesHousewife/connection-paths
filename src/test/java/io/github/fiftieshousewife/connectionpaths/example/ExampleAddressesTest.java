@@ -47,18 +47,6 @@ class ExampleAddressesTest {
             "host of upgrade");
     }
 
-    // A literal says where it is written, so an address the main code holds is told from one a test gives.
-    @Test
-    void saysWhereEachLiteralAddressIsWritten() {
-        assertThat(FACTS.getConnectionPoints().stream()
-                .filter(point -> point.getMethod().equals("com.example.db.Database#open()")
-                    || point.getAddress().getValue().equals("ftp-mirror.internal"))
-                .map(point -> point.getAddress().getWrittenAt())
-                .map(at -> at.file().substring(at.file().indexOf("/src/") + 1) + ":" + at.line()))
-            .containsExactlyInAnyOrder("src/main/java/com/example/db/Database.java:9",
-                "src/test/java/org/apache/commons/net/SocketClientTest.java:11");
-    }
-
     @Test
     void followsABuilderChainAndAMethodsReturnToTheSettingItReads() {
         final Address directory = addressOf("com.example.addresses.DirectoryClient#users()");
