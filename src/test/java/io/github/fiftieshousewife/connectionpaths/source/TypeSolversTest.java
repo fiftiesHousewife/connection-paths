@@ -43,6 +43,19 @@ class TypeSolversTest {
     }
 
     @Test
+    void namesAClasspathEntryByItsPathFromTheFolderItRunsIn(@TempDir final Path dir) {
+        final Path here = Path.of("").toAbsolutePath();
+        final Options options = Options.builder()
+            .mainSource(dir)
+            .classpathEntry(here.resolve("no-such-folder/missing.jar"))
+            .classpathEntry(here.resolve("src"))
+            .build();
+        assertThat(TypeSolvers.create(options).notes()).containsExactly(
+            "not found: no-such-folder/missing.jar",
+            "a class folder, not read (give the module's source with --main instead): src");
+    }
+
+    @Test
     void readsAJarWhoseModuleInfoItCannotParse(@TempDir final Path dir) throws IOException {
         final Path jar = jar(dir.resolve("odd.jar"), "module-info.class", "readme.txt");
         final Options options = Options.builder().mainSource(dir).classpathEntry(jar).build();

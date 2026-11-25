@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -56,12 +57,21 @@ public final class TypeSolvers {
 
     private static void add(final CombinedTypeSolver solver, final Path entry, final List<String> notes) {
         if (Files.isDirectory(entry)) {
-            notes.add("a class folder, not read (give the module's source with --main instead): " + entry);
+            notes.add("a class folder, not read (give the module's source with --main instead): " + shown(entry));
         } else if (!Files.isRegularFile(entry)) {
-            notes.add("not found: " + entry);
+            notes.add("not found: " + shown(entry));
         } else {
             addJar(solver, entry, notes);
         }
+    }
+
+    // A path as the facts show one: from the folder the tool runs in, as the source files' are, so that no one's home
+    // folder is written into them.
+    private static String shown(final Path entry) {
+        final Path here = Path.of("").toAbsolutePath();
+        final Path absolute = entry.toAbsolutePath().normalize();
+        final Path shown = Objects.equals(here.getRoot(), absolute.getRoot()) ? here.relativize(absolute) : absolute;
+        return shown.toString().replace('\\', '/');
     }
 
     // JavaParser fails on some jars' module-info.class; a copy without it reads fine.
