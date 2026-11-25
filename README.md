@@ -81,7 +81,9 @@ properties, YAML or XML files hold it, its `setting_value`, `setting_file` and `
 `parameter`; or `built-at-run-time`, with the code it reached. `placeholder` marks a value a person is meant to fill
 in, such as `https://YOUR-SERVER/`. A setting read as `${key:default}` has its default as its `setting_value`, with no
 `setting_file`, until a file sets it; a file's value that refers to an environment variable, `${DB_URL:jdbc:h2:mem:x}`,
-is its default, and with none, `${DB_URL}`, a test's address is known only at run time.
+is its default, and with none, `${DB_URL}`, a test's address is known only at run time. A client the test makes with no
+arguments, from a class in the source, and uses only for the call that connects, has no address for tests (`none`):
+nothing gives it one.
 
 The kinds come from [the rules](src/main/resources/connection-rules.txt): `database`, `http`, `mail`, `directory`,
 `jndi`, `queue`, `socket`, `url` (a URL may be a file or jar as well as a server), `host-lookup` and `process`.

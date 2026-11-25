@@ -73,7 +73,7 @@ final class Reaches {
 
     private TestFacts.Reach reachOf(final MethodKey test, final String kind, final TestChains.TestChain chain) {
         final List<MethodKey> steps = chain.steps();
-        final TestAddresses.ForTests forTests = testAddresses.of(steps, kind);
+        final ForTests forTests = testAddresses.of(steps, kind);
         final Optional<TestCalls.FirstCall> first = testCalls.of(steps, chain.throughSetUp());
         return TestFacts.Reach.builder()
             .kind(kind)

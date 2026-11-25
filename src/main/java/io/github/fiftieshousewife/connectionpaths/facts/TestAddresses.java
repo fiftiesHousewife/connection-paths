@@ -30,11 +30,13 @@ final class TestAddresses {
     private final SettingsFiles settings;
     private final ArgumentTracer arguments;
     private final TestModel tests;
+    private final ClientsWithoutAnAddress bareClients;
 
     TestAddresses(final SourceModel model, final SettingsFiles settings) {
         this.settings = settings.onTheTestClasspath();
         this.arguments = new ArgumentTracer(model);
         this.tests = model.tests();
+        this.bareClients = new ClientsWithoutAnAddress(model);
         this.byPoint = model.getPoints().stream().collect(Collectors.toMap(
             point -> point.method() + " " + point.kind(), point -> model.callsOf(point).get(0).address(),
             (first, second) -> first));
@@ -51,14 +53,16 @@ final class TestAddresses {
     // test's chain, to the argument each caller passes, as far as the test.
     ForTests of(final List<MethodKey> chain, final String kind) {
         final ForTests graded = graded(chain, kind);
-        return RUN_TIME.equals(graded.grade()) && chain.size() > 1 ? fromTheTest(chain, kind).orElse(graded) : graded;
+        if (!RUN_TIME.equals(graded.grade()) || chain.size() < 2) {
+            return graded;
+        }
+        return fromTheTest(chain, kind).orElse(isNeverGivenOne(chain, kind) ? new ForTests(NONE, null) : graded);
     }
 
-    // Where a test would connect, and the host it would connect to, if it names one.
-    record ForTests(String grade, String host) {
-        private static ForTests of(final String grade, final Address address) {
-            return new ForTests(grade, HOST.equals(grade) ? PointGroups.hostOf(address).orElse(null) : null);
-        }
+    // A client the test makes and never gives an address, whose own address is no setting or other name.
+    private boolean isNeverGivenOne(final List<MethodKey> chain, final String kind) {
+        return !alongTheChain(chain, byPoint.get(chain.get(chain.size() - 1) + " " + kind)).isNamed()
+            && bareClients.isGivenNone(chain);
     }
 
     // Where the reach's own address leaves it unknown, what the test's call into its chain says, or, failing that, the

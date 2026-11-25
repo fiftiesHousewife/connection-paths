@@ -86,3 +86,4 @@ org.apache.commons.dbcp.BasicDataSource#<bean stubReportsDataSource>() database
 com.example.addresses.LedgerLink#open() host-lookup
 com.example.addresses.LedgerLink#open() socket
 com.example.addresses.JarEntryReader#read(String) url
+com.example.fetch.ReportFetcher#fetch() url

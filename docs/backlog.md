@@ -43,8 +43,7 @@ choice between ways of building it gets a [decision record](decisions/README.md)
       resolved.
 9. **Tests still flagged in the field trials.** Commons Net's ListingFunctionalTest builds its hosts in a JUnit 3
     `suite()` from a `String[][]`, into each test's field through its constructor; jsoup's `postHtmlFile` posts a
-    form whose address is relative to the page fetched; `SessionIT.multiThread`'s http reach; and a request never
-    given a URL, which throws before it connects, should grade `none`.
+    form whose address is relative to the page fetched; and `SessionIT.multiThread`'s http reach.
 
 ## What it writes
 

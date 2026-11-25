@@ -46,6 +46,14 @@ class ExampleGradesTest {
             .containsExactly(null, "cannot-reach", "local");
     }
 
+    // A client the test makes with no address, and calls only to connect, has none to connect to.
+    @Test
+    void givesNoAddressToAClientTheTestMakesAndNeverGivesOne() {
+        assertThat(Stream.of("com.example.fetch.ReportFetcherTest.refusesWithoutAUrl",
+                "com.example.fetch.ReportFetcherTest.fetchesTheReport").map(test -> reachOf(test, "url")))
+            .extracting(TestFacts.Reach::getAddressForTests).containsExactly("none", "host");
+    }
+
     @Test
     void givesTheHostWhereTheChainStartsAndTheTestClassFieldItCalls() {
         assertThat(reachOf(PRICES, "url"))
