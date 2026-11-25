@@ -6,7 +6,7 @@ pluginManagement {
         mavenCentral()
     }
     plugins {
-        id("io.github.fiftieshousewife.java-conventions") version "0.1.0"
+        id("io.github.fiftieshousewife.java-conventions") version "0.3.0"
     }
 }
 
