@@ -1,9 +1,12 @@
 package io.github.fiftieshousewife.connectionpaths.example;
 
 import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
+import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.REACHING;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.reachOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /** Tests that load a Spring XML context reach the connections its beans make. */
@@ -27,6 +30,23 @@ class ExampleSpringXmlContextsTest {
     void reachesTheBeansOfAFileTheContextImports() {
         assertThat(reachOf("com.example.spring.LedgerContextTest.loadsTheBeansItsContextImports", "database")
             .getPoint()).isEqualTo(BEAN + "ledgerDataSource>()");
+    }
+
+    // Two files of the same name, in different folders, are two contexts: each test reaches only the one it names.
+    @Test
+    void matchesAContextByItsPathOnTheClasspathNotItsFileNameAlone() {
+        assertThat(Stream.of("com.example.spring.StubReportsContextTest.loadsTheStubBeans",
+                "com.example.spring.ReportsContextTest.loadsTheReportBeans")
+            .map(test -> REACHING.get(test).getReaches().stream().map(TestFacts.Reach::getPoint)
+                .filter(point -> point.startsWith(BEAN)).sorted().toList()).toList())
+            .containsExactly(List.of(BEAN + "stubReportsDataSource>()"),
+                List.of(BEAN + "auditDataSource>()", BEAN + "reportsDataSource>()"));
+    }
+
+    @Test
+    void reachesTheBeansOfEachContextAWildcardLocationMatches() {
+        assertThat(reachOf("com.example.spring.EverySpringContextTest.loadsEveryContextInTheFolder", "database")
+            .getPoint()).isEqualTo(BEAN + "stubReportsDataSource>()");
     }
 
     @Test

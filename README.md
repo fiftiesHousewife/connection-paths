@@ -173,8 +173,11 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   connection point at the XML file and line, named `<class>#<bean id>`, with that property as its address. A test
   class whose `@ContextConfiguration` (or `@SpringJUnitConfig`, `@ImportResource`) names the file reaches its beans
   through its set-up, and code that makes a `ClassPathXmlApplicationContext` on it reaches them from where it does;
-  files are matched by name, through a step of their own, `ApplicationContext#<xml applicationContext.xml>`, and a
-  file's `<import resource=...>` makes the imported file's beans too.
+  files are matched by their path on the classpath, as Spring reads a location (a plain one in
+  `@ContextConfiguration` from the test class's package, an import from the importing file's folder), through a step
+  of their own, `ApplicationContext#<xml spring/app.xml>`; a wildcard, such as `classpath*:spring/*.xml`, stands for
+  each file it matches, and a location no file is at for any file of the same name. A file's
+  `<import resource=...>` makes the imported file's beans too.
 
 It does not follow reflection, the wiring between Spring beans, or code loaded by name at run time. What it doesn't
 do yet is in the [backlog](docs/backlog.md).

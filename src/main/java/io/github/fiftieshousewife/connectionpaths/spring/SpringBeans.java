@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -48,9 +49,10 @@ public final class SpringBeans {
             model.xmlContextHolds(bean.at().file(), bean.point().method());
         });
         // A file that imports another makes the imported file's beans too, to any depth.
-        SpringXml.imports(files).forEach((file, imported) -> imported.stream()
-            .filter(resource -> !resource.contains("*"))
-            .forEach(resource -> model.xmlContextHolds(file, XmlContexts.contextOf(resource))));
+        final Map<String, List<String>> imports = SpringXml.imports(files);
+        imports.forEach((file, imported) -> imported.forEach(resource -> model.xmlContextHolds(file,
+            XmlContexts.contextOf(XmlLocations.importedBy(file, resource)))));
+        XmlLocations.join(model, List.copyOf(imports.keySet()));
         beans.stream().map(SpringXml.Bean::getType).filter(Objects::nonNull).forEach(model::created);
     }
 

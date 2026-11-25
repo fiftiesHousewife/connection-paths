@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans">
+
+    <!-- A context of the same name as the main one, in a folder of its own, with a data source of its own. -->
+    <bean id="stubReportsDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="url" value="jdbc:postgresql://reports-stub.internal/reports"/>
+    </bean>
+</beans>

@@ -66,3 +66,5 @@ com.example.lines.WeatherLineTest.readsTheWeather
 org.apache.commons.net.SocketClientTest.connectsToTheMirror
 org.apache.commons.net.SocketClientTest.connectsOnTheDefaultPort
 com.example.lines.LineClientTest.connectsToAHostItIsHanded
+com.example.spring.StubReportsContextTest.loadsTheStubBeans
+com.example.spring.EverySpringContextTest.loadsEveryContextInTheFolder

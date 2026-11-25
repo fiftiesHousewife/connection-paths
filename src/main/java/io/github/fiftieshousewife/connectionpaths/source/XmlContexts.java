@@ -5,6 +5,7 @@ import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -13,10 +14,12 @@ import java.util.stream.Stream;
  * {@code @ContextConfiguration} names the file, as its set-up, and a method that makes a
  * {@code ClassPathXmlApplicationContext}, {@code FileSystemXmlApplicationContext} or
  * {@code GenericXmlApplicationContext} on it. Each file is a step of its own,
- * {@code ApplicationContext#<xml applicationContext.xml>}, that calls each of its beans; files are matched by name.
+ * {@code ApplicationContext#<xml applicationContext.xml>}, that calls each of its beans; files are matched by their
+ * path on the classpath.
  */
 public final class XmlContexts {
 
+    private static final String CONTEXT = "org.springframework.context.ApplicationContext";
     private static final Set<String> NAMING = Set.of("ContextConfiguration", "SpringJUnitConfig",
         "SpringJUnitWebConfig", "ImportResource");
     private static final Set<String> LOADING = Set.of("ClassPathXmlApplicationContext",
@@ -25,16 +28,27 @@ public final class XmlContexts {
     private XmlContexts() {
     }
 
-    /** The step that stands for a Spring XML file, matched by its name: {@code ApplicationContext#<xml app.xml>}. */
-    public static MethodKey contextOf(final String file) {
-        return new MethodKey("org.springframework.context.ApplicationContext", "<xml " + fileName(file) + ">", "");
+    /**
+     * The step that stands for a Spring XML location, by its path on the classpath:
+     * {@code classpath:spring/app.xml} is {@code ApplicationContext#<xml spring/app.xml>}. A location with a wildcard,
+     * such as {@code classpath*:spring/*.xml}, keeps it, and stands for each file it matches.
+     */
+    public static MethodKey contextOf(final String location) {
+        return new MethodKey(CONTEXT, "<xml " + pathOf(location) + ">", "");
+    }
+
+    /** The path on the classpath a step stands for, or empty if it stands for no Spring XML location. */
+    public static Optional<String> locationOf(final MethodKey step) {
+        return CONTEXT.equals(step.type()) && step.name().startsWith("<xml ")
+            ? Optional.of(step.name().substring("<xml ".length(), step.name().length() - 1)) : Optional.empty();
     }
 
     // A test class's framework, and the Spring XML files its annotations name, which its set-up loads.
     static void read(final TypeDeclaration<?> type, final String name, final SourceModel model) {
         Frameworks.startedBy(type).ifPresent(annotation -> model.tests().startsAFramework(name, annotation));
         type.getAnnotations().stream().filter(a -> NAMING.contains(a.getName().getIdentifier()))
-            .flatMap(XmlContexts::filesIn).forEach(file -> model.call(MethodKey.fieldsOf(name), contextOf(file)));
+            .flatMap(XmlContexts::filesIn).map(file -> fromItsPackage(file, name))
+            .forEach(file -> model.call(MethodKey.fieldsOf(name), contextOf(file)));
     }
 
     static List<String> loadedBy(final ObjectCreationExpr creation) {
@@ -44,12 +58,26 @@ public final class XmlContexts {
 
     private static Stream<String> filesIn(final Node node) {
         return node.findAll(StringLiteralExpr.class).stream().map(StringLiteralExpr::asString)
-            .filter(text -> text.endsWith(".xml") && !text.contains("*"));
+            .filter(text -> text.endsWith(".xml"));
     }
 
-    // A location's file name: classpath:spring/app.xml is app.xml.
-    private static String fileName(final String location) {
-        final String path = location.replace('\\', '/');
-        return path.substring(Math.max(path.lastIndexOf('/'), path.lastIndexOf(':')) + 1);
+    // A test class's plain location, such as app.xml, is in its own package, as Spring reads it.
+    private static String fromItsPackage(final String location, final String testClass) {
+        final boolean plain = !location.contains(":") && !location.startsWith("/");
+        final int dot = testClass.lastIndexOf('.');
+        return plain && dot > 0 ? testClass.substring(0, dot).replace('.', '/') + "/" + location : location;
+    }
+
+    /**
+     * A location's path on the classpath: without {@code classpath:}, {@code classpath*:} or {@code file:}, a leading
+     * slash, or the folders up to a resources folder, as {@code src/main/resources/spring/app.xml} is
+     * {@code spring/app.xml}.
+     */
+    public static String pathOf(final String location) {
+        String path = location.replace('\\', '/').replaceFirst("^(classpath\\*?|file):", "");
+        final int resources = path.lastIndexOf("resources/");
+        path = resources >= 0 && (resources == 0 || path.charAt(resources - 1) == '/')
+            ? path.substring(resources + "resources/".length()) : path;
+        return path.replaceFirst("^/+", "");
     }
 }
