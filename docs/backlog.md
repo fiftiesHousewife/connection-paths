@@ -39,8 +39,8 @@ choice between ways of building it gets a [decision record](decisions/README.md)
     * a dotted literal not ending in a few known endings (`db.acme.de`) given to a method outside the JDK counts as a
       setting key;
     * a settings or XML file that fails to read is warned about, but not listed in the output;
-    * type variables are guessed from short capital names; tests of an
-      abstract class with no subclass are kept; symbol-solver failures outside calls aren't counted as not resolved.
+    * type variables are guessed from short capital names; symbol-solver failures outside calls aren't counted as not
+      resolved.
 9. **Tests still flagged in the field trials.** Commons Net's ListingFunctionalTest builds its hosts in a JUnit 3
     `suite()` from a `String[][]`, into each test's field through its constructor; jsoup's `postHtmlFile` posts a
     form whose address is relative to the page fetched; `SessionIT.multiThread`'s http reach; and a request never

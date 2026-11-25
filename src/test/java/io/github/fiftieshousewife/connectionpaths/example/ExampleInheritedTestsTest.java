@@ -28,4 +28,9 @@ class ExampleInheritedTestsTest {
                 OPEN),
             () -> assertThat(REACHING).doesNotContainKey(PACKAGE + "TextResourceTest.isReady"));
     }
+
+    @Test
+    void leavesOutATestOfAnAbstractClassNoTestClassExtends() {
+        assertThat(REACHING).doesNotContainKey(PACKAGE + "UnusedContractTest.opens");
+    }
 }

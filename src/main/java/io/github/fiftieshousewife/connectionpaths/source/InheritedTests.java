@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * A test method is run by its own class, if that class isn't abstract, and by every test class below it that doesn't
  * declare a method of the same name and parameters, with that class's set-up. A test runner names it by the class
- * that runs it, so it is listed under each.
+ * that runs it, so it is listed under each; one of an abstract class no test class extends never runs.
  */
 public final class InheritedTests {
 
@@ -26,7 +26,7 @@ public final class InheritedTests {
                 .filter(type -> !model.getDeclared().contains(method.inType(type)))
                 .toList();
             runners.forEach(type -> model.tests().inheritedTest(method.inType(type), method, test.getValue()));
-            if (abstractTypes.contains(method.type()) && !runners.isEmpty()) {
+            if (abstractTypes.contains(method.type())) {
                 model.tests().dropTest(method);
             }
         }
