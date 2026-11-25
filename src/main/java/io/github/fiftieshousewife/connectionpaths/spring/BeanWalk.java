@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 import javax.xml.stream.XMLStreamReader;
@@ -16,6 +17,9 @@ import javax.xml.stream.XMLStreamReader;
 // whose root element isn't <beans> holds none.
 final class BeanWalk implements XmlFiles.Handler {
 
+    private static final String JNDI_LOOKUP = "jndi-lookup";
+    private static final Set<String> BEAN_ELEMENTS = Set.of("bean", JNDI_LOOKUP);
+    private static final String JNDI_FACTORY = "org.springframework.jndi.JndiObjectFactoryBean";
     private static final String P_NAMESPACE = "http://www.springframework.org/schema/p";
 
     private final String file;
@@ -46,7 +50,7 @@ final class BeanWalk implements XmlFiles.Handler {
         root = Objects.requireNonNullElse(root, name);
         if ("import".equals(name)) {
             addImport(element);
-        } else if ("bean".equals(name)) {
+        } else if (BEAN_ELEMENTS.contains(name)) {
             open.push(bean(element));
         } else if ("property".equals(name) && !open.isEmpty()) {
             property = element.getAttributeValue(null, "name");
@@ -69,7 +73,7 @@ final class BeanWalk implements XmlFiles.Handler {
             putProperty(characters.toString().strip());
         } else if ("property".equals(name)) {
             property = null;
-        } else if ("bean".equals(name) && !open.isEmpty()) {
+        } else if (BEAN_ELEMENTS.contains(name) && !open.isEmpty()) {
             found.add(open.pop().properties(Map.copyOf(properties.pop())).build());
         }
         characters.setLength(0);
@@ -87,10 +91,14 @@ final class BeanWalk implements XmlFiles.Handler {
         IntStream.range(0, element.getAttributeCount())
             .filter(i -> P_NAMESPACE.equals(element.getAttributeNamespace(i)))
             .forEach(i -> fromAttributes.put(element.getAttributeLocalName(i), element.getAttributeValue(i)));
+        // <jee:jndi-lookup jndi-name="..."/> is a JndiObjectFactoryBean with that jndiName.
+        final boolean lookup = JNDI_LOOKUP.equals(element.getLocalName());
+        Optional.ofNullable(element.getAttributeValue(null, "jndi-name")).filter(n -> lookup)
+            .ifPresent(name -> fromAttributes.put("jndiName", name));
         properties.push(fromAttributes);
         return SpringXml.Bean.builder()
             .id(id == null ? element.getAttributeValue(null, "name") : id)
-            .type(element.getAttributeValue(null, "class"))
+            .type(lookup ? JNDI_FACTORY : element.getAttributeValue(null, "class"))
             .file(file)
             .line(element.getLocation().getLineNumber());
     }

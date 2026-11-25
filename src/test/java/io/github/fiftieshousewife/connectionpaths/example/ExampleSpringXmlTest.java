@@ -37,6 +37,15 @@ class ExampleSpringXmlTest {
             () -> assertThat(point(AUDIT).getLocal()).isEqualTo("an H2 database in memory or in a file"));
     }
 
+    @Test
+    void takesABeanLookedUpByJndiForAPointWhoseAddressIsTheName() {
+        assertThat(FACTS.getConnectionPoints())
+            .filteredOn(p -> p.getMethod().startsWith("org.springframework.jndi.JndiObjectFactoryBean#"))
+            .extracting(p -> p.getKind() + " " + p.getAddress().getSource() + " " + p.getAddress().getValue())
+            .containsExactlyInAnyOrder("jndi jndi-name java:comp/env/jdbc/orders-xml",
+                "jndi jndi-name java:comp/env/jdbc/audit");
+    }
+
     private static Facts.Point point(final String method) {
         return FACTS.getConnectionPoints().stream().filter(p -> p.getMethod().equals(method)).findFirst().orElseThrow();
     }

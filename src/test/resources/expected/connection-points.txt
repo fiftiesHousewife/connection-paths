@@ -87,3 +87,5 @@ com.example.addresses.LedgerLink#open() host-lookup
 com.example.addresses.LedgerLink#open() socket
 com.example.addresses.JarEntryReader#read(String) url
 com.example.fetch.ReportFetcher#fetch() url
+org.springframework.jndi.JndiObjectFactoryBean#<bean ordersSource>() jndi
+org.springframework.jndi.JndiObjectFactoryBean#<bean auditSource>() jndi

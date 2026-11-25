@@ -84,6 +84,8 @@ directory javax.naming.ldap.InitialLdapContext#<init>
 directory org.springframework.ldap.core.LdapOperations#*
 
 jndi javax.naming.InitialContext#<init>
+# Spring's factory of an object looked up by JNDI name, also written as <jee:jndi-lookup> in Spring XML.
+jndi org.springframework.jndi.JndiObjectFactoryBean#getObject
 
 queue javax.jms.ConnectionFactory#createConnection
 queue jakarta.jms.ConnectionFactory#createConnection

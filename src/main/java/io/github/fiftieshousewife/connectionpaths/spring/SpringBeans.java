@@ -103,8 +103,13 @@ public final class SpringBeans {
         return all;
     }
 
-    // The first address property's value: a ${key} setting or a literal; else, given at run time.
+    // A JNDI name for a bean looked up by one; else the first address property's value: a ${key} setting or a literal;
+    // else, given at run time.
     static Address addressOf(final SpringXml.Bean bean) {
+        final String jndiName = bean.getProperties().get("jndiName");
+        if (jndiName != null && !jndiName.isBlank()) {
+            return Address.of(Address.JNDI_NAME, jndiName);
+        }
         final Optional<String> value = ADDRESS_PROPERTIES.stream().map(bean.getProperties()::get)
             .filter(v -> v != null && !v.isBlank()).findFirst();
         return value.map(text -> SettingAnnotations.settingOrLiteral(text, VIA))

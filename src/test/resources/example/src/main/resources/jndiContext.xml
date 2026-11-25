@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:jee="http://www.springframework.org/schema/jee">
+
+    <!-- Data sources looked up by JNDI name: the name is their address. -->
+    <jee:jndi-lookup id="ordersSource" jndi-name="java:comp/env/jdbc/orders-xml"/>
+
+    <bean id="auditSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+        <property name="jndiName" value="java:comp/env/jdbc/audit"/>
+    </bean>
+</beans>

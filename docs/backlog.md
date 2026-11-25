@@ -15,7 +15,6 @@ choice between ways of building it gets a [decision record](decisions/README.md)
    * `${name}` and `${name:default}` looked up in the files a `property-placeholder`, `PropertyPlaceholderConfigurer`
      or `util:properties` names, and the default used where none sets it;
    * `<beans profile=...>` counting only for an active profile;
-   * `jee:jndi-lookup` and `JndiObjectFactoryBean` as a point whose address is the JNDI name.
    Done when under-test's Spring XML guide for the external systems list no longer needs any of these.
 3. **Settings loaded from a named file.** A `Properties` loaded from `orders.properties` and read with
    `getProperty("url")` should be looked up in that file, not in every settings file. A Spring profile's file
