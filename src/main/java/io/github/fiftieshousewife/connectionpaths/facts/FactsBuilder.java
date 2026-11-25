@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /** Turns the source model and call graph into {@link Facts}. */
 public final class FactsBuilder {
@@ -47,7 +49,7 @@ public final class FactsBuilder {
             .toolVersion(toolVersion)
             .summary(summary(tests.size(), frameworkTests.size()))
             .connectionPoints(points)
-            .systems(new SystemsBuilder(model, graph).build(groups))
+            .systems(namedBy(new SystemsBuilder(model, graph).build(groups), tests))
             .tests(tests)
             .testsStartingAFramework(frameworkTests)
             .notResolved(model.getUnresolved().top(REASONS_REPORTED))
@@ -55,6 +57,15 @@ public final class FactsBuilder {
                 .map(e -> new Facts.Dispatch(e.getKey(), e.getValue())).toList())
             .classpathNotes(setup.notes())
             .build();
+    }
+
+    // Each system with how many tests name it among their systems.
+    private static List<Facts.ExternalSystem> namedBy(final List<Facts.ExternalSystem> systems,
+                                                      final List<TestFacts.TestReach> tests) {
+        final Map<String, Long> named = tests.stream().flatMap(test -> test.getSystems().stream())
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        return systems.stream().map(system -> system.toBuilder()
+            .tests(named.getOrDefault(system.getName(), 0L).intValue()).build()).toList();
     }
 
     private Facts.Summary summary(final int testsReaching, final int testsStartingAFramework) {

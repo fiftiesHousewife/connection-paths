@@ -47,6 +47,15 @@ class ExampleAddressesTest {
             "host of upgrade");
     }
 
+    // The setter's parameter is followed back to what its callers pass, so the point has the address they set.
+    @Test
+    void givesAPointTheAddressesItsSettersCallersPass() {
+        assertThat(FACTS.getConnectionPoints()).filteredOn(point -> point.getMethod().equals(
+                "com.example.fetch.ReportFetcher#fetch()"))
+            .extracting(point -> point.getAddress().getSource() + " " + point.getAddress().getValue())
+            .containsExactly("literal https://reports.internal/daily");
+    }
+
     @Test
     void followsABuilderChainAndAMethodsReturnToTheSettingItReads() {
         final Address directory = addressOf("com.example.addresses.DirectoryClient#users()");

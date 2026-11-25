@@ -28,11 +28,19 @@ final class GivenSystems {
         final Map<String, List<TestFacts.Reach>> byPoint = new LinkedHashMap<>();
         reaches.forEach(r -> byPoint.computeIfAbsent(r.getKind() + " " + r.getPoint(), k -> new ArrayList<>()).add(r));
         final List<TestFacts.Reach> kept = new ArrayList<>();
-        byPoint.values().forEach(atAPoint -> {
-            final List<TestFacts.Reach> given = atAPoint.stream().filter(this::isGiven).toList();
-            kept.addAll(given.isEmpty() ? List.of(atAPoint.get(0).toBuilder().system(null).build()) : given);
-        });
+        byPoint.values().forEach(atAPoint -> kept.addAll(keptAt(atAPoint)));
         return kept;
+    }
+
+    // Where the host the test's own call gives names one of the point's systems, that one; else those its chain gives.
+    private List<TestFacts.Reach> keptAt(final List<TestFacts.Reach> atAPoint) {
+        final List<TestFacts.Reach> byItsHost = atAPoint.stream()
+            .filter(r -> r.getSystem() != null && r.getSystem().equals(r.getHost())).toList();
+        if (!byItsHost.isEmpty()) {
+            return byItsHost;
+        }
+        final List<TestFacts.Reach> given = atAPoint.stream().filter(this::isGiven).toList();
+        return given.isEmpty() ? List.of(atAPoint.get(0).toBuilder().system(null).build()) : given;
     }
 
     private boolean isGiven(final TestFacts.Reach reach) {

@@ -17,10 +17,12 @@ final class PointAddresses {
 
     private static final int MOST_STEPS = 8;
 
+    private final SourceModel model;
     private final CallGraph graph;
     private final ArgumentTracer arguments;
 
     PointAddresses(final SourceModel model, final CallGraph graph) {
+        this.model = model;
         this.graph = graph;
         this.arguments = new ArgumentTracer(model);
     }
@@ -60,8 +62,42 @@ final class PointAddresses {
 
     private List<Map.Entry<MethodKey, Address>> passedInto(final MethodKey callee, final Address parameter) {
         final String name = ArgumentTracer.parameterOf(parameter).orElseThrow();
-        return graph.callersOf(callee).stream()
-            .flatMap(caller -> arguments.passedBy(caller, callee, name).map(a -> Map.entry(caller, a)).stream())
+        final String owner = parameter.getValue().substring(parameter.getValue().indexOf(" of ") + " of ".length());
+        return declaring(callee, owner).stream().flatMap(method -> graph.callersOf(method).stream()
+                .flatMap(caller -> arguments.passedBy(caller, method, name).map(a -> Map.entry(caller, a)).stream()))
             .toList();
+    }
+
+    // The method a parameter is of: the callee's own, or else a setter of that name in the callee's class, one it sits
+    // in or beside, or a superclass or subclass, that holds it in a field the callee reads, as url(String) before
+    // fetch().
+    private List<MethodKey> declaring(final MethodKey callee, final String owner) {
+        if (isNamed(callee, owner)) {
+            return List.of(callee);
+        }
+        final String family = topLevelOf(callee.type());
+        return model.getDeclared().stream().filter(method -> isNamed(method, owner))
+            .filter(method -> topLevelOf(method.type()).equals(family)
+                || model.types().ancestors(callee.type()).contains(method.type())
+                || model.types().ancestors(method.type()).contains(callee.type()))
+            .toList();
+    }
+
+    // A type's outermost class: org.jsoup.helper.HttpConnection for HttpConnection.Request and HttpConnection.Response.
+    private static String topLevelOf(final String type) {
+        final String[] parts = type.split("\\.");
+        final StringBuilder name = new StringBuilder();
+        for (final String part : parts) {
+            name.append(name.length() == 0 ? "" : ".").append(part);
+            if (!part.isEmpty() && Character.isUpperCase(part.charAt(0))) {
+                return name.toString();
+            }
+        }
+        return type;
+    }
+
+    private static boolean isNamed(final MethodKey method, final String owner) {
+        return method.isConstructor() ? method.type().endsWith("." + owner) || method.type().equals(owner)
+            : method.name().equals(owner);
     }
 }

@@ -74,7 +74,7 @@ public class Facts {
      * that one setting, variable or JNDI name, or failing that one class.
      */
     @Value
-    @Builder
+    @Builder(toBuilder = true)
     public static class ExternalSystem {
         String name;
         String namedBy;
