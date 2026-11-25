@@ -7,12 +7,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 // Groups connection points by the system they go to: by host where the address shows one, else by the setting,
 // variable or JNDI name it comes from, else by the class that opens it. A point with no address of its own, such as
-// sending on a connection opened in the same method or class, belongs to that connection's system. Local
+// sending on a connection opened in the same method or class, belongs to that connection's system; but a call its
+// callers give hosts, and one known only at run time, is in its class's system for the one known at run time. Local
 // connections, host look-ups and processes belong to no system. A host's name may be internationalised
 // (räksmörgås.josefsson.org), so its parts are letters and digits of any script.
 final class PointGroups {
@@ -33,22 +36,32 @@ final class PointGroups {
     static Map<String, Group> of(final List<Facts.Point> points) {
         final List<Facts.Point> inSystems =
             points.stream().filter(p -> p.getLocal() == null && !NOT_SYSTEMS.contains(p.getKind())).toList();
-        final Map<String, Group> byMethod = new TreeMap<>();
-        final Map<String, Group> byClass = new TreeMap<>();
-        inSystems.stream().map(p -> Map.entry(p.getMethod(), nameOf(p)))
-            .filter(e -> !CLASS.equals(e.getValue().namedBy()))
-            .forEach(e -> {
-                byMethod.putIfAbsent(e.getKey(), e.getValue());
-                byClass.putIfAbsent(typeOf(e.getKey()), e.getValue());
-            });
+        final Map<String, Group> byMethod = firstNamed(inSystems, Facts.Point::getMethod);
+        final Map<String, Group> byClass = firstNamed(inSystems, p -> typeOf(p.getMethod()));
+        final Set<String> namedCalls = inSystems.stream().filter(p -> !CLASS.equals(nameOf(p).namedBy()))
+            .map(PointGroups::callOf).collect(Collectors.toSet());
         final Map<String, Group> groups = new TreeMap<>();
         inSystems.forEach(p -> {
             final Group named = nameOf(p);
-            final Group group = CLASS.equals(named.namedBy())
-                ? byMethod.getOrDefault(p.getMethod(), byClass.getOrDefault(typeOf(p.getMethod()), named)) : named;
+            final Group group = !CLASS.equals(named.namedBy()) || namedCalls.contains(callOf(p)) ? named
+                : byMethod.getOrDefault(p.getMethod(), byClass.getOrDefault(typeOf(p.getMethod()), named));
             groups.computeIfAbsent(group.name(), k -> new Group(k, group.namedBy(), new ArrayList<>())).points().add(p);
         });
         return groups;
+    }
+
+    // The first system named by an address, for each method or class.
+    private static Map<String, Group> firstNamed(final List<Facts.Point> points,
+                                                 final Function<Facts.Point, String> key) {
+        final Map<String, Group> first = new TreeMap<>();
+        points.stream().filter(p -> !CLASS.equals(nameOf(p).namedBy()))
+            .forEach(p -> first.putIfAbsent(key.apply(p), nameOf(p)));
+        return first;
+    }
+
+    // A call, by its method and line: one its callers give named addresses is listed once for each, an unknown one too.
+    private static String callOf(final Facts.Point point) {
+        return point.getMethod() + ":" + point.getLine();
     }
 
     private static Group nameOf(final Facts.Point point) {

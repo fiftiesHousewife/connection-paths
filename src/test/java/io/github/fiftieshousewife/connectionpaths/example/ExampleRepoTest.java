@@ -105,7 +105,7 @@ class ExampleRepoTest {
             () -> assertThat(summary.getFiles()).isEqualTo(190),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
             // The abstract ResourceContractTest's one test is counted twice, under each subclass, not under itself.
-            () -> assertThat(summary.getTests()).isEqualTo(82),
-            () -> assertThat(summary.getTestsReaching()).isEqualTo(66));
+            () -> assertThat(summary.getTests()).isEqualTo(83),
+            () -> assertThat(summary.getTestsReaching()).isEqualTo(67));
     }
 }

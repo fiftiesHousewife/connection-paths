@@ -41,6 +41,13 @@ class ExampleSystemsTest {
                 List.of("org.apache.commons.net.SocketClient#connect(String,int)"));
     }
 
+    // A host known only at run time is the client's own system, of its class: no reach that may connect is left out.
+    @Test
+    void givesAReachToAHostKnownOnlyAtRunTimeTheSystemOfItsPointsClass() {
+        assertThat(onlyReach("com.example.lines.LineClientTest.connectsToAHostItIsHanded").getSystem())
+            .isEqualTo("com.example.lines.LineClient");
+    }
+
     // The host goes through an overload whose parameter has the same name as the one it calls.
     @Test
     void followsATestsHostThroughAnOverloadToTheSystemOfTheClientsPoint() {
@@ -53,7 +60,8 @@ class ExampleSystemsTest {
         assertThat(FACTS.getSystems())
             .filteredOn(system -> system.getPoints().contains("com.example.lines.LineClient#connect(String)"))
             .extracting(Facts.ExternalSystem::getName)
-            .containsExactlyInAnyOrder("line.host", "lines.internal", "news.internal", "weather.internal");
+            .containsExactlyInAnyOrder("com.example.lines.LineClient", "line.host", "lines.internal", "news.internal",
+                "weather.internal");
     }
 
     // A client every caller gives its own host, tests among them, is in each host's system; a test reaches only the

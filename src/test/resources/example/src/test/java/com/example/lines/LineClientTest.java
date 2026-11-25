@@ -10,6 +10,15 @@ class LineClientTest {
     }
 
     @Test
+    void connectsToAHostItIsHanded() throws IOException {
+        new LineClient().connect(hosts()[0]);
+    }
+
+    private static String[] hosts() {
+        return new String[] {System.getenv("LINE_HOSTS")};
+    }
+
+    @Test
     void connectsToAHostKnownOnlyAtRunTime() throws IOException {
         new LineClient().connect(System.getProperty("line.host"));
     }
