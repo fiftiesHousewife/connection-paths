@@ -138,4 +138,10 @@ class ExampleTestSettingsTest {
         assertThat(onlyReach("com.example.directory.LdapConnectorTest.connects").getAddressForTests())
             .isEqualTo("none");
     }
+
+    @Test
+    void readsTheModulesOwnSettingsNotThoseOfAModuleInsideIt() {
+        assertThat(ExampleRepo.addressOf("com.example.addresses.CrmClient#open()").getSettingFile())
+            .doesNotContain("addons");
+    }
 }

@@ -11,14 +11,16 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-// The properties, YAML and XML files under some folders that may hold settings, outside build output and tool files,
-// and no larger than a megabyte, in the order their settings are kept: production before test, then by name. A file
-// for one Spring profile (application-dev.yml) is left out: its settings hold only where that profile is active.
+// The properties, YAML and XML files under some folders that may hold settings, outside build output, tool files and
+// modules of their own inside a folder, and no larger than a megabyte, in the order their settings are kept: production
+// before test, then by name. A file for one Spring profile (application-dev.yml) is left out: its settings hold only
+// where that profile is active.
 final class SettingsFileFinder {
 
     private static final Set<String> SKIPPED_FOLDERS =
         Set.of("build", "target", ".git", ".gradle", ".idea", "node_modules", "out");
     private static final Set<String> SKIPPED_FILES = Set.of("pom.xml", "build.xml", "ivy.xml", "checkstyle.xml");
+    private static final Set<String> BUILD_FILES = Set.of("pom.xml", "build.gradle", "build.gradle.kts", "build.xml");
     private static final Set<String> EXTENSIONS = Set.of("properties", "yml", "yaml", "xml");
     private static final long LARGEST = 1_000_000;
     private static final Pattern PROFILE_FILE = Pattern.compile("(application|bootstrap)-[^.]+\\.(properties|ya?ml)");
@@ -45,9 +47,15 @@ final class SettingsFileFinder {
         return set.startsWith("/src/test/resources/") || set.startsWith("/src/main/resources/");
     }
 
+    // The folder's files, but for those of a module inside it, a folder with a build file of its own.
     private static Stream<Path> settingsFilesIn(final Path folder) {
         try (Stream<Path> paths = Files.walk(folder)) {
-            return paths.filter(SettingsFileFinder::isSettingsFile).toList().stream();
+            final List<Path> all = paths.toList();
+            final List<Path> modules = all.stream()
+                .filter(path -> BUILD_FILES.contains(String.valueOf(path.getFileName()))).map(Path::getParent)
+                .filter(module -> !module.equals(folder)).toList();
+            return all.stream().filter(SettingsFileFinder::isSettingsFile)
+                .filter(file -> modules.stream().noneMatch(file::startsWith));
         } catch (IOException e) {
             throw new UncheckedIOException("Can't read " + folder, e);
         }

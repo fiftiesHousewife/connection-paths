@@ -124,7 +124,8 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 * An address is traced from the connection call's first argument, or what the call is made on, back through
   variables, fields, constructors, builder chains, the JDK's helpers and the source's own methods, to a literal or a
   name. A call passing a dotted key (`crowd.server.url`) reads a setting, which is looked up in the settings files
-  under `--module` and `--settings` folders: production settings before test ones, a file without a Spring profile
+  under `--module` and `--settings` folders, but not those of a module inside one (a folder with a build file of its
+  own): production settings before test ones, a file without a Spring profile
   before one with, and keys matched loosely, as Spring matches them (`jdbcUrl`, `jdbc-url`, `JDBC_URL`). A field
   of a `@ConfigurationProperties("orders-db")` class reads the setting `orders-db.<field>`. A Spring Data repository's
   call reads `spring.datasource.url`; where no settings file sets it, the tool takes the embedded database Spring

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A module of its own inside the example, whose settings are its own, not the example's. -->
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>addons</artifactId>
+    <version>1</version>
+</project>
