@@ -22,13 +22,13 @@ final class Reaches {
     private final SourceModel model;
     private final MockedChains mocks;
     private final TestAddresses testAddresses;
-    private final Set<String> createdOutsideTests;
+    private final RunsFor runs;
 
     Reaches(final SourceModel model, final SettingsFiles settings) {
         this.model = model;
         this.mocks = new MockedChains(model);
         this.testAddresses = new TestAddresses(model, settings);
-        this.createdOutsideTests = model.created(false);
+        this.runs = new RunsFor(model);
     }
 
     List<Facts.Reach> of(final MethodKey test, final Map<String, Map<MethodKey, MethodKey>> reachedByKind) {
@@ -67,11 +67,8 @@ final class Reaches {
             .build();
     }
 
-    // A chain into a type that only other test classes' own code creates never runs as this test does.
     private boolean runsFor(final MethodKey test, final Facts.Reach reach) {
-        return reach.getChain().stream().map(step -> step.substring(0, step.indexOf('#')))
-            .filter(type -> !createdOutsideTests.contains(type))
-            .allMatch(type -> model.tests().mayBeCreatedFor(test.type(), type));
+        return runs.test(test, reach.getChain());
     }
 
     private static boolean cannotConnect(final Facts.Reach database) {

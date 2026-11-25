@@ -35,6 +35,7 @@ com.example.boot.LedgerContainerTest.storesAnEntry
 com.example.schema.SchemaUpgradeTest.upgrades
 com.example.schema.SchemaOwnersTest.findsTheFirstOwner
 com.example.groups.GroupsFromTheDirectoryTest.listsRemoteMembers
+com.example.groups.GroupsTest.savesTheMembers
 com.example.boot.OrdersOverHttpTest.showsAnOrder
 com.example.report.ReportClientStartingItsServerTest.fetches
 com.example.pages.PageRequestTest.fetchesAPage

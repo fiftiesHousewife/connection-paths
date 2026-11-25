@@ -46,7 +46,7 @@ class ExampleSystemsTest {
     void givesEachSystemItsTestsAndTheCallsTheyAllGoThrough() {
         final Facts.ExternalSystem orders = system("orders-db.internal");
         assertAll(
-            () -> assertThat(orders.getTests()).isEqualTo(18),
+            () -> assertThat(orders.getTests()).isEqualTo(19),
             () -> assertThat(orders.getSharedChain()).containsExactly(OPEN_QUIETLY, OPEN),
             () -> assertThat(system("main-db.internal").getSharedChain())
                 .containsExactly("com.example.alt.DbManager#connect()",

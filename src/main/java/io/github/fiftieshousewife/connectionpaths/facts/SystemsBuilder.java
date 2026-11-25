@@ -24,10 +24,12 @@ public final class SystemsBuilder {
 
     private final SourceModel model;
     private final CallGraph graph;
+    private final RunsFor runsFor;
 
     SystemsBuilder(final SourceModel model, final CallGraph graph) {
         this.model = model;
         this.graph = graph;
+        this.runsFor = new RunsFor(model);
     }
 
     Result build(final List<Facts.Point> points) {
@@ -44,7 +46,9 @@ public final class SystemsBuilder {
                                         final Map<MethodKey, List<String>> byTest) {
         final Map<MethodKey, MethodKey> next = graph.reachBack(methodsOf(group));
         final List<List<MethodKey>> chains = new ArrayList<>();
-        model.tests().all().keySet().forEach(test -> TestChains.of(model, test, next).ifPresent(chain -> {
+        model.tests().all().keySet().forEach(test -> TestChains.of(model, test, next)
+            .filter(chain -> runsFor.test(test, chain.steps().stream().map(MethodKey::toString).toList()))
+            .ifPresent(chain -> {
             chains.add(chain.steps());
             byTest.computeIfAbsent(test, k -> new ArrayList<>()).add(group.name());
         }));
