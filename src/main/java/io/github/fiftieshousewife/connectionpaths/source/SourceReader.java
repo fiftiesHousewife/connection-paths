@@ -50,9 +50,7 @@ public final class SourceReader {
     public SourceModel read(final List<Path> mainSources, final List<Path> testSources) {
         mainSources.forEach(dir -> readFolder(dir, false));
         testSources.forEach(dir -> readFolder(dir, true));
-        members.junit3Candidates().entrySet().stream()
-            .filter(e -> model.types().ancestors(e.getKey().type()).stream().anyMatch(TypeHeads::isJunit3Base))
-            .forEach(e -> model.tests().test(e.getKey(), e.getValue()));
+        members.addJunit3(type -> model.types().ancestors(type).stream().anyMatch(TypeHeads::isJunit3Base));
         InheritedTests.spread(model, abstractTestTypes);
         StartedServers.addTo(model);
         // Creating an object first runs its superclass's constructor (super() unless it says otherwise), and so the

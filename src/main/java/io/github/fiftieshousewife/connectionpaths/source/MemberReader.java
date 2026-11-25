@@ -12,9 +12,11 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.RecordDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 // Reads a type's members into the model: methods, constructors (a test class's run with each test) and initialisers,
 // and which test methods are tests or set-up. JUnit 3 tests are known only once every supertype has been read, so
@@ -36,14 +38,19 @@ final class MemberReader {
     private final SourceModel model;
     private final CallResolver calls;
     private final Map<MethodKey, SourceModel.Location> candidates = new HashMap<>();
+    private final Set<MethodKey> setUpsByName = new HashSet<>();
 
     MemberReader(final SourceModel model, final CallResolver calls) {
         this.model = model;
         this.calls = calls;
     }
 
-    Map<MethodKey, SourceModel.Location> junit3Candidates() {
-        return candidates;
+    // The JUnit 3 tests and set-ups, by their names, in the classes whose superclass is TestCase or the like.
+    void addJunit3(final Predicate<String> isJunit3) {
+        candidates.entrySet().stream().filter(e -> isJunit3.test(e.getKey().type()))
+            .forEach(e -> model.tests().test(e.getKey(), e.getValue()));
+        setUpsByName.stream().filter(key -> isJunit3.test(key.type()))
+            .forEach(key -> model.tests().setUp(key.type(), key));
     }
 
     void read(final BodyDeclaration<?> member, final Owner owner) {
@@ -121,15 +128,13 @@ final class MemberReader {
     private void readTestMethod(final MethodDeclaration method, final MethodKey key, final SourceModel.Location at) {
         if (annotated(method, TEST_ANNOTATIONS)) {
             model.tests().test(key, at);
-        } else if (isSetUp(method, key)) {
+        } else if (annotated(method, SET_UP_ANNOTATIONS)) {
             model.tests().setUp(key.type(), key);
+        } else if (JUNIT3_SET_UP.contains(key.name())) {
+            setUpsByName.add(key);
         } else if (isJunit3Candidate(method, key)) {
             candidates.put(key, at);
         }
-    }
-
-    private static boolean isSetUp(final MethodDeclaration method, final MethodKey key) {
-        return annotated(method, SET_UP_ANNOTATIONS) || JUNIT3_SET_UP.contains(key.name());
     }
 
     private static boolean isJunit3Candidate(final MethodDeclaration method, final MethodKey key) {

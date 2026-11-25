@@ -45,6 +45,11 @@ class ExampleRepoTest {
     }
 
     @Test
+    void takesAMethodNamedSetUpForSetUpOnlyInAJunit3Test() {
+        assertThat(REACHING).doesNotContainKey("com.example.orders.OrderSetUpByNameTest.countsNothing");
+    }
+
+    @Test
     void findsAConnectionReachedThroughSetUpAndFieldInitialisers() {
         final TestFacts.Reach reach = onlyReach("com.example.ledger.LedgerTest.countsEntries");
         assertAll(
@@ -102,10 +107,10 @@ class ExampleRepoTest {
     void summarisesWhatItRead() {
         final Facts.Summary summary = FACTS.getSummary();
         assertAll(
-            () -> assertThat(summary.getFiles()).isEqualTo(194),
+            () -> assertThat(summary.getFiles()).isEqualTo(195),
             () -> assertThat(summary.getFilesNotParsed()).isZero(),
             // The abstract ResourceContractTest's one test is counted twice, under each subclass, not under itself.
-            () -> assertThat(summary.getTests()).isEqualTo(85),
+            () -> assertThat(summary.getTests()).isEqualTo(86),
             () -> assertThat(summary.getTestsReaching()).isEqualTo(69));
     }
 }
