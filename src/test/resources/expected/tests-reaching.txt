@@ -63,3 +63,5 @@ com.example.addresses.PriceFeedsTest.readsRates
 com.example.lines.LineClientTest.connectsToItsOwnHost
 com.example.lines.LineClientTest.connectsToAHostKnownOnlyAtRunTime
 com.example.lines.WeatherLineTest.readsTheWeather
+org.apache.commons.net.SocketClientTest.connectsToTheMirror
+org.apache.commons.net.SocketClientTest.connectsOnTheDefaultPort

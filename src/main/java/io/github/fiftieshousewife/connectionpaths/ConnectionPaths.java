@@ -3,6 +3,7 @@ package io.github.fiftieshousewife.connectionpaths;
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import io.github.fiftieshousewife.connectionpaths.facts.FactsBuilder;
 import io.github.fiftieshousewife.connectionpaths.graph.CallGraph;
+import io.github.fiftieshousewife.connectionpaths.graph.ClientsInTheSource;
 import io.github.fiftieshousewife.connectionpaths.rules.ConnectionRules;
 import io.github.fiftieshousewife.connectionpaths.settings.ServiceFiles;
 import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
@@ -43,6 +44,7 @@ public final class ConnectionPaths {
         settings.values().forEach(model::created);
         ServiceFiles.namedIn(options.getSettings()).forEach(model::created);
         final CallGraph graph = new CallGraph(model, options.getMaxImplementations());
+        ClientsInTheSource.mark(model, graph);
         return new FactsBuilder(model, graph, settings).build(version(), setup);
     }
 

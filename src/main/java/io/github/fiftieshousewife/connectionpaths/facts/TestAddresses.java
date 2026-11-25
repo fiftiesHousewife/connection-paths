@@ -25,6 +25,7 @@ final class TestAddresses {
     static final String RUN_TIME = "run-time";
 
     private final Map<String, Address> byPoint;
+    private final Map<String, List<Address>> everyCallOf;
     private final Set<String> listening;
     private final SettingsFiles settings;
     private final ArgumentTracer arguments;
@@ -37,6 +38,9 @@ final class TestAddresses {
         this.byPoint = model.getPoints().stream().collect(Collectors.toMap(
             point -> point.method() + " " + point.kind(), point -> model.callsOf(point).get(0).address(),
             (first, second) -> first));
+        this.everyCallOf = model.getPoints().stream().collect(Collectors.groupingBy(
+            point -> point.method() + " " + point.kind(), Collectors.flatMapping(point -> model.callsOf(point).stream()
+                .map(SourceModel.PointCall::address), Collectors.toList())));
         this.listening = model.getPoints().stream().collect(Collectors.groupingBy(
             point -> point.method() + " " + point.kind(), Collectors.mapping(point -> Locality.ofTheCall(point.call())
                 .isPresent(), Collectors.reducing(true, Boolean::logicalAnd))))
@@ -78,21 +82,23 @@ final class TestAddresses {
         return ForTests.of(classify(withValue, kind), withValue);
     }
 
-    // The address a reach's chain gives its point, where the point's own address is one of its parameters: what the
-    // test's chain passes, as far as it can be followed.
-    Optional<Address> givenAlong(final List<MethodKey> chain, final String kind) {
-        final Address atThePoint = byPoint.get(chain.get(chain.size() - 1) + " " + kind);
-        return ArgumentTracer.parameterOf(atThePoint).map(p -> settings.withValue(alongTheChain(chain, atThePoint)));
+    // The addresses a reach's chain gives its point, for each of its calls whose own address is one of its parameters:
+    // what the test's chain passes, as far as it can be followed.
+    List<Address> givenAlong(final List<MethodKey> chain, final String kind) {
+        return everyCallOf.getOrDefault(chain.get(chain.size() - 1) + " " + kind, List.of()).stream()
+            .filter(atThePoint -> ArgumentTracer.parameterOf(atThePoint).isPresent())
+            .map(atThePoint -> settings.withValue(alongTheChain(chain, atThePoint))).toList();
     }
 
     private Address alongTheChain(final List<MethodKey> chain, final Address atThePoint) {
         Address address = atThePoint;
         for (int step = chain.size() - 1; step > 0 && ArgumentTracer.parameterOf(address).isPresent(); step--) {
             final String parameter = ArgumentTracer.parameterOf(address).orElseThrow();
-            address = arguments.passedBy(chain.get(step - 1), chain.get(step), parameter).orElse(address);
-            if (ArgumentTracer.parameterOf(address).filter(parameter::equals).isPresent()) {
+            final Optional<Address> passed = arguments.passedBy(chain.get(step - 1), chain.get(step), parameter);
+            if (passed.isEmpty()) {
                 break;
             }
+            address = passed.get();
         }
         return address;
     }

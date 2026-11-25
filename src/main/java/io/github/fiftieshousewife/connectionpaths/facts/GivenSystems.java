@@ -1,5 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.facts;
 
+import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
 import java.util.ArrayList;
@@ -38,11 +39,21 @@ final class GivenSystems {
         if (reach.getSystem() == null) {
             return true;
         }
+        final List<Optional<String>> names = namesGiven(reach);
+        if (names.isEmpty() || names.contains(Optional.of(reach.getSystem()))) {
+            return true;
+        }
+        return names.stream().allMatch(Optional::isEmpty) && isItsPointsClass(reach);
+    }
+
+    // The system names the reach's chain gives its point's calls, for those whose address is one of their parameters.
+    private List<Optional<String>> namesGiven(final TestFacts.Reach reach) {
         final List<MethodKey> chain = reach.getChain().stream().map(methods::get).toList();
-        final Optional<String> name = chain.contains(null) ? Optional.of(reach.getSystem())
-            : testAddresses.givenAlong(chain, reach.getKind()).map(PointGroups::nameOf)
-                .orElse(Optional.of(reach.getSystem()));
-        return name.map(reach.getSystem()::equals)
-            .orElseGet(() -> reach.getSystem().equals(reach.getPoint().substring(0, reach.getPoint().indexOf('#'))));
+        final List<Address> given = chain.contains(null) ? List.of() : testAddresses.givenAlong(chain, reach.getKind());
+        return given.stream().map(PointGroups::nameOf).toList();
+    }
+
+    private static boolean isItsPointsClass(final TestFacts.Reach reach) {
+        return reach.getSystem().equals(reach.getPoint().substring(0, reach.getPoint().indexOf('#')));
     }
 }

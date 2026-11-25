@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Getter;
 
 /** Everything read from the source: methods, the calls each makes, types' supertypes, tests, and connection points. */
@@ -44,6 +45,7 @@ public final class SourceModel {
     private final Map<ConnectionPoint, Map<Location, Address>> pointCalls = new HashMap<>();
     private final TypeHierarchy hierarchy = new TypeHierarchy();
     private final TestModel testModel = new TestModel(hierarchy, declared);
+    @Getter(onMethod_ = @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The model is shared on purpose"))
     private final Unresolved unresolved = new Unresolved();
     @Getter
     private final Counts counts = new Counts();
@@ -64,7 +66,7 @@ public final class SourceModel {
         pointCalls.computeIfAbsent(point, k -> new LinkedHashMap<>()).putIfAbsent(at, address);
     }
 
-    void mark(final Mark mark, final String code) {
+    public void mark(final Mark mark, final String code) {
         marks.computeIfAbsent(mark, k -> new HashSet<>()).add(code);
     }
 
@@ -138,12 +140,10 @@ public final class SourceModel {
             .map(e -> new PointCall(e.getKey(), e.getValue())).toList();
     }
 
+    /** The connection points, but for those marked as no point, as a call into the source's own client is. */
     public Set<ConnectionPoint> getPoints() {
-        return Collections.unmodifiableSet(points);
-    }
-
-    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The model is shared on purpose")
-    public Unresolved getUnresolved() {
-        return unresolved;
+        final Set<String> not = marked(Mark.NOT_A_POINT);
+        return points.stream().filter(p -> !not.contains(p.toString())).collect(Collectors.toCollection(
+            LinkedHashSet::new));
     }
 }

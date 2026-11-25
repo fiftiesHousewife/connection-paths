@@ -117,12 +117,9 @@ class ExampleAddressesTest {
         assertThat(FACTS.getConnectionPoints()).filteredOn(point -> point.getLocal() != null)
             .extracting(Facts.Point::getMethod, Facts.Point::getLocal)
             .containsExactlyInAnyOrder(
-                tuple("com.example.alt.EmbeddedProvider#getConnection()",
-                    "an H2 database in memory or in a file"),
-                tuple("com.example.alt.LocalThings#readBundledFile()",
-                    "a file, a jar or a classpath resource"),
-                tuple("com.example.alt.LocalThings#talkToTheAgentOnThisMachine()",
-                    "this machine"),
+                tuple("com.example.alt.EmbeddedProvider#getConnection()", "an H2 database in memory or in a file"),
+                tuple("com.example.alt.LocalThings#readBundledFile()", "a file, a jar or a classpath resource"),
+                tuple("com.example.alt.LocalThings#talkToTheAgentOnThisMachine()", "this machine"),
                 tuple("com.example.alt.LocalThings#readOwnJar()", "a classpath resource"),
                 tuple("com.example.alt.LocalThings#openTheDatabaseOnThisMachine()", "this machine"),
                 tuple("com.example.addresses.ListenAddress#toListenOn()",
@@ -130,6 +127,9 @@ class ExampleAddressesTest {
                 tuple("com.example.lookups.Peers#gateway()", "a numeric address, which nothing looks up"),
                 tuple("com.example.transfers.LocalFileServer#<init>(int)", "a port of this machine, to listen on"),
                 tuple("com.example.lookups.Peers#onTheLink()", "a numeric address, which nothing looks up"),
+                tuple("com.example.lookups.Peers#byAddress(String)", "a numeric address, which nothing looks up"),
+                tuple("com.example.lookups.TimeClient#ask(InetAddress,int)", "this machine"),
+                tuple("com.example.pages.PageClient#get(String)", "this machine"),
                 tuple("org.apache.commons.dbcp.BasicDataSource#<bean auditDataSource>()",
                     "an H2 database in memory or in a file"));
     }

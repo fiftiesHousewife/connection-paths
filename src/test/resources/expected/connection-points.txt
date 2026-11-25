@@ -75,3 +75,8 @@ com.example.lookups.ServiceRecords#zoneFile() url
 com.example.lines.LineClient#connect(String) socket
 com.example.lines.ProxyLineClient#connect(String) socket
 com.example.lines.LineClient#connect(String) socket
+org.apache.commons.net.SocketClient#connect(String,int) socket
+com.example.lines.LineClient#connect(String) socket
+com.example.lines.LineClient#connect(String) socket
+org.apache.commons.net.SocketClient#connect(String,int) socket
+org.apache.commons.net.SocketClient#connect(String,int) socket

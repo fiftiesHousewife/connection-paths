@@ -7,6 +7,7 @@ import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.FAC
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.OPEN;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.OPEN_QUIETLY;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.REACHING;
+import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.onlyReach;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.system;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -29,15 +30,34 @@ class ExampleSystemsTest {
                 tuple("database", "main-db.internal", "com.example.alt.DefaultProvider#getConnection()"));
     }
 
+    // A client whose code is in the source opens its connection there: a test's call to it is no point, and the host
+    // the test gives it is a system of the client's own point.
     @Test
-    void putsAPointInTheSystemOfEachHostItsCallersPass() {
-        assertThat(FACTS.getSystems())
-            .filteredOn(system -> system.getPoints().contains("com.example.lines.LineClient#connect(String)"))
-            .extracting(Facts.ExternalSystem::getName).containsExactlyInAnyOrder("news.internal", "weather.internal");
+    void takesTheConnectionAClientInTheSourceOpensForItsPointNotTheCallToIt() {
+        final TestFacts.Reach reach = onlyReach("org.apache.commons.net.SocketClientTest.connectsToTheMirror");
+        assertThat(List.of(reach.getSystem(), reach.getPoint(), reach.getClientField(),
+                system("ftp-mirror.internal").getPoints()))
+            .containsExactly("ftp-mirror.internal", "org.apache.commons.net.SocketClient#connect(String,int)", "client",
+                List.of("org.apache.commons.net.SocketClient#connect(String,int)"));
     }
 
-    // A client every caller gives its own host is in the system of the host one caller passes; a test that passes
-    // another host, or one known only at run time, doesn't reach that system.
+    // The host goes through an overload whose parameter has the same name as the one it calls.
+    @Test
+    void followsATestsHostThroughAnOverloadToTheSystemOfTheClientsPoint() {
+        assertThat(onlyReach("org.apache.commons.net.SocketClientTest.connectsOnTheDefaultPort").getSystem())
+            .isEqualTo("ftp-default.internal");
+    }
+
+    @Test
+    void putsAPointInTheSystemOfEachHostItsCallersAndTestsPass() {
+        assertThat(FACTS.getSystems())
+            .filteredOn(system -> system.getPoints().contains("com.example.lines.LineClient#connect(String)"))
+            .extracting(Facts.ExternalSystem::getName)
+            .containsExactlyInAnyOrder("line.host", "lines.internal", "news.internal", "weather.internal");
+    }
+
+    // A client every caller gives its own host, tests among them, is in each host's system; a test reaches only the
+    // one its own chain passes.
     @Test
     void namesForATestOnlyTheSystemItsOwnChainGivesTheAddressOf() {
         assertThat(Stream.of("com.example.lines.WeatherLineTest.readsTheWeather",
@@ -45,8 +65,8 @@ class ExampleSystemsTest {
                 "com.example.lines.LineClientTest.connectsToAHostKnownOnlyAtRunTime")
             .map(test -> REACHING.get(test).getReaches()).toList())
             .extracting(reaches -> reaches.stream().map(r -> r.getSystem() + " " + r.getHost()).toList())
-            .containsExactly(List.of("weather.internal weather.internal"), List.of("null lines.internal"),
-                List.of("null null"));
+            .containsExactly(List.of("weather.internal weather.internal"), List.of("lines.internal lines.internal"),
+                List.of("line.host null"));
     }
 
     @Test
