@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.example;
 
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import io.github.fiftieshousewife.connectionpaths.source.Unresolved;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.FACTS;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.ORDERS_TEST;
@@ -45,7 +46,7 @@ class ExampleRepoTest {
 
     @Test
     void findsAConnectionReachedThroughSetUpAndFieldInitialisers() {
-        final Facts.Reach reach = onlyReach("com.example.ledger.LedgerTest.countsEntries");
+        final TestFacts.Reach reach = onlyReach("com.example.ledger.LedgerTest.countsEntries");
         assertAll(
             () -> assertThat(reach.isThroughSetUp()).isTrue(),
             () -> assertThat(reach.getChain()).containsExactly(

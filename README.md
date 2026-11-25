@@ -68,7 +68,7 @@ says.
 | `summary` | Files and methods read; calls resolved and not; tests, how many may reach a connection, and how many start a framework |
 | `connection_points` | Each call that opens or uses a connection, so a method that connects twice is listed twice: its kind, the rule its call matched, its method, the file and line of the call, its `address`, and, if it stays on this machine, why (`local`) |
 | `systems` | What tests may reach outside the program: the points that go to one host, setting, variable, JNDI name or class; the systems that are `alternatives` to it; how many tests may reach it; and the `shared_chain` of calls they all go through |
-| `tests` | Each test that may reach a connection: for each kind, a chain of calls from the test to the connection; whether it goes through what runs with the test (`through_set_up`); the first step that would run a mock the test puts in place instead of the real code (`through_mock`); where the test's own settings send it (`address_for_tests`: `host`, `local`, `none` or `run-time`); the `systems` it may reach; and the servers on this machine its rules, extensions, Testcontainers containers, set-up or tests start, directly or through helpers (`stand_ins`) |
+| `tests` | Each test that may reach a connection, with its `test_framework` (`junit3`, `junit4`, `junit5`, `junit6` or `testng`), the annotation that starts a framework (`starts_framework`) and, for one that does, the `settings_files` and `profiles` it loads; the servers on this machine its rules, extensions, Testcontainers containers, set-up or tests start, directly or through helpers (`stand_ins`); the `systems` it may reach; and a reach for each system it may reach, and for each kind of connection in no system. Each reach has a chain of calls from the test to the connection; the `system`; whether it goes through what runs with the test (`through_set_up`); the first step that would run a mock the test puts in place instead of the real code (`through_mock`); where the test's own settings send it (`address_for_tests`: `host`, `local`, `none` or `run-time`) and the `host`; the file and line of the chain's first call (`first_call`) and the test class's field it is made on (`client_field`); and its `grade` (`reaches`, `may-reach` or `cannot-reach`), with the `reason` and the `reason_text` |
 | `tests_starting_a_framework` | Each test that starts a framework (`@SpringBootTest`, `@Testcontainers`, `@QuarkusTest`, Spring's runner...), which may connect through wiring no call shows: the annotation, and the class it is on |
 | `not_resolved` | The calls it couldn't resolve, by reason, most common first; a missing library shows up here by its types' names |
 | `dispatch_points_not_followed` | Calls through an interface or superclass with more implementations than the limit (listeners, handlers, plug-ins): reported, not followed |
@@ -155,6 +155,12 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   inside a loop or `if` on one, such as `while (rows.next())`) can't connect in a test whose database reach can't:
   it takes that reach's `address_for_tests`, and its mock. A DNS look-up through JNDI is where it asks for records
   (`getAttributes`, `search`), not where its context is made.
+* Each reach is graded by the first of these that holds: it goes through a mock (`through-a-mock`), or the test starts
+  a server on this machine in its place (`embedded-server`: by name, such as an LDAP, GreenMail, WireMock, Postgres or
+  Kafka server, or for a web server by its package, Jetty's, Undertow's or Netty's), so it `cannot-reach`; no setting
+  the test runs with gives its address (`no-address-for-tests`), or its address is on this machine (`local`), so it
+  `cannot-reach`; its address is a host (`host`), so it `reaches`; otherwise its address is known only at run time
+  (`run-time`), so it `may-reach`.
 * A test that starts a framework is listed by the annotation that starts it, on its class, a superclass or a class
   around it. See [the decision](docs/decisions/0009-tests-that-start-a-framework-are-listed-by-their-annotation-apart-from-the-tests-that-reach-a-connection.md).
 * A test is listed if it may reach a connection. "May": measurement, the first run of the tests, confirms or clears

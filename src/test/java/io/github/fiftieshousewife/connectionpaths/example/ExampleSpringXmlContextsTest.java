@@ -1,6 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.example;
 
-import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.reachOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,7 +13,7 @@ class ExampleSpringXmlContextsTest {
 
     @Test
     void reachesTheBeansOfTheContextATestClassNames() {
-        final Facts.Reach reach = reachOf("com.example.spring.ReportsContextTest.loadsTheReportBeans", "database");
+        final TestFacts.Reach reach = reachOf("com.example.spring.ReportsContextTest.loadsTheReportBeans", "database");
         assertThat(reach.getPoint() + " " + reach.isThroughSetUp()).startsWith(BEAN).endsWith(" true");
     }
 

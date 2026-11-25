@@ -22,66 +22,85 @@ final class Reaches {
     private final SourceModel model;
     private final MockedChains mocks;
     private final TestAddresses testAddresses;
+    private final TestCalls testCalls;
     private final RunsFor runs;
 
     Reaches(final SourceModel model, final SettingsFiles settings) {
         this.model = model;
         this.mocks = new MockedChains(model);
         this.testAddresses = new TestAddresses(model, settings);
+        this.testCalls = new TestCalls(model);
         this.runs = new RunsFor(model);
     }
 
-    List<Facts.Reach> of(final MethodKey test, final Map<String, Map<MethodKey, MethodKey>> reachedByKind) {
-        final List<Facts.Reach> reaches = reachedByKind.entrySet().stream()
-            .map(kind -> reach(test, kind.getKey(), kind.getValue()))
+    List<TestFacts.Reach> of(final MethodKey test, final List<ReachTargets.Target> targets) {
+        final List<TestFacts.Reach> reaches = targets.stream()
+            .map(target -> reach(test, target.kind(), target.next())
+                .map(reach -> reach.toBuilder().system(target.system()).build()))
             .flatMap(Optional::stream).filter(reach -> runsFor(test, reach)).toList();
-        return reaches.stream().filter(r -> DATABASE.equals(r.getKind())).findFirst()
-            .filter(Reaches::cannotConnect)
-            .map(database -> reaches.stream().map(r -> behind(r, database)).toList())
-            .orElse(reaches);
+        final List<String> standIns = List.copyOf(model.tests().standInsOf(test.type()));
+        return behindTheDatabase(reaches).stream().map(reach -> graded(reach, standIns)).toList();
+    }
+
+    // Where every database reach can't connect, the code that runs only on an open database can't either.
+    private List<TestFacts.Reach> behindTheDatabase(final List<TestFacts.Reach> reaches) {
+        final List<TestFacts.Reach> databases = reaches.stream().filter(r -> DATABASE.equals(r.getKind())).toList();
+        return databases.isEmpty() || !databases.stream().allMatch(Reaches::cannotConnect) ? reaches
+            : reaches.stream().map(r -> behind(r, databases.get(0))).toList();
+    }
+
+    private static TestFacts.Reach graded(final TestFacts.Reach reach, final List<String> standIns) {
+        final Grades.Grade grade = Grades.of(reach, standIns);
+        return reach.toBuilder().grade(grade.grade()).reason(grade.reason()).reasonText(grade.text()).build();
     }
 
     // Through the test's own body, unless that goes to an address known only at run time and its set-up reaches the
     // same kind of connection at a host or on this machine: a client the set-up connects, then the test uses.
-    private Optional<Facts.Reach> reach(final MethodKey test, final String kind, final Map<MethodKey, MethodKey> next) {
-        final Optional<Facts.Reach> first = TestChains.of(model, test, next).map(c -> reachOf(test, kind, c));
+    private Optional<TestFacts.Reach> reach(final MethodKey test, final String kind,
+                                            final Map<MethodKey, MethodKey> next) {
+        final Optional<TestFacts.Reach> first = TestChains.of(model, test, next).map(c -> reachOf(test, kind, c));
         final boolean runTime = first.filter(r -> TestAddresses.RUN_TIME.equals(r.getAddressForTests())).isPresent();
         return runTime ? Optional.of(TestChains.throughSetUp(model, test, next).map(c -> reachOf(test, kind, c))
             .filter(r -> isKnown(r) && runsFor(test, r)).orElse(first.get())) : first;
     }
 
-    private static boolean isKnown(final Facts.Reach reach) {
+    private static boolean isKnown(final TestFacts.Reach reach) {
         return TestAddresses.HOST.equals(reach.getAddressForTests())
             || TestAddresses.LOCAL.equals(reach.getAddressForTests());
     }
 
-    private Facts.Reach reachOf(final MethodKey test, final String kind, final TestChains.TestChain chain) {
+    private TestFacts.Reach reachOf(final MethodKey test, final String kind, final TestChains.TestChain chain) {
         final List<MethodKey> steps = chain.steps();
-        return Facts.Reach.builder()
+        final TestAddresses.ForTests forTests = testAddresses.of(steps, kind);
+        final Optional<TestCalls.FirstCall> first = testCalls.of(steps, chain.throughSetUp());
+        return TestFacts.Reach.builder()
             .kind(kind)
             .point(steps.get(steps.size() - 1).toString())
             .throughSetUp(chain.throughSetUp())
             .throughMock(mocks.throughMock(test, steps).map(MethodKey::toString).orElse(null))
-            .addressForTests(testAddresses.of(steps, kind))
+            .addressForTests(forTests.grade())
+            .host(forTests.host())
+            .firstCall(first.map(TestCalls.FirstCall::at).orElse(null))
+            .clientField(first.map(TestCalls.FirstCall::field).orElse(null))
             .chain(steps.stream().map(MethodKey::toString).toList())
             .build();
     }
 
-    private boolean runsFor(final MethodKey test, final Facts.Reach reach) {
+    private boolean runsFor(final MethodKey test, final TestFacts.Reach reach) {
         return runs.test(test, reach.getChain());
     }
 
-    private static boolean cannotConnect(final Facts.Reach database) {
+    private static boolean cannotConnect(final TestFacts.Reach database) {
         return database.getThroughMock() != null || TestAddresses.NONE.equals(database.getAddressForTests());
     }
 
-    private Facts.Reach behind(final Facts.Reach reach, final Facts.Reach database) {
+    private TestFacts.Reach behind(final TestFacts.Reach reach, final TestFacts.Reach database) {
         final List<String> chain = reach.getChain();
         final Set<String> open = model.marked(Mark.ON_AN_OPEN_DATABASE);
         final boolean needsIt = !DATABASE.equals(reach.getKind()) && IntStream.range(0, chain.size())
             .anyMatch(i -> open.contains(chain.get(i))
                 || i > 0 && open.contains(chain.get(i - 1) + " > " + chain.get(i)));
-        return needsIt ? reach.toBuilder().addressForTests(database.getAddressForTests())
+        return needsIt ? reach.toBuilder().addressForTests(database.getAddressForTests()).host(database.getHost())
             .throughMock(Optional.ofNullable(reach.getThroughMock()).orElse(database.getThroughMock())).build()
             : reach;
     }

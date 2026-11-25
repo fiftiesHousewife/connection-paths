@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.example;
 
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.DB_MANAGER_TEST;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.FACTS;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.OPEN;
@@ -15,6 +16,16 @@ import org.junit.jupiter.api.Test;
 
 /** How the example repo's connection points are grouped into the systems tests may reach. */
 class ExampleSystemsTest {
+
+    @Test
+    void givesATestOneReachForEachSystemItReaches() {
+        assertThat(REACHING.get(DB_MANAGER_TEST).getReaches())
+            .extracting(TestFacts.Reach::getKind, TestFacts.Reach::getSystem, TestFacts.Reach::getPoint)
+            .containsExactly(
+                tuple("database", null, "com.example.alt.EmbeddedProvider#getConnection()"),
+                tuple("database", "java:comp/env/jdbc/app", "com.example.alt.JndiProvider#getConnection()"),
+                tuple("database", "main-db.internal", "com.example.alt.DefaultProvider#getConnection()"));
+    }
 
     @Test
     void groupsConnectionPointsIntoSystemsByHostThenNameThenClass() {

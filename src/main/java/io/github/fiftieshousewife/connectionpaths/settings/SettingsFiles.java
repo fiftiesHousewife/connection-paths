@@ -28,8 +28,6 @@ public final class SettingsFiles {
     record Setting(String value, String file, int line) {
     }
 
-
-
     private final Map<String, Setting> settings = new TreeMap<>();
     private final Map<String, Setting> loosely = new TreeMap<>();
     private final Optional<SettingsFiles> testClasspath;
@@ -89,8 +87,9 @@ public final class SettingsFiles {
         return settings.isEmpty();
     }
 
-    int size() {
-        return settings.size();
+    /** The files the settings come from, as the facts name files. */
+    public List<String> files() {
+        return settings.values().stream().map(Setting::file).distinct().sorted().toList();
     }
 
     // Whether a value looks like one a person is meant to fill in, or a stand-in until one is: YOUR-..., CHANGE-ME,

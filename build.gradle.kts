@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.guava)
     compileOnly(libs.spotbugs.annotations)
     testCompileOnly(libs.spotbugs.annotations)
+    testImplementation(libs.json.schema.validator)
 }
 
 underTest {

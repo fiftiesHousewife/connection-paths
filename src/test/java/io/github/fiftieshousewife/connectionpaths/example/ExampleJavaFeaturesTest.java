@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.example;
 
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.CONFIG_TEST;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.FACTS;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.OPEN;
@@ -70,7 +71,7 @@ class ExampleJavaFeaturesTest {
 
     @Test
     void appliesTheEnclosingClassesSetUpToANestedTest() {
-        final Facts.Reach reach = onlyReach("com.example.ledger.LedgerNestedTest.WhenEmpty.hasNoEntries");
+        final TestFacts.Reach reach = onlyReach("com.example.ledger.LedgerNestedTest.WhenEmpty.hasNoEntries");
         assertAll(
             () -> assertThat(reach.isThroughSetUp()).isTrue(),
             () -> assertThat(reach.getChain()).containsExactly(

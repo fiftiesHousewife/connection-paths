@@ -54,7 +54,7 @@ class SettingsFilesTest {
                 .contains("jdbc:h2:mem:test"),
             () -> assertThat(settings.get("spring.mail").map(SettingsFiles.Setting::value)).contains("smtp.internal"),
             () -> assertThat(settings.get("server").map(SettingsFiles.Setting::line)).contains(7),
-            () -> assertThat(settings.size()).isEqualTo(3));
+            () -> assertThat(settings.values()).hasSize(3));
     }
 
     @Test
@@ -97,7 +97,7 @@ class SettingsFilesTest {
         Files.createDirectories(dir.resolve("target"));
         Files.writeString(dir.resolve("target/a.properties"), "a=1\n");
         Files.writeString(dir.resolve("pom.xml"), "<project><name>x</name></project>");
-        assertThat(SettingsFiles.read(List.of(dir, dir.resolve("missing"))).size()).isZero();
+        assertThat(SettingsFiles.read(List.of(dir, dir.resolve("missing"))).values()).isEmpty();
     }
 
     @Test

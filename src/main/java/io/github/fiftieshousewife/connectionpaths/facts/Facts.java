@@ -17,7 +17,7 @@ import lombok.Value;
 @Builder
 public class Facts {
 
-    static final String SCHEMA = "external-calls/1";
+    static final String SCHEMA = "external-calls/2";
     static final String FRAMEWORK_TESTS = "tests_starting_a_framework";
 
     @Builder.Default
@@ -29,7 +29,7 @@ public class Facts {
     @Singular
     List<ExternalSystem> systems;
     @Singular
-    List<TestReach> tests;
+    List<TestFacts.TestReach> tests;
     @Singular("testStartingAFramework")
     @JsonProperty(FRAMEWORK_TESTS)
     List<FrameworkTest> testsStartingAFramework;
@@ -90,21 +90,6 @@ public class Facts {
         List<String> sharedChain;
     }
 
-    /** A test that may reach one or more kinds of connection. */
-    @Value
-    @Builder
-    public static class TestReach {
-        String test;
-        String file;
-        int line;
-        @Singular("reach")
-        List<Reach> reaches;
-        @Singular
-        List<String> systems;
-        @Singular
-        List<String> standIns;
-    }
-
     /**
      * A test that starts a framework, such as Spring or Quarkus, or containers: the framework may open connections
      * that no call in the source shows, whether or not the test is also in {@code tests}.
@@ -117,20 +102,6 @@ public class Facts {
         int line;
         String framework;
         String annotatedOn;
-    }
-
-    /** One kind of connection a test may reach, and one chain of calls showing how. */
-    @Value
-    @Builder(toBuilder = true)
-    public static class Reach {
-        String kind;
-        String point;
-        boolean throughSetUp;
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        String throughMock;
-        String addressForTests;
-        @Singular("step")
-        List<String> chain;
     }
 
     /** A call through a supertype with more overriding methods than the limit: reported, not followed. */

@@ -49,10 +49,9 @@ choice between ways of building it gets a [decision record](decisions/README.md)
 
 ## What it writes
 
-10. **Grades in the facts, as external-calls/2.** The tool grades each reach (reaches, may reach, cannot reach, with
-    the reason), as under-test's skill does today, and adds each reach's host, the file and line of the chain's first
-    call, each test's framework, and the settings files and profiles a test that starts a framework loads. Bump the
-    version whenever a value's meaning changes, and check the facts against under-test's schema in a test.
+10. **What external-calls/2 leaves out.** A test's `profiles` from `@ActiveProfiles` and a YAML file's on-profile
+    documents; a `client_field` declared in a superclass of the test class; a `first_call` for a chain that starts in
+    the test class's own field initialisers; and every address a point's callers pass, not only the first.
 
 ## How it is built
 

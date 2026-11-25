@@ -1,6 +1,6 @@
 package io.github.fiftieshousewife.connectionpaths.example;
 
-import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.OPEN;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.OPEN_QUIETLY;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.REACHING;
@@ -17,7 +17,7 @@ class ExampleInheritedTestsTest {
 
     @Test
     void listsAnInheritedTestUnderTheSubclassThatRunsItWithThatSubclasssSetUp() {
-        final Facts.Reach reach = onlyReach(PACKAGE + "LedgerResourceTest.isReady");
+        final TestFacts.Reach reach = onlyReach(PACKAGE + "LedgerResourceTest.isReady");
         assertAll(
             () -> assertThat(reach.isThroughSetUp()).isTrue(),
             () -> assertThat(reach.getChain()).containsExactly(

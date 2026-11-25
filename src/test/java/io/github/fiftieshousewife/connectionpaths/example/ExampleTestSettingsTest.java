@@ -6,7 +6,7 @@ import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.onl
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.reachOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import org.junit.jupiter.api.Test;
 
 // Where the example repo's tests would connect, from the settings on the test classpath: its test resources first,
@@ -58,7 +58,8 @@ class ExampleTestSettingsTest {
     @Test
     void takesTheHostTheSetUpConnectsToWhenTheTestsOwnConnectionIsKnownOnlyAtRunTime() {
         assertThat(reachOf("com.example.transfers.FileServerClientTest.listsTheFiles", "socket"))
-            .extracting(Facts.Reach::getAddressForTests, Facts.Reach::isThroughSetUp).containsExactly("host", true);
+            .extracting(TestFacts.Reach::getAddressForTests, TestFacts.Reach::isThroughSetUp)
+            .containsExactly("host", true);
     }
 
     @Test

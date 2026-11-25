@@ -56,6 +56,13 @@ class TypeSolversTest {
     }
 
     @Test
+    void readsTheMajorVersionOfJupitersApiFromItsJar(@TempDir final Path dir) {
+        final Options options = Options.builder().mainSource(dir)
+            .classpathEntry(dir.resolve("junit-jupiter-api-6.1.3.jar")).build();
+        assertThat(TypeSolvers.create(options).jupiter()).isEqualTo(6);
+    }
+
+    @Test
     void readsAJarWhoseModuleInfoItCannotParse(@TempDir final Path dir) throws IOException {
         final Path jar = jar(dir.resolve("odd.jar"), "module-info.class", "readme.txt");
         final Options options = Options.builder().mainSource(dir).classpathEntry(jar).build();

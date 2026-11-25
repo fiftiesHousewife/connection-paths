@@ -17,6 +17,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -26,13 +28,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class TypeSolvers {
 
-    /** The solver, and what happened to each classpath entry that wasn't read as it was. */
+    /**
+     * The solver, what happened to each classpath entry that wasn't read as it was, and the major version of JUnit
+     * Jupiter's API on the classpath, or 0 where it isn't there.
+     */
     @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The solver is shared on purpose")
-    public record Setup(CombinedTypeSolver solver, List<String> notes) {
+    public record Setup(CombinedTypeSolver solver, List<String> notes, int jupiter) {
         public Setup {
             notes = List.copyOf(notes);
         }
     }
+
+    private static final Pattern JUPITER = Pattern.compile("junit-jupiter-api-(\\d+)\\..*\\.jar");
 
     private TypeSolvers() {
     }
@@ -52,7 +59,7 @@ public final class TypeSolvers {
         final List<String> notes = new ArrayList<>();
         options.getClasspath().forEach(entry -> add(solver, entry, notes));
         parsing.setSymbolResolver(new JavaSymbolSolver(solver));
-        return new Setup(solver, notes);
+        return new Setup(solver, notes, jupiterVersion(options.getClasspath()));
     }
 
     private static void add(final CombinedTypeSolver solver, final Path entry, final List<String> notes) {
@@ -63,6 +70,11 @@ public final class TypeSolvers {
         } else {
             addJar(solver, entry, notes);
         }
+    }
+
+    private static int jupiterVersion(final List<Path> classpath) {
+        return classpath.stream().map(entry -> JUPITER.matcher(String.valueOf(entry.getFileName())))
+            .filter(Matcher::matches).mapToInt(m -> Integer.parseInt(m.group(1))).max().orElse(0);
     }
 
     // A path as the facts show one: from the folder the tool runs in, as the source files' are, so that no one's home

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.fiftieshousewife.connectionpaths.Options;
 import io.github.fiftieshousewife.connectionpaths.ConnectionPaths;
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
@@ -20,8 +21,8 @@ class ExampleWithoutTestSettingsTest {
             .build());
         assertThat(facts.getTests())
             .filteredOn(t -> t.getTest().equals("com.example.addresses.AuditFeedTest.readsTheFeed"))
-            .flatExtracting(Facts.TestReach::getReaches)
+            .flatExtracting(TestFacts.TestReach::getReaches)
             .filteredOn(r -> r.getKind().equals("url"))
-            .extracting(Facts.Reach::getAddressForTests).containsExactly("run-time");
+            .extracting(TestFacts.Reach::getAddressForTests).containsExactly("run-time");
     }
 }

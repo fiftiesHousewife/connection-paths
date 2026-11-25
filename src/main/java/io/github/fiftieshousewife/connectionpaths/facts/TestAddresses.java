@@ -39,28 +39,36 @@ final class TestAddresses {
 
     // Where a reach's test would connect. A point whose address is one of its parameters is followed back along the
     // test's chain, to the argument each caller passes, as far as the test.
-    String of(final List<MethodKey> chain, final String kind) {
-        final String graded = graded(chain, kind);
-        return RUN_TIME.equals(graded) && chain.size() > 1 ? fromTheTest(chain, kind).orElse(graded) : graded;
+    ForTests of(final List<MethodKey> chain, final String kind) {
+        final ForTests graded = graded(chain, kind);
+        return RUN_TIME.equals(graded.grade()) && chain.size() > 1 ? fromTheTest(chain, kind).orElse(graded) : graded;
+    }
+
+    // Where a test would connect, and the host it would connect to, if it names one.
+    record ForTests(String grade, String host) {
+        private static ForTests of(final String grade, final Address address) {
+            return new ForTests(grade, HOST.equals(grade) ? PointGroups.hostOf(address).orElse(null) : null);
+        }
     }
 
     // Where the reach's own address leaves it unknown, what the test's call into its chain says, or, failing that, the
     // next step's, such as its set-up's, if that names a host or this machine: an address handed in, held by a builder
     // and read back as the connection is made.
-    private Optional<String> fromTheTest(final List<MethodKey> chain, final String kind) {
+    private Optional<ForTests> fromTheTest(final List<MethodKey> chain, final String kind) {
         return IntStream.range(0, Math.min(2, chain.size() - 1))
             .mapToObj(step -> arguments.atTheTestsCall(chain.get(step), chain.get(step + 1), kind))
             .flatMap(Optional::stream)
-            .map(address -> classify(settings.withValue(address), kind))
-            .filter(grade -> HOST.equals(grade) || LOCAL.equals(grade)).findFirst();
+            .map(settings::withValue).map(address -> ForTests.of(classify(address, kind), address))
+            .filter(found -> HOST.equals(found.grade()) || LOCAL.equals(found.grade())).findFirst();
     }
 
-    private String graded(final List<MethodKey> chain, final String kind) {
+    private ForTests graded(final List<MethodKey> chain, final String kind) {
         final Address address = alongTheChain(chain, byPoint.get(chain.get(chain.size() - 1) + " " + kind));
         if (address.isRelativePath() && servesOnAPort(chain.get(0).type())) {
-            return LOCAL;
+            return new ForTests(LOCAL, null);
         }
-        return classify(settings.withValue(address), kind);
+        final Address withValue = settings.withValue(address);
+        return ForTests.of(classify(withValue, kind), withValue);
     }
 
     private Address alongTheChain(final List<MethodKey> chain, final Address atThePoint) {

@@ -5,6 +5,7 @@ import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.REA
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,7 +19,7 @@ class ExampleCreatedTypesTest {
     @Test
     void doesNotFollowACallToAClassNothingInTheCodeCreates() {
         assertThat(REACHING.get("com.example.plugins.ExportersTest.exports").getReaches())
-            .extracting(Facts.Reach::getPoint)
+            .extracting(TestFacts.Reach::getPoint)
             .doesNotContain("com.example.plugins.FtpExporter#export(String)");
     }
 
@@ -30,7 +31,7 @@ class ExampleCreatedTypesTest {
     @Test
     void followsAClassATestCreatesOnlyForThatTestsClass() {
         assertThat(REACHING.get("com.example.groups.GroupsFromTheDirectoryTest.listsRemoteMembers").getReaches())
-            .extracting(Facts.Reach::getPoint).containsExactly("com.example.groups.RemoteGroups#members(String)");
+            .extracting(TestFacts.Reach::getPoint).containsExactly("com.example.groups.RemoteGroups#members(String)");
     }
 
     @Test
@@ -39,14 +40,13 @@ class ExampleCreatedTypesTest {
             .containsExactly("orders-db.internal");
     }
 
-    // A test reaches each kind of connection by one chain, so a second system of the same kind has no reach of its own.
     @Test
-    void namesForEachTestOnlySystemsOfAKindItReaches() {
-        final Map<String, List<String>> kinds = FACTS.getSystems().stream()
-            .collect(Collectors.toMap(Facts.ExternalSystem::getName, Facts.ExternalSystem::getKinds));
+    void namesForEachTestOnlySystemsOneOfItsReachesConnectsTo() {
+        final Map<String, List<String>> points = FACTS.getSystems().stream()
+            .collect(Collectors.toMap(Facts.ExternalSystem::getName, Facts.ExternalSystem::getPoints));
         assertThat(REACHING.values().stream().flatMap(test -> test.getSystems().stream()
-            .filter(system -> test.getReaches().stream().map(Facts.Reach::getKind)
-                .noneMatch(kinds.get(system)::contains))
+            .filter(system -> test.getReaches().stream().map(TestFacts.Reach::getPoint)
+                .noneMatch(points.get(system)::contains))
             .map(system -> test.getTest() + " " + system)).toList()).isEmpty();
     }
 

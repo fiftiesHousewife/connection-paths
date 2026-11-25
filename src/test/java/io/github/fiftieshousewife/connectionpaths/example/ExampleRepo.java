@@ -4,6 +4,7 @@ import io.github.fiftieshousewife.connectionpaths.Options;
 import io.github.fiftieshousewife.connectionpaths.ConnectionPaths;
 import io.github.fiftieshousewife.connectionpaths.address.Address;
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
+import io.github.fiftieshousewife.connectionpaths.facts.TestFacts;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -28,8 +29,8 @@ final class ExampleRepo {
         .testSource(Path.of("src/test/resources/example/src/test/java"))
         .settingsFolder(Path.of("src/test/resources/example"))
         .build());
-    static final Map<String, Facts.TestReach> REACHING =
-        FACTS.getTests().stream().collect(Collectors.toMap(Facts.TestReach::getTest, t -> t));
+    static final Map<String, TestFacts.TestReach> REACHING =
+        FACTS.getTests().stream().collect(Collectors.toMap(TestFacts.TestReach::getTest, t -> t));
 
     private ExampleRepo() {
     }
@@ -48,13 +49,13 @@ final class ExampleRepo {
         assertThat(address.getSource() + " " + address.getValue()).isEqualTo(source + " " + value);
     }
 
-    static Facts.Reach reachOf(final String test, final String kind) {
+    static TestFacts.Reach reachOf(final String test, final String kind) {
         return REACHING.get(test).getReaches().stream().filter(r -> r.getKind().equals(kind)).findFirst()
             .orElseThrow();
     }
 
-    static Facts.Reach onlyReach(final String test) {
-        final List<Facts.Reach> reaches = REACHING.get(test).getReaches();
+    static TestFacts.Reach onlyReach(final String test) {
+        final List<TestFacts.Reach> reaches = REACHING.get(test).getReaches();
         assertThat(reaches).hasSize(1);
         return reaches.get(0);
     }

@@ -43,7 +43,7 @@ public final class ConnectionPaths {
         settings.values().forEach(model::created);
         ServiceFiles.namedIn(options.getSettings()).forEach(model::created);
         final CallGraph graph = new CallGraph(model, options.getMaxImplementations());
-        return new FactsBuilder(model, graph, settings).build(version(), setup.notes());
+        return new FactsBuilder(model, graph, settings).build(version(), setup);
     }
 
     static void write(final Facts facts, final Path out) {

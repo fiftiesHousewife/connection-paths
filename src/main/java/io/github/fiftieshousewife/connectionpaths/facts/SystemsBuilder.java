@@ -18,10 +18,6 @@ import java.util.TreeSet;
  */
 public final class SystemsBuilder {
 
-    /** What the systems are, and which each test reaches. */
-    record Result(List<Facts.ExternalSystem> systems, Map<MethodKey, List<String>> byTest) {
-    }
-
     private final SourceModel model;
     private final CallGraph graph;
     private final RunsFor runsFor;
@@ -32,26 +28,20 @@ public final class SystemsBuilder {
         this.runsFor = new RunsFor(model);
     }
 
-    Result build(final List<Facts.Point> points) {
-        final Map<String, PointGroups.Group> groups = PointGroups.of(points);
+    List<Facts.ExternalSystem> build(final Map<String, PointGroups.Group> groups) {
         final Map<String, Set<String>> implemented = new TreeMap<>();
         groups.forEach((name, group) -> implemented.put(name, implementedBy(group)));
-        final Map<MethodKey, List<String>> byTest = new TreeMap<>();
         final List<Facts.ExternalSystem> systems = new ArrayList<>();
-        groups.forEach((name, group) -> systems.add(system(group, alternatives(name, implemented), byTest)));
-        return new Result(systems, byTest);
+        groups.forEach((name, group) -> systems.add(system(group, alternatives(name, implemented))));
+        return systems;
     }
 
-    private Facts.ExternalSystem system(final PointGroups.Group group, final List<String> alternatives,
-                                        final Map<MethodKey, List<String>> byTest) {
+    private Facts.ExternalSystem system(final PointGroups.Group group, final List<String> alternatives) {
         final Map<MethodKey, MethodKey> next = graph.reachBack(methodsOf(group));
         final List<List<MethodKey>> chains = new ArrayList<>();
         model.tests().all().keySet().forEach(test -> TestChains.of(model, test, next)
             .filter(chain -> runsFor.test(test, chain.steps().stream().map(MethodKey::toString).toList()))
-            .ifPresent(chain -> {
-            chains.add(chain.steps());
-            byTest.computeIfAbsent(test, k -> new ArrayList<>()).add(group.name());
-        }));
+            .ifPresent(chain -> chains.add(chain.steps())));
         return Facts.ExternalSystem.builder()
             .name(group.name())
             .namedBy(group.namedBy())

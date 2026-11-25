@@ -43,7 +43,7 @@ final class ArgumentTracer {
             .min(Address.MOST_INFORMATIVE).orElse(null));
     }
 
-    private Optional<CallableDeclaration<?>> declaration(final MethodKey method) {
+    Optional<CallableDeclaration<?>> declaration(final MethodKey method) {
         final SourceModel.Location at = model.locationOf(method);
         return at == null ? Optional.empty() : model.reread(at.file()).flatMap(unit -> unit
             .findFirst(Node.class, n -> n instanceof CallableDeclaration<?> && n.getBegin().map(p -> p.line).orElse(0)
@@ -58,7 +58,7 @@ final class ArgumentTracer {
 
     // The calls in a body that may be to the callee: by name and number of arguments, or for a constructor, by its
     // class's name, or super(...) and this(...); and, where the call resolves, to the callee or a method it overrides.
-    private Stream<NodeWithArguments<?>> callsIn(final Node body, final MethodKey callee) {
+    Stream<NodeWithArguments<?>> callsIn(final Node body, final MethodKey callee) {
         final String simpleType = callee.type().substring(callee.type().lastIndexOf('.') + 1);
         final List<NodeWithArguments<?>> calls = callee.isConstructor()
             ? Stream.concat(body.findAll(ObjectCreationExpr.class,

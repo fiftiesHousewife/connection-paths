@@ -7,13 +7,14 @@ import io.github.fiftieshousewife.connectionpaths.graph.TestChains;
 import io.github.fiftieshousewife.connectionpaths.settings.SettingsFiles;
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import io.github.fiftieshousewife.connectionpaths.source.TestModel;
+import io.github.fiftieshousewife.connectionpaths.source.TypeSolvers;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.Objects;
+import java.util.Optional;
 
 /** Turns the source model and call graph into {@link Facts}. */
 public final class FactsBuilder {
@@ -36,32 +37,24 @@ public final class FactsBuilder {
     }
 
     /** The facts, naming the tool's version and what happened to the classpath's entries. */
-    public Facts build(final String toolVersion, final List<String> classpathNotes) {
+    public Facts build(final String toolVersion, final TypeSolvers.Setup setup) {
         final List<Facts.Point> points = points();
-        final SystemsBuilder.Result systems = new SystemsBuilder(model, graph).build(points);
-        final List<Facts.TestReach> tests = testsReaching(reachedByKind(), systems.byTest());
+        final Map<String, PointGroups.Group> groups = PointGroups.of(points);
+        final List<TestFacts.TestReach> tests = testsReaching(ReachTargets.of(model, graph, groups),
+            new TestFrameworks(model, setup.jupiter()));
         final List<Facts.FrameworkTest> frameworkTests = testsStartingAFramework();
         return Facts.builder()
             .toolVersion(toolVersion)
             .summary(summary(tests.size(), frameworkTests.size()))
             .connectionPoints(points)
-            .systems(systems.systems())
+            .systems(new SystemsBuilder(model, graph).build(groups))
             .tests(tests)
             .testsStartingAFramework(frameworkTests)
             .notResolved(model.getUnresolved().top(REASONS_REPORTED))
             .dispatchPointsNotFollowed(graph.getNotFollowed().entrySet().stream()
                 .map(e -> new Facts.Dispatch(e.getKey(), e.getValue())).toList())
-            .classpathNotes(classpathNotes)
+            .classpathNotes(setup.notes())
             .build();
-    }
-
-    // For each kind of connection, everything that reaches one, walked back from its points.
-    private Map<String, Map<MethodKey, MethodKey>> reachedByKind() {
-        final Map<String, Set<MethodKey>> startsByKind = new TreeMap<>();
-        model.getPoints().forEach(p -> startsByKind.computeIfAbsent(p.kind(), k -> new TreeSet<>()).add(p.method()));
-        final Map<String, Map<MethodKey, MethodKey>> reachedByKind = new TreeMap<>();
-        startsByKind.forEach((kind, starts) -> reachedByKind.put(kind, graph.reachBack(starts)));
-        return reachedByKind;
     }
 
     private Facts.Summary summary(final int testsReaching, final int testsStartingAFramework) {
@@ -104,20 +97,32 @@ public final class FactsBuilder {
         return found;
     }
 
-    private List<Facts.TestReach> testsReaching(final Map<String, Map<MethodKey, MethodKey>> reachedByKind,
-                                                final Map<MethodKey, List<String>> systemsByTest) {
-        final List<Facts.TestReach> tests = new ArrayList<>();
+    private List<TestFacts.TestReach> testsReaching(final List<ReachTargets.Target> targets,
+                                                    final TestFrameworks frameworks) {
+        final List<TestFacts.TestReach> tests = new ArrayList<>();
         model.tests().all().forEach((test, at) -> {
-            final Facts.TestReach.TestReachBuilder entry = Facts.TestReach.builder()
-                .test(TestChains.nameOf(test)).file(at.file()).line(at.line())
-                .systems(systemsByTest.getOrDefault(test, List.of()))
-                .standIns(model.tests().standInsOf(test.type()));
-            final List<Facts.Reach> reaches = this.reaches.of(test, reachedByKind);
+            final List<TestFacts.Reach> reaches = this.reaches.of(test, targets);
             if (!reaches.isEmpty()) {
-                reaches.forEach(entry::reach);
-                tests.add(entry.build());
+                tests.add(entryOf(test, at, frameworks).reaches(reaches)
+                    .systems(reaches.stream().map(TestFacts.Reach::getSystem).filter(Objects::nonNull).distinct()
+                        .toList())
+                    .build());
             }
         });
         return tests;
+    }
+
+    // A test that starts a framework loads the settings files on the test classpath, and its profiles' too, which
+    // are not read yet.
+    private TestFacts.TestReach.TestReachBuilder entryOf(final MethodKey test, final SourceModel.Location at,
+                                                         final TestFrameworks frameworks) {
+        final Optional<String> starts = model.tests().frameworkOf(test.type()).map(TestModel.Framework::annotation);
+        return TestFacts.TestReach.builder()
+            .test(TestChains.nameOf(test)).file(at.file()).line(at.line())
+            .standIns(model.tests().standInsOf(test.type()))
+            .startsFramework(starts.orElse(null))
+            .testFramework(frameworks.of(at).orElse(null))
+            .settingsFiles(starts.map(s -> settings.onTheTestClasspath().files()).orElse(null))
+            .profiles(starts.map(s -> List.<String>of()).orElse(null));
     }
 }
