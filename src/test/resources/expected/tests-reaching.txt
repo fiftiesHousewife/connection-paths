@@ -73,3 +73,4 @@ com.example.spring.StubReportsContextTest.loadsTheStubBeans
 com.example.spring.EverySpringContextTest.loadsEveryContextInTheFolder
 com.example.fetch.ReportFetcherTest.refusesWithoutAUrl
 com.example.fetch.ReportFetcherTest.fetchesTheReport
+com.example.documents.LinkedDocumentsTest.followsTheLinkInADocument

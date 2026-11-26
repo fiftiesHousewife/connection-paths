@@ -2,6 +2,7 @@ package io.github.fiftieshousewife.connectionpaths.address;
 
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.CallableDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import java.util.List;
@@ -10,7 +11,8 @@ import java.util.Set;
 
 // Follows an address through a call or an object creation. A call that reads an address by name gives it; a call into
 // the source is followed into what it returns; otherwise, as for a builder's chain or the JDK's own helpers, what it
-// is called on gives the address, or failing that its first argument. A builder's address is in its first call, so
+// is called on gives the address, or failing that its first argument. What a method returns from a stream it is given
+// is what it reads. A builder's address is in its first call, so
 // the later calls' arguments, such as timeouts, are passed over.
 final class CallTracer {
 
@@ -19,6 +21,7 @@ final class CallTracer {
     private static final Set<String> NOT_ADDRESSES =
         Set.of("getInstance", "forName", "getLogger", "getBundle", "valueOf", "getDefault");
     private static final Set<String> JDK_SETTING_READERS = Set.of("getProperty", "getString", "getObject", "get");
+    private static final Set<String> READ_TYPES = Set.of("File", "Path", "Scanner", "Readable");
     private static final Set<String> JDK_HELPERS = Set.of("String", "URI", "URL", "Paths", "Path", "Objects");
 
     private final AddressTracer expressions;
@@ -56,18 +59,27 @@ final class CallTracer {
         return jdk ? Optional.empty() : names.returnedBy(call, trace).map(a -> argumentFor(call, a, trace));
     }
 
-    // What a method returns built from one of its parameters is built from the argument this call passes for it.
+    // What a method returns built from one of its parameters is built from the argument this call passes for it; but
+    // what it returns from a stream, a reader, a file or a path it is given is what it reads, known only at run time.
     private Address argumentFor(final MethodCallExpr call, final Address returned, final Trace trace) {
         if (!Address.PARAMETER.equals(returned.getSource())) {
             return returned;
         }
         final String parameter = returned.getValue().substring(0, returned.getValue().indexOf(" of "));
-        return Declarations.of(call).filter(CallableDeclaration.class::isInstance)
-            .map(d -> ((CallableDeclaration<?>) d).getParameters().stream().map(p -> p.getNameAsString()).toList())
-            .filter(names -> returned.getValue().endsWith(" of " + call.getNameAsString()))
-            .map(names -> names.indexOf(parameter))
-            .filter(i -> i >= 0 && i < call.getArguments().size())
-            .map(i -> expressions.expression(call.getArgument(i), trace)).orElse(returned);
+        final List<Parameter> parameters = Declarations.of(call).filter(CallableDeclaration.class::isInstance)
+            .filter(d -> returned.getValue().endsWith(" of " + call.getNameAsString()))
+            .map(d -> List.copyOf(((CallableDeclaration<?>) d).getParameters())).orElse(List.of());
+        final int at = parameters.stream().map(Parameter::getNameAsString).toList().indexOf(parameter);
+        if (at < 0 || at >= call.getArguments().size()) {
+            return returned;
+        }
+        return isRead(parameters.get(at)) ? Address.builtBy("what " + AddressText.shorten(call) + " reads")
+            : expressions.expression(call.getArgument(at), trace);
+    }
+
+    private static boolean isRead(final Parameter parameter) {
+        final String type = parameter.getType().asString();
+        return type.endsWith("Reader") || type.endsWith("InputStream") || READ_TYPES.contains(type);
     }
 
     private Optional<Address> fromParts(final MethodCallExpr call, final Trace trace) {

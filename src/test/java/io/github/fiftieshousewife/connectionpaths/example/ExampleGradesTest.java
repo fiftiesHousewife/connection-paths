@@ -99,4 +99,11 @@ class ExampleGradesTest {
             .containsExactly("rates-dev.internal", "[dev]",
                 "[src/test/resources/example/src/main/resources/application-dev.properties]");
     }
+
+    // The link is in the document the test reads from the classpath: where it goes is known only once it is read.
+    @Test
+    void takesWhatAMethodReadsFromAStreamAsKnownOnlyAtRunTimeNotAsTheStreamsAddress() {
+        assertThat(onlyReach("com.example.documents.LinkedDocumentsTest.followsTheLinkInADocument")
+            .getAddressForTests()).isEqualTo("run-time");
+    }
 }
