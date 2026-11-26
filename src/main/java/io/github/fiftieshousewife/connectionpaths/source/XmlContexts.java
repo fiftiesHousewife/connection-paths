@@ -3,6 +3,7 @@ package io.github.fiftieshousewife.connectionpaths.source;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import java.util.List;
@@ -49,9 +50,17 @@ public final class XmlContexts {
     }
 
     // A test class's framework, and the Spring XML files its annotations or JUnit 3 methods name, which its set-up
-    // loads.
+    // loads; an annotation of the repo's own on it names the files that annotation's annotations do.
     static void read(final TypeDeclaration<?> type, final String name, final SourceModel model) {
         Frameworks.startedBy(type).ifPresent(annotation -> model.tests().startsAFramework(name, annotation));
+        namedBy(type, name, model);
+        type.getAnnotations().stream().filter(a -> !NAMING.contains(a.getName().getIdentifier()))
+            .map(XmlContexts::qualifiedName).flatMap(Optional::stream)
+            .forEach(annotation -> model.call(MethodKey.fieldsOf(name), MethodKey.fieldsOf(annotation)));
+    }
+
+    // The files a type's annotations or JUnit 3 methods name, which making it loads.
+    private static void namedBy(final TypeDeclaration<?> type, final String name, final SourceModel model) {
         final Stream<String> named = type.getAnnotations().stream()
             .filter(a -> NAMING.contains(a.getName().getIdentifier())).flatMap(XmlContexts::filesIn);
         final Stream<String> paths = type.getMethods().stream()
@@ -60,6 +69,15 @@ public final class XmlContexts {
             .filter(XmlContexts::takesNothing).flatMap(XmlContexts::filesIn).map(XmlContexts::fromTheRoot);
         Stream.concat(Stream.concat(named, paths).map(file -> fromItsPackage(file, name)), locations)
             .forEach(file -> model.call(MethodKey.fieldsOf(name), contextOf(file)));
+    }
+
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.AvoidCatchingThrowable"})
+    private static Optional<String> qualifiedName(final AnnotationExpr annotation) {
+        try {
+            return Optional.of(annotation.resolve().getQualifiedName());
+        } catch (RuntimeException | StackOverflowError e) {
+            return Optional.empty();
+        }
     }
 
     private static boolean takesNothing(final MethodDeclaration method) {

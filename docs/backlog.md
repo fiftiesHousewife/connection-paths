@@ -10,7 +10,8 @@ choice between ways of building it gets a [decision record](decisions/README.md)
    starts no server, so a chain through it doesn't run.
 2. **Spring XML read as Spring reads it.** A test or code that loads a context now reaches the beans in the file it
    names, matched by its path on the classpath. Still to do, each a rule a program can follow:
-   * a context named on a meta-annotation of the repo's own;
+   * a test that starts Spring through a JUnit 3 base class or an annotation of the repo's own, listed among those
+     that start a framework;
    * `${name}` and `${name:default}` looked up in the files a `property-placeholder`, `PropertyPlaceholderConfigurer`
      or `util:properties` names, and the default used where none sets it;
    * `<beans profile=...>` counting only for an active profile;

@@ -39,6 +39,12 @@ class ExampleSpringXmlContextsTest {
             .getPoint()).isEqualTo(BEAN + "ledgerDataSource>()");
     }
 
+    @Test
+    void reachesTheBeansOfTheContextAnAnnotationOfTheRepoNames() {
+        assertThat(reachOf("com.example.spring.LedgerAnnotatedTest.loadsTheBeansItsAnnotationNames", "database")
+            .getPoint()).isEqualTo(BEAN + "ledgerDataSource>()");
+    }
+
     // Two files of the same name, in different folders, are two contexts: each test reaches only the one it names.
     @Test
     void matchesAContextByItsPathOnTheClasspathNotItsFileNameAlone() {
