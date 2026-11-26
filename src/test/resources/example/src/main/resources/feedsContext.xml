@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans">
+
+    <!-- Each data source is made only when its profile is active. -->
+    <beans profile="dev,qa">
+        <bean id="devFeedsSource" class="org.apache.commons.dbcp.BasicDataSource">
+            <property name="url" value="jdbc:postgresql://feeds-dev.internal/feeds"/>
+        </bean>
+    </beans>
+
+    <beans profile="!dev">
+        <bean id="localFeedsSource" class="org.apache.commons.dbcp.BasicDataSource">
+            <property name="url" value="jdbc:postgresql://feeds-local.internal/feeds"/>
+        </bean>
+    </beans>
+
+    <beans profile="prod">
+        <bean id="prodFeedsSource" class="org.apache.commons.dbcp.BasicDataSource">
+            <property name="url" value="jdbc:postgresql://feeds.internal/feeds"/>
+        </bean>
+    </beans>
+</beans>

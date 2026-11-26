@@ -75,3 +75,4 @@ com.example.fetch.ReportFetcherTest.refusesWithoutAUrl
 com.example.fetch.ReportFetcherTest.fetchesTheReport
 com.example.documents.LinkedDocumentsTest.followsTheLinkInADocument
 com.example.lines.LineCheckTest.checksTheLineThenConnects
+com.example.spring.DevFeedsContextTest.loadsTheDevBeans

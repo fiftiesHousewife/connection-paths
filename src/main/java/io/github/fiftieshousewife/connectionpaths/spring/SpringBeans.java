@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Spring XML beans whose class is a connection client, such as a {@code DataSource} with a {@code url} property: a
@@ -44,16 +45,30 @@ public final class SpringBeans {
     /** Adds the beans in the files to the model: the connection points they make, and the classes they create. */
     public void addTo(final SourceModel model, final List<Path> files) {
         final List<SpringXml.Bean> beans = SpringXml.read(files);
+        final Map<MethodKey, List<String>> profiles = beans.stream().filter(b -> b.getType() != null)
+            .collect(Collectors.toMap(SpringBeans::keyOf, SpringXml.Bean::getProfiles, (first, second) -> first));
         points(beans).forEach(bean -> {
             model.point(bean.point(), bean.at(), bean.address());
-            model.xmlContextHolds(bean.at().file(), bean.point().method());
+            holds(model, bean, profiles.getOrDefault(bean.point().method(), List.of()));
         });
         // A file that imports another makes the imported file's beans too, to any depth.
         final Map<String, List<String>> imports = SpringXml.imports(files);
-        imports.forEach((file, imported) -> imported.forEach(resource -> model.xmlContextHolds(file,
-            XmlContexts.contextOf(XmlLocations.importedBy(file, resource)))));
+        imports.forEach((file, imported) -> imported.forEach(resource -> model.xmlContextHolds(
+            XmlContexts.contextOf(file), XmlContexts.contextOf(XmlLocations.importedBy(file, resource)))));
         XmlLocations.join(model, List.copyOf(imports.keySet()));
         beans.stream().map(SpringXml.Bean::getType).filter(Objects::nonNull).forEach(model::created);
+    }
+
+    // A bean in a profile's block is made through that profile's step, which runs only where the profile is active.
+    private static void holds(final SourceModel model, final SourcePoint bean, final List<String> profiles) {
+        final MethodKey context = XmlContexts.contextOf(bean.at().file());
+        if (profiles.isEmpty()) {
+            model.xmlContextHolds(context, bean.point().method());
+            return;
+        }
+        final MethodKey step = XmlProfiles.stepOf(bean.at().file(), profiles);
+        model.xmlContextHolds(context, step);
+        model.xmlContextHolds(step, bean.point().method());
     }
 
     // The connection points the beans make, with addresses as the beans give them.

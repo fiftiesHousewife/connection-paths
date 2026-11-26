@@ -35,6 +35,8 @@ class ExampleFrameworksTest {
             .extracting(Facts.FrameworkTest::getTest, Facts.FrameworkTest::getFramework,
                 Facts.FrameworkTest::getAnnotatedOn)
             .containsExactly(
+                tuple("com.example.spring.DevFeedsContextTest.loadsTheDevBeans", "@ContextConfiguration",
+                    "com.example.spring.DevFeedsContextTest"),
                 tuple("com.example.spring.EverySpringContextTest.loadsEveryContextInTheFolder", "@ContextConfiguration",
                     "com.example.spring.EverySpringContextTest"),
                 tuple("com.example.spring.LedgerContextTest.loadsTheBeansItsContextImports", "@ContextConfiguration",
@@ -49,7 +51,7 @@ class ExampleFrameworksTest {
 
     @Test
     void countsThemInTheSummary() {
-        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(10);
+        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(11);
     }
 
     // The framework makes what a test class's @Autowired field holds, though no code the test runs does.

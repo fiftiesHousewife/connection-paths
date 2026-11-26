@@ -15,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Reads the beans a Spring XML file defines: each {@code <bean>}'s id, class, and the values of its properties, given
  * as {@code <property name="url" value="..."/>}, as a {@code <value>} inside the property, or as a {@code p:url}
- * attribute. Document types and outside entities are never read.
+ * attribute, and the profiles of the {@code <beans profile="...">} blocks around it. Document types and outside
+ * entities are never read.
  */
 @Slf4j
 public final class SpringXml {
@@ -29,6 +30,7 @@ public final class SpringXml {
         Map<String, String> properties;
         String file;
         int line;
+        List<String> profiles;
     }
 
     private SpringXml() {

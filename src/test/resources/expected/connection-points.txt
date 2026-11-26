@@ -93,3 +93,6 @@ org.apache.commons.dbcp.BasicDataSource#<bean archiveDataSource>() database
 com.example.documents.LinkedDocuments#follow(String) url
 com.example.lines.LineCheckTest#checksTheLineThenConnects() socket
 com.example.lines.LineClient#connect(String) socket
+org.apache.commons.dbcp.BasicDataSource#<bean devFeedsSource>() database
+org.apache.commons.dbcp.BasicDataSource#<bean prodFeedsSource>() database
+org.apache.commons.dbcp.BasicDataSource#<bean localFeedsSource>() database

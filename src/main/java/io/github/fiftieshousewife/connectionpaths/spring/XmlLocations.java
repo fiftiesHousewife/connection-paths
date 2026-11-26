@@ -30,7 +30,7 @@ final class XmlLocations {
             .map(XmlContexts::locationOf).flatMap(Optional::stream)
             .filter(location -> !paths.contains(location)).collect(Collectors.toSet());
         named.forEach(location -> paths.stream().filter(path -> standsFor(location, path))
-            .forEach(path -> model.xmlContextHolds(location, XmlContexts.contextOf(path))));
+            .forEach(path -> model.xmlContextHolds(XmlContexts.contextOf(location), XmlContexts.contextOf(path))));
     }
 
     private static boolean standsFor(final String location, final String path) {

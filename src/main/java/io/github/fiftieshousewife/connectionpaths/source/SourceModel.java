@@ -75,9 +75,9 @@ public final class SourceModel {
         return Collections.unmodifiableSet(marks.getOrDefault(mark, Set.of()));
     }
 
-    /** A bean in a Spring XML file, which code that loads the file as a context makes. */
-    public void xmlContextHolds(final String file, final MethodKey bean) {
-        call(XmlContexts.contextOf(file), bean);
+    /** A bean, or a file or profile's beans, that a Spring XML context makes, which code that loads it then does. */
+    public void xmlContextHolds(final MethodKey context, final MethodKey bean) {
+        call(context, bean);
     }
 
     void rereadWith(final Function<Path, Optional<CompilationUnit>> fileParser) {

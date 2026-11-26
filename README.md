@@ -186,7 +186,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   classpath's root, an import from the importing file's folder), through a step
   of their own, `ApplicationContext#<xml spring/app.xml>`; a wildcard, such as `classpath*:spring/*.xml`, stands for
   each file it matches, and a location no file is at for any file of the same name. A file's
-  `<import resource=...>` makes the imported file's beans too.
+  `<import resource=...>` makes the imported file's beans too. A bean in a `<beans profile="dev">` block is made
+  through a step of its own, `ApplicationContext#<profile dev of spring/app.xml>`, only for a test whose profiles
+  activate it (`dev,qa` is either, `!prod` any but prod, and with none active Spring's `default` is).
 
 It does not follow reflection, the wiring between Spring beans, or code loaded by name at run time. What it doesn't
 do yet is in the [backlog](docs/backlog.md).

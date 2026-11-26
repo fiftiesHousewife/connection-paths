@@ -13,7 +13,8 @@ import java.util.TreeMap;
 import java.util.stream.IntStream;
 import javax.xml.stream.XMLStreamReader;
 
-// Collects the beans in a Spring XML file, with a bean inside a property kept apart from the one around it. A file
+// Collects the beans in a Spring XML file, with a bean inside a property kept apart from the one around it, and the
+// profiles of the <beans> blocks around each. A file
 // whose root element isn't <beans> holds none.
 final class BeanWalk implements XmlFiles.Handler {
 
@@ -27,6 +28,7 @@ final class BeanWalk implements XmlFiles.Handler {
     private final List<String> imported = new ArrayList<>();
     private final Deque<SpringXml.Bean.BeanBuilder> open = new ArrayDeque<>();
     private final Deque<Map<String, String>> properties = new ArrayDeque<>();
+    private final Deque<String> profiles = new ArrayDeque<>();
     private final StringBuilder characters = new StringBuilder();
     private String root;
     private String property;
@@ -48,6 +50,7 @@ final class BeanWalk implements XmlFiles.Handler {
         characters.setLength(0);
         final String name = element.getLocalName();
         root = Objects.requireNonNullElse(root, name);
+        enterBeans(name, element);
         if ("import".equals(name)) {
             addImport(element);
         } else if (BEAN_ELEMENTS.contains(name)) {
@@ -55,6 +58,18 @@ final class BeanWalk implements XmlFiles.Handler {
         } else if ("property".equals(name) && !open.isEmpty()) {
             property = element.getAttributeValue(null, "name");
             putProperty(element.getAttributeValue(null, "value"));
+        }
+    }
+
+    private void enterBeans(final String name, final XMLStreamReader element) {
+        if ("beans".equals(name)) {
+            profiles.push(Objects.requireNonNullElse(element.getAttributeValue(null, "profile"), ""));
+        }
+    }
+
+    private void leaveBeans(final String name) {
+        if ("beans".equals(name) && !profiles.isEmpty()) {
+            profiles.pop();
         }
     }
 
@@ -69,6 +84,7 @@ final class BeanWalk implements XmlFiles.Handler {
 
     @Override
     public void end(final String name) {
+        leaveBeans(name);
         if ("value".equals(name)) {
             putProperty(characters.toString().strip());
         } else if ("property".equals(name)) {
@@ -100,6 +116,7 @@ final class BeanWalk implements XmlFiles.Handler {
             .id(id == null ? element.getAttributeValue(null, "name") : id)
             .type(lookup ? JNDI_FACTORY : element.getAttributeValue(null, "class"))
             .file(file)
-            .line(element.getLocation().getLineNumber());
+            .line(element.getLocation().getLineNumber())
+            .profiles(profiles.stream().filter(p -> !p.isBlank()).toList());
     }
 }

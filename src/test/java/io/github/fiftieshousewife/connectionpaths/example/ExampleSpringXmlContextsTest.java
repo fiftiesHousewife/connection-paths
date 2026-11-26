@@ -45,6 +45,13 @@ class ExampleSpringXmlContextsTest {
             .getPoint()).isEqualTo(BEAN + "ledgerDataSource>()");
     }
 
+    // A bean inside <beans profile="dev,qa"> is made for a test that activates dev; one inside "prod" or "!dev" is not.
+    @Test
+    void reachesOnlyTheBeansOfTheProfilesATestActivates() {
+        assertThat(REACHING.get("com.example.spring.DevFeedsContextTest.loadsTheDevBeans").getReaches())
+            .extracting(TestFacts.Reach::getPoint).containsExactly(BEAN + "devFeedsSource>()");
+    }
+
     // Two files of the same name, in different folders, are two contexts: each test reaches only the one it names.
     @Test
     void matchesAContextByItsPathOnTheClasspathNotItsFileNameAlone() {

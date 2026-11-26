@@ -2,6 +2,7 @@ package io.github.fiftieshousewife.connectionpaths.facts;
 
 import io.github.fiftieshousewife.connectionpaths.source.MethodKey;
 import io.github.fiftieshousewife.connectionpaths.source.SourceModel;
+import io.github.fiftieshousewife.connectionpaths.spring.XmlProfiles;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.Set;
 
 // Whether a chain of calls runs as a test does: each type on it that the program creates objects of must be created
 // as the test's class runs, by its own code or code that then runs; a type nothing creates, such as an abstract class
-// or one only of static methods, is called as it is.
+// or one only of static methods, is called as it is. A step for a Spring profile's beans runs only where it is active.
 final class RunsFor {
 
     private final SourceModel model;
@@ -23,7 +24,9 @@ final class RunsFor {
 
     boolean test(final MethodKey test, final List<String> chain) {
         final Set<String> created = createdFor.computeIfAbsent(test.type(), model::createdFor);
-        return chain.stream().map(step -> step.substring(0, step.indexOf('#')))
+        final List<String> profiles = model.tests().profilesOf(test.type());
+        return chain.stream().allMatch(step -> XmlProfiles.runsWith(step, profiles))
+            && chain.stream().map(step -> step.substring(0, step.indexOf('#')))
             .allMatch(type -> created.contains(type) || !createdAtAll.contains(type));
     }
 }
