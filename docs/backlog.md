@@ -37,7 +37,9 @@ choice between ways of building it gets a [decision record](decisions/README.md)
       resolved.
 8. **Tests still flagged in the field trials.** Commons Net's ListingFunctionalTest builds its hosts in a JUnit 3
     `suite()` from a `String[][]`, into each test's field through its constructor; jsoup's `postHtmlFile` posts a
-    form whose address is relative to the page fetched; and `SessionIT.multiThread`'s http reach.
+    form whose address is relative to the page fetched; `SessionIT.multiThread`'s http reach; and jsonld-java's tests
+    that read a JSON-LD document from a test resource, which may name a remote `@context` (reading it out of the
+    resource the chain opens would tell).
 
 ## What it writes
 
@@ -67,8 +69,8 @@ choice between ways of building it gets a [decision record](decisions/README.md)
 
 ## Checked against real repos
 
-16. **More repos.** Openfire 4.6.0, spring-petclinic, jsoup 1.15.3 and Commons Net 3.6 are checked against their
-    tests run under the airgap agent: every test that calls out is graded reaches. Check an old Spring XML
+16. **More repos.** Openfire 4.6.0, spring-petclinic, jsoup 1.15.3, Commons Net 3.6 and jsonld-java 0.12.0 are
+    checked against their tests run under the airgap agent: no test that calls out is graded cannot-reach. Check an old Spring XML
     application and a multi-module Maven build next, and turn each fault into a case first.
 
 ## Released
