@@ -89,3 +89,4 @@ com.example.addresses.JarEntryReader#read(String) url
 com.example.fetch.ReportFetcher#fetch() url
 org.springframework.jndi.JndiObjectFactoryBean#<bean ordersSource>() jndi
 org.springframework.jndi.JndiObjectFactoryBean#<bean auditSource>() jndi
+org.apache.commons.dbcp.BasicDataSource#<bean archiveDataSource>() database

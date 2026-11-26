@@ -12,8 +12,9 @@ choice between ways of building it gets a [decision record](decisions/README.md)
    names, matched by its path on the classpath. Still to do, each a rule a program can follow:
    * a test that starts Spring through a JUnit 3 base class or an annotation of the repo's own, listed among those
      that start a framework;
-   * `${name}` and `${name:default}` looked up in the files a `property-placeholder`, `PropertyPlaceholderConfigurer`
-     or `util:properties` names, and the default used where none sets it;
+   * `${name}` looked up in the files a `property-placeholder`, `PropertyPlaceholderConfigurer` or
+     `util:properties` names, the test classpath's copy first, rather than in every settings file (it differs only
+     where a key is set in more than one);
    * `<beans profile=...>` counting only for an active profile;
    Done when under-test's Spring XML guide for the external systems list no longer needs any of these.
 3. **Settings loaded from a named file.** A `Properties` loaded from `orders.properties` and read with

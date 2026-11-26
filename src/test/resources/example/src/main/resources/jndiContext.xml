@@ -8,4 +8,8 @@
     <bean id="auditSource" class="org.springframework.jndi.JndiObjectFactoryBean">
         <property name="jndiName" value="java:comp/env/jdbc/audit"/>
     </bean>
+
+    <bean id="archiveDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="url" value="${archive.db.url:jdbc:postgresql://archive-db.internal/archive}"/>
+    </bean>
 </beans>

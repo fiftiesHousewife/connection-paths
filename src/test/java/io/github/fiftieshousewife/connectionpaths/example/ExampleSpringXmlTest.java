@@ -37,6 +37,13 @@ class ExampleSpringXmlTest {
             () -> assertThat(point(AUDIT).getLocal()).isEqualTo("an H2 database in memory or in a file"));
     }
 
+    // No settings file sets archive.db.url, so the bean connects to the placeholder's default.
+    @Test
+    void takesAPlaceholdersDefaultWhereNoSettingsFileSetsItsKey() {
+        assertThat(system("archive-db.internal").getPoints())
+            .containsExactly("org.apache.commons.dbcp.BasicDataSource#<bean archiveDataSource>()");
+    }
+
     @Test
     void takesABeanLookedUpByJndiForAPointWhoseAddressIsTheName() {
         assertThat(FACTS.getConnectionPoints())
