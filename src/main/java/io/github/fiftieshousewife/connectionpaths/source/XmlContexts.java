@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
@@ -13,7 +14,9 @@ import java.util.stream.Stream;
  * Code that loads a Spring XML file as a context, and so makes its beans: a test class whose
  * {@code @ContextConfiguration} names the file, as its set-up, and a method that makes a
  * {@code ClassPathXmlApplicationContext}, {@code FileSystemXmlApplicationContext} or
- * {@code GenericXmlApplicationContext} on it. Each file is a step of its own,
+ * {@code GenericXmlApplicationContext} on it. A JUnit 3 Spring test names its files in {@code getConfigLocations()},
+ * where a plain one is at the classpath's root, or in {@code getConfigPaths()} or {@code getConfigPath()}, where it is
+ * in the class's package. Each file is a step of its own,
  * {@code ApplicationContext#<xml applicationContext.xml>}, that calls each of its beans; files are matched by their
  * path on the classpath.
  */
@@ -24,6 +27,8 @@ public final class XmlContexts {
         "SpringJUnitWebConfig", "ImportResource");
     private static final Set<String> LOADING = Set.of("ClassPathXmlApplicationContext",
         "FileSystemXmlApplicationContext", "GenericXmlApplicationContext");
+    private static final String LOCATIONS = "getConfigLocations";
+    private static final Set<String> PATHS = Set.of("getConfigPaths", "getConfigPath");
 
     private XmlContexts() {
     }
@@ -43,12 +48,26 @@ public final class XmlContexts {
             ? Optional.of(step.name().substring("<xml ".length(), step.name().length() - 1)) : Optional.empty();
     }
 
-    // A test class's framework, and the Spring XML files its annotations name, which its set-up loads.
+    // A test class's framework, and the Spring XML files its annotations or JUnit 3 methods name, which its set-up
+    // loads.
     static void read(final TypeDeclaration<?> type, final String name, final SourceModel model) {
         Frameworks.startedBy(type).ifPresent(annotation -> model.tests().startsAFramework(name, annotation));
-        type.getAnnotations().stream().filter(a -> NAMING.contains(a.getName().getIdentifier()))
-            .flatMap(XmlContexts::filesIn).map(file -> fromItsPackage(file, name))
+        final Stream<String> named = type.getAnnotations().stream()
+            .filter(a -> NAMING.contains(a.getName().getIdentifier())).flatMap(XmlContexts::filesIn);
+        final Stream<String> paths = type.getMethods().stream()
+            .filter(m -> PATHS.contains(m.getNameAsString()) && takesNothing(m)).flatMap(XmlContexts::filesIn);
+        final Stream<String> locations = type.getMethodsByName(LOCATIONS).stream()
+            .filter(XmlContexts::takesNothing).flatMap(XmlContexts::filesIn).map(XmlContexts::fromTheRoot);
+        Stream.concat(Stream.concat(named, paths).map(file -> fromItsPackage(file, name)), locations)
             .forEach(file -> model.call(MethodKey.fieldsOf(name), contextOf(file)));
+    }
+
+    private static boolean takesNothing(final MethodDeclaration method) {
+        return method.getParameters().isEmpty();
+    }
+
+    private static String fromTheRoot(final String location) {
+        return location.contains(":") || location.startsWith("/") ? location : "/" + location;
     }
 
     static List<String> loadedBy(final ObjectCreationExpr creation) {

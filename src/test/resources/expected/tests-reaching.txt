@@ -44,6 +44,7 @@ com.example.spring.LegacyLauncherTest.starts
 com.example.spring.ReportsContextTest.loadsTheReportBeans
 com.example.spring.ReportsContextSubclassTest.loadsTheBeansItsSuperclassNames
 com.example.spring.LedgerContextTest.loadsTheBeansItsContextImports
+com.example.spring.LedgerSpringTestCase.testLoadsTheLedgerBeans
 com.example.lookups.PeersTest.findsAPeerByItsAddress
 com.example.pages.PageInSetUpTest.hasAPage
 com.example.transfers.FileServerClientTest.listsTheFiles

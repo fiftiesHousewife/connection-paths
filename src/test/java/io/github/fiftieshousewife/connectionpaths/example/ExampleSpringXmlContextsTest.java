@@ -32,6 +32,13 @@ class ExampleSpringXmlContextsTest {
             .getPoint()).isEqualTo(BEAN + "ledgerDataSource>()");
     }
 
+    // A JUnit 3 Spring test names its files in getConfigLocations(), where a plain one is at the classpath's root.
+    @Test
+    void reachesTheBeansOfTheFilesAJunit3SpringTestsConfigLocationsName() {
+        assertThat(reachOf("com.example.spring.LedgerSpringTestCase.testLoadsTheLedgerBeans", "database")
+            .getPoint()).isEqualTo(BEAN + "ledgerDataSource>()");
+    }
+
     // Two files of the same name, in different folders, are two contexts: each test reaches only the one it names.
     @Test
     void matchesAContextByItsPathOnTheClasspathNotItsFileNameAlone() {
