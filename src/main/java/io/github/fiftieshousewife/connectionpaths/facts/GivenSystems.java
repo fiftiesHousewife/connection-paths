@@ -13,7 +13,7 @@ import java.util.Optional;
 // A point whose address is one of its parameters is in the system of what its callers pass, so a test reaching it
 // reaches only the system its own chain gives the address of: where the chain passes a host or a name, that one's;
 // where it passes nothing that can be followed, the point's class's. A reach that names no system it may reach is
-// kept for its point, without a system.
+// kept for its point, without a system, unless its host is a system the test reaches by the same kind elsewhere.
 final class GivenSystems {
 
     private final TestAddresses testAddresses;
@@ -29,7 +29,13 @@ final class GivenSystems {
         reaches.forEach(r -> byPoint.computeIfAbsent(r.getKind() + " " + r.getPoint(), k -> new ArrayList<>()).add(r));
         final List<TestFacts.Reach> kept = new ArrayList<>();
         byPoint.values().forEach(atAPoint -> kept.addAll(keptAt(atAPoint)));
-        return kept;
+        return kept.stream().filter(reach -> !isReachedElsewhere(reach, kept)).toList();
+    }
+
+    // A reach with no system whose host is a system the test reaches by the same kind at another point.
+    private static boolean isReachedElsewhere(final TestFacts.Reach reach, final List<TestFacts.Reach> kept) {
+        return reach.getSystem() == null && reach.getHost() != null && kept.stream()
+            .anyMatch(other -> reach.getHost().equals(other.getSystem()) && reach.getKind().equals(other.getKind()));
     }
 
     // Where the host the test's own call gives names one of the point's systems, that one; else those its chain gives.

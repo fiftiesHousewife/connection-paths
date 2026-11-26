@@ -77,6 +77,16 @@ class ExampleSystemsTest {
                 List.of("line.host null"));
     }
 
+    // The test's own socket to lines.internal is the reach to that system; its call into the client goes to the same
+    // host, so it is no reach of its own without a system.
+    @Test
+    void leavesOutAReachWithNoSystemToAHostTheTestAlreadyReachesItsSystemOf() {
+        assertThat(REACHING.get("com.example.lines.LineCheckTest.checksTheLineThenConnects").getReaches())
+            .extracting(TestFacts.Reach::getKind, TestFacts.Reach::getSystem, TestFacts.Reach::getPoint)
+            .containsExactly(tuple("socket", "lines.internal",
+                "com.example.lines.LineCheckTest#checksTheLineThenConnects()"));
+    }
+
     @Test
     void groupsConnectionPointsIntoSystemsByHostThenNameThenClass() {
         assertThat(FACTS.getSystems()).extracting(Facts.ExternalSystem::getName, Facts.ExternalSystem::getNamedBy)
