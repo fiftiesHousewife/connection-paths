@@ -2,16 +2,12 @@ package io.github.fiftieshousewife.connectionpaths.settings;
 
 import io.github.fiftieshousewife.connectionpaths.address.SettingAnnotations;
 import io.github.fiftieshousewife.connectionpaths.address.Address;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * The settings in a repo's properties, YAML and XML files, by dotted key. YAML and XML are flattened to the path of
@@ -19,25 +15,39 @@ import lombok.extern.slf4j.Slf4j;
  * element. Where a key is in more than one file, the value kept is from production settings before test ones, then
  * a file without a profile ({@code application.yml}) before one with ({@code application-dev.yml}), then file-name
  * order. Keys are matched loosely, as Spring matches them: {@code jdbcUrl}, {@code jdbc-url} and {@code JDBC_URL}
- * are one key.
+ * are one key. A test's Spring profiles' files ({@code application-dev.yml}) are left out, but for a test that
+ * activates their profile, whose settings come before the others.
  */
-@Slf4j
 public final class SettingsFiles {
 
     /** A setting's value, and where it is. */
     record Setting(String value, String file, int line) {
     }
 
+    // The folders the files were found in, which hold the profiles' files too, and the embedded database Spring Boot
+    // would start from the classpath.
+    private record Origin(List<Path> folders, Optional<Setting> embeddedDatabase) {
+    }
+
     private final Map<String, Setting> settings = new TreeMap<>();
     private final Map<String, Setting> loosely = new TreeMap<>();
     private final Optional<SettingsFiles> testClasspath;
-    private final Optional<Setting> embeddedDatabase;
+    private final Optional<SettingsFiles> under;
+    private final Origin origin;
 
-    private SettingsFiles(final List<Path> files, final Optional<SettingsFiles> testClasspath,
-                          final Optional<Setting> embeddedDatabase) {
+    private SettingsFiles(final List<Path> files, final Optional<SettingsFiles> testClasspath, final Origin origin) {
         this.testClasspath = testClasspath;
-        this.embeddedDatabase = embeddedDatabase;
-        files.forEach(this::readFile);
+        this.under = Optional.empty();
+        this.origin = origin;
+        files.forEach(file -> SettingsFileReader.read(file, this::add));
+    }
+
+    // Profiles' files, whose settings come before those under them.
+    private SettingsFiles(final List<Path> files, final SettingsFiles under) {
+        this.testClasspath = Optional.empty();
+        this.under = Optional.of(under);
+        this.origin = under.origin;
+        files.forEach(file -> SettingsFileReader.read(file, this::add));
     }
 
     /** The settings in the folders' files; and, apart, those on the test classpath, test resources first. */
@@ -50,10 +60,18 @@ public final class SettingsFiles {
      * source, the embedded database Spring Boot would start from the classpath, if it has one.
      */
     public static SettingsFiles read(final List<Path> folders, final List<Path> classpath) {
-        final Optional<Setting> embedded = EmbeddedDatabases.on(classpath);
-        return new SettingsFiles(filesIn(folders),
-            Optional.of(new SettingsFiles(SettingsFileFinder.testClasspathFilesIn(folders), Optional.empty(),
-                embedded)), embedded);
+        final Origin origin = new Origin(List.copyOf(folders), EmbeddedDatabases.on(classpath));
+        return new SettingsFiles(filesIn(folders), Optional.of(
+            new SettingsFiles(SettingsFileFinder.testClasspathFilesIn(folders), Optional.empty(), origin)), origin);
+    }
+
+    /**
+     * These settings, with those of the Spring profiles' files on the test classpath before them, the last profile's
+     * first, as Spring takes them.
+     */
+    public SettingsFiles forProfiles(final List<String> profiles) {
+        final List<Path> files = SettingsFileFinder.profileFilesIn(origin.folders(), profiles);
+        return files.isEmpty() ? this : new SettingsFiles(files, this);
     }
 
     /** The settings a test runs with: those in test resources, then main resources. */
@@ -68,7 +86,8 @@ public final class SettingsFiles {
 
     Optional<Setting> get(final String key) {
         return Optional.ofNullable(settings.get(key)).or(() -> Optional.ofNullable(loosely.get(loose(key))))
-            .or(() -> embeddedDatabase.filter(e -> loose(key).equals(loose(Address.DATA_SOURCE_URL))));
+            .or(() -> under.map(files -> files.get(key)).orElseGet(() -> origin.embeddedDatabase()
+                .filter(e -> loose(key).equals(loose(Address.DATA_SOURCE_URL)))));
     }
 
     // A key as Spring compares keys: without dashes, with underscores as dots, in lower case.
@@ -79,17 +98,19 @@ public final class SettingsFiles {
 
     /** Every value in the settings files. */
     public Stream<String> values() {
-        return settings.values().stream().map(Setting::value);
+        return Stream.concat(settings.values().stream().map(Setting::value),
+            under.stream().flatMap(SettingsFiles::values));
     }
 
     /** Whether the files hold any settings at all. */
     public boolean isEmpty() {
-        return settings.isEmpty();
+        return settings.isEmpty() && under.map(SettingsFiles::isEmpty).orElse(true);
     }
 
     /** The files the settings come from, as the facts name files. */
     public List<String> files() {
-        return settings.values().stream().map(Setting::file).distinct().sorted().toList();
+        return Stream.concat(settings.values().stream().map(Setting::file),
+            under.stream().flatMap(u -> u.files().stream())).distinct().sorted().toList();
     }
 
     // Whether a value looks like one a person is meant to fill in, or a stand-in until one is: YOUR-..., CHANGE-ME,
@@ -114,24 +135,6 @@ public final class SettingsFiles {
     // nothing sets the variable. Without one, it stays as it is, known only at run time.
     private static String resolved(final String value) {
         return SettingAnnotations.defaultOf(value.strip()).orElse(value);
-    }
-
-    private void readFile(final Path file) {
-        final String name = file.toString().replace('\\', '/');
-        try {
-            if (name.endsWith(".xml")) {
-                XmlSettings.read(file, (key, value, line) -> add(key, new Setting(value, name, line)));
-                return;
-            }
-            final List<String> lines = Files.readAllLines(file, StandardCharsets.ISO_8859_1);
-            if (name.endsWith(".properties")) {
-                TextSettings.properties(lines, (key, value, line) -> add(key, new Setting(value, name, line)));
-            } else {
-                TextSettings.yaml(lines, (key, value, line) -> add(key, new Setting(value, name, line)));
-            }
-        } catch (IOException | IllegalArgumentException e) {
-            log.warn("Settings not read from {}: {}", name, e.getMessage());
-        }
     }
 
     private void add(final String key, final Setting setting) {

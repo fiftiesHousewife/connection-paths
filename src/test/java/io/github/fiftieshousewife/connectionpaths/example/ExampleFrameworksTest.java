@@ -2,6 +2,7 @@ package io.github.fiftieshousewife.connectionpaths.example;
 
 import io.github.fiftieshousewife.connectionpaths.facts.Facts;
 import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.FACTS;
+import static io.github.fiftieshousewife.connectionpaths.example.ExampleRepo.reachOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
@@ -48,6 +49,13 @@ class ExampleFrameworksTest {
 
     @Test
     void countsThemInTheSummary() {
-        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(9);
+        assertThat(FACTS.getSummary().getTestsStartingAFramework()).isEqualTo(10);
+    }
+
+    // The framework makes what a test class's @Autowired field holds, though no code the test runs does.
+    @Test
+    void reachesThroughWhatTheFrameworkPutsInATestsInjectedField() {
+        assertThat(reachOf("com.example.addresses.DevPriceFeedsTest.readsTheDevRates", "url").getChain())
+            .contains("com.example.addresses.PriceFeeds#rates()");
     }
 }

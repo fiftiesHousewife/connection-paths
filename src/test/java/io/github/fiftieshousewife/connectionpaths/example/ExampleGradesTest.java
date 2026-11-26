@@ -88,4 +88,15 @@ class ExampleGradesTest {
                 "src/main/resources/application.yml", "src/main/resources/applicationContext.xml",
                 "src/main/resources/config.xml", "src/test/resources/application.properties"), List.of());
     }
+
+    // Only the dev profile's file sets rates.url: a test that activates the profile connects to the host it gives.
+    @Test
+    void takesTheSettingsOfTheProfilesATestActivatesBeforeThePlainOnes() {
+        final TestFacts.TestReach test = REACHING.get("com.example.addresses.DevPriceFeedsTest.readsTheDevRates");
+        assertThat(List.of(test.getReaches().get(0).getHost(), test.getProfiles(),
+                test.getSettingsFiles().stream().filter(file -> file.contains("-dev")).toList()))
+            .extracting(Object::toString)
+            .containsExactly("rates-dev.internal", "[dev]",
+                "[src/test/resources/example/src/main/resources/application-dev.properties]");
+    }
 }

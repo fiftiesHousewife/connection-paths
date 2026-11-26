@@ -18,10 +18,11 @@ choice between ways of building it gets a [decision record](decisions/README.md)
    * `<beans profile=...>` counting only for an active profile;
    Done when under-test's Spring XML guide for the external systems list no longer needs any of these.
 3. **Settings loaded from a named file.** A `Properties` loaded from `orders.properties` and read with
-   `getProperty("url")` should be looked up in that file, not in every settings file. A Spring profile's file
-   (`application-mysql.properties`) is left out: read it for a test whose `@ActiveProfiles`, or
-   `spring.profiles.active`, names that profile, and leave out a YAML document with
-   `spring.config.activate.on-profile` the same way (today every document of a file counts, the first value winning).
+   `getProperty("url")` should be looked up in that file, not in every settings file. A test's profiles now come
+   from `@ActiveProfiles`; still to do: `spring.profiles.active` set in a settings file, a YAML document with
+   `spring.config.activate.on-profile` left out but for its profile (today every document of a file counts, the
+   first value winning), and a test resource that shadows the main one of the same path, as only one is on the
+   classpath (today both count, the test one first).
 4. **XML parsers that fetch a DTD.** A parser built without turning external entities off (`new SAXReader()`,
    `DocumentBuilderFactory`) can fetch a DTD over HTTP; there is no rule for it yet.
 5. **Dispatch points.** Give how many places call each one, and put the few with most calls in the summary.
@@ -40,8 +41,8 @@ choice between ways of building it gets a [decision record](decisions/README.md)
 
 ## What it writes
 
-9. **What external-calls/2 leaves out.** A test's `profiles` from `@ActiveProfiles` and a YAML file's on-profile
-    documents; a `client_field` declared in a superclass of the test class; a `first_call` for a chain that starts in
+9. **What external-calls/2 leaves out.** A test's `profiles` from `spring.profiles.active` and a YAML file's
+    on-profile documents; a `client_field` declared in a superclass of the test class; a `first_call` for a chain that starts in
     the test class's own field initialisers.
 
 ## How it is built

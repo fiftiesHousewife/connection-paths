@@ -2,26 +2,33 @@ package io.github.fiftieshousewife.connectionpaths.source;
 
 import io.github.fiftieshousewife.connectionpaths.source.syntax.TypeHeads;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // Which types the code creates objects of, besides with new: an enum's constants; a class a framework creates, by
-// its annotation; a test class; and any class named in a string, which may be created by name.
+// its annotation, or puts in a test class's injected field; a test class; and any class named in a string, which may
+// be created by name.
 final class CreatedTypes {
 
     private static final Set<String> MANAGED = Set.of("Component", "Service", "Repository", "Controller",
         "RestController", "Configuration", "Named", "Singleton", "ApplicationScoped", "RequestScoped",
         "SessionScoped", "Dependent", "Stateless", "Stateful", "MessageDriven", "WebServlet", "WebFilter",
         "WebListener", "Path", "Provider", "ServerEndpoint");
+    private static final Set<String> INJECTING = Set.of("Autowired", "Inject", "Resource", "SpyBean",
+        "MockitoSpyBean");
     private static final Pattern PACKAGE_PART = Pattern.compile("[a-z_]\\w*");
     private static final Pattern CLASS_PART = Pattern.compile("[A-Z][\\w$]*");
 
@@ -32,6 +39,14 @@ final class CreatedTypes {
     static boolean isCreatedWithoutNew(final TypeDeclaration<?> type, final boolean tests) {
         return type instanceof EnumDeclaration || tests && !TypeHeads.isAbstractClass(type)
             || type.getAnnotations().stream().anyMatch(a -> MANAGED.contains(a.getName().getIdentifier()));
+    }
+
+    // The class a framework puts in a test class's field marked to be injected, such as with @Autowired.
+    static Optional<String> injectedInto(final BodyDeclaration<?> member) {
+        return Optional.of(member).filter(FieldDeclaration.class::isInstance).map(FieldDeclaration.class::cast)
+            .filter(field -> field.getAnnotations().stream().anyMatch(a -> INJECTING.contains(a.getNameAsString())))
+            .map(field -> field.getElementType()).filter(ClassOrInterfaceType.class::isInstance)
+            .map(type -> TypeHeads.importedName((ClassOrInterfaceType) type));
     }
 
     // The types created as the program runs: those created whatever runs, then, until no more are found, those

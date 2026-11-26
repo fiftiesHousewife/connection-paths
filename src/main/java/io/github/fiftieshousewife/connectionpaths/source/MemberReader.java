@@ -90,6 +90,7 @@ final class MemberReader {
             calls.collect(key, member, owner.file());
             if (owner.tests()) {
                 model.tests().mocks(key, MockedTypes.in(member));
+                CreatedTypes.injectedInto(member).ifPresent(injected -> model.createdBy(key, injected));
                 standIn(member).ifPresent(server -> model.tests().standIn(owner.type(), server));
             }
         }

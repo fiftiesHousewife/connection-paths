@@ -4,6 +4,7 @@ import io.github.fiftieshousewife.connectionpaths.source.syntax.Signatures;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ClassExpr;
+import com.github.javaparser.ast.expr.StringLiteralExpr;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -11,7 +12,8 @@ import java.util.Set;
 /**
  * The annotations by which a test class starts a framework, such as Spring, Quarkus or Micronaut, or containers. The
  * framework wires objects together and may open connections that no call in the source shows, so these tests are
- * listed by the annotation rather than by a chain of calls.
+ * listed by the annotation rather than by a chain of calls. Its {@code @ActiveProfiles} names the Spring profiles it
+ * runs with.
  */
 public final class Frameworks {
 
@@ -32,6 +34,13 @@ public final class Frameworks {
     // application on, if any: @SpringBootTest(webEnvironment = RANDOM_PORT).
     static Optional<String> startedBy(final TypeDeclaration<?> type) {
         return type.getAnnotations().stream().map(Frameworks::started).flatMap(Optional::stream).findFirst();
+    }
+
+    // The Spring profiles a type's @ActiveProfiles names, in its order.
+    static List<String> profilesOf(final TypeDeclaration<?> type) {
+        return type.getAnnotationByName("ActiveProfiles").stream()
+            .flatMap(annotation -> annotation.findAll(StringLiteralExpr.class).stream())
+            .map(StringLiteralExpr::asString).filter(profile -> !profile.isBlank()).toList();
     }
 
     private static Optional<String> started(final AnnotationExpr annotation) {

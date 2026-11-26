@@ -110,7 +110,8 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
 * A call through an interface or superclass reaches only the overriding methods of classes the program creates (with
   `new`, as an enum or test class, by a framework annotation, or by a name in the source or the settings). A `new`
   in a class's own code counts only once that class is created, or in static code; for a test, only once its class
-  or the code it runs creates that class, and never in a program's `main`, which a test doesn't run. See
+  or the code it runs creates that class, or a framework puts one in its class's `@Autowired`, `@Inject` or
+  `@Resource` field, and never in a program's `main`, which a test doesn't run. See
   [the decision](docs/decisions/0011-a-call-through-an-interface-reaches-only-the-classes-the-program-creates.md).
   They are matched by name and parameter types, where a type variable (`save(T)`) matches any type so that generic interfaces work, except:
   * through the JDK's own types (`Map`, `Runnable`...): following them joins every `Map.put` to every class that
@@ -141,8 +142,9 @@ The kinds come from [the rules](src/main/resources/connection-rules.txt): `datab
   See [the decision](docs/decisions/0007-connection-points-are-grouped-into-systems-and-local-connections-are-part-of-none.md).
 * A chain that calls an instance method of a type the test mocks (a `@Mock` field, or `mock(T.class)` in the test,
   what runs with it, or a test-source helper they call) is kept, and marked at that step. Where the test would
-  connect comes from the settings on the test classpath, test resources before main ones: a setting none of
-  them gives means the test can't reach the system. See [the decision](docs/decisions/0010-each-reach-says-whether-it-runs-a-mock-and-where-the-tests-own-settings-send-it.md).
+  connect comes from the settings on the test classpath, test resources before main ones, and before them the files
+  of the Spring profiles its class's `@ActiveProfiles` names (`application-dev.properties`), the last profile's
+  first: a setting none of them gives means the test can't reach the system. See [the decision](docs/decisions/0010-each-reach-says-whether-it-runs-a-mock-and-where-the-tests-own-settings-send-it.md).
   A path such as `/owners/1`, in a test that serves the application on a port
   (`@SpringBootTest(webEnvironment = RANDOM_PORT)` or `DEFINED_PORT`), goes to it on this machine, and is local.
   Where a reach's own address leaves it unknown, the test's own call into its chain is traced, and taken if it

@@ -125,17 +125,17 @@ public final class FactsBuilder {
         return tests;
     }
 
-    // A test that starts a framework loads the settings files on the test classpath, and its profiles' too, which
-    // are not read yet.
+    // A test that starts a framework loads the settings files on the test classpath, and its profiles' too.
     private TestFacts.TestReach.TestReachBuilder entryOf(final MethodKey test, final SourceModel.Location at,
                                                          final TestFrameworks frameworks) {
         final Optional<String> starts = model.tests().frameworkOf(test.type()).map(TestModel.Framework::annotation);
+        final List<String> profiles = model.tests().profilesOf(test.type());
         return TestFacts.TestReach.builder()
             .test(TestChains.nameOf(test)).file(at.file()).line(at.line())
             .standIns(model.tests().standInsOf(test.type()))
             .startsFramework(starts.orElse(null))
             .testFramework(frameworks.of(at).orElse(null))
-            .settingsFiles(starts.map(s -> settings.onTheTestClasspath().files()).orElse(null))
-            .profiles(starts.map(s -> List.<String>of()).orElse(null));
+            .settingsFiles(starts.map(s -> settings.onTheTestClasspath().forProfiles(profiles).files()).orElse(null))
+            .profiles(starts.map(s -> profiles).orElse(null));
     }
 }

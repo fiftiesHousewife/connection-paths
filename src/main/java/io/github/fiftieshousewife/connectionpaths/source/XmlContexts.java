@@ -49,10 +49,11 @@ public final class XmlContexts {
             ? Optional.of(step.name().substring("<xml ".length(), step.name().length() - 1)) : Optional.empty();
     }
 
-    // A test class's framework, and the Spring XML files its annotations or JUnit 3 methods name, which its set-up
-    // loads; an annotation of the repo's own on it names the files that annotation's annotations do.
+    // A test class's framework and profiles, and the Spring XML files its annotations or JUnit 3 methods name, which
+    // its set-up loads; an annotation of the repo's own on it names the files that annotation's annotations do.
     static void read(final TypeDeclaration<?> type, final String name, final SourceModel model) {
         Frameworks.startedBy(type).ifPresent(annotation -> model.tests().startsAFramework(name, annotation));
+        model.tests().activatesProfiles(name, Frameworks.profilesOf(type));
         namedBy(type, name, model);
         type.getAnnotations().stream().filter(a -> !NAMING.contains(a.getName().getIdentifier()))
             .map(XmlContexts::qualifiedName).flatMap(Optional::stream)

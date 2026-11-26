@@ -1,8 +1,10 @@
 package io.github.fiftieshousewife.connectionpaths.source;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -27,6 +29,7 @@ public final class TestModel {
     private final Map<MethodKey, Set<String>> mocked = new HashMap<>();
     private final Set<MethodKey> statics = new HashSet<>();
     private final Map<String, Set<String>> standIns = new HashMap<>();
+    private final Map<String, List<String>> profiles = new HashMap<>();
 
     TestModel(final TypeHierarchy types, final Set<MethodKey> declared) {
         this.types = types;
@@ -59,6 +62,19 @@ public final class TestModel {
     // A test class, or a class tests extend, that starts a framework by this annotation.
     void startsAFramework(final String type, final String annotation) {
         frameworks.put(type, annotation);
+    }
+
+    void activatesProfiles(final String type, final List<String> named) {
+        if (!named.isEmpty()) {
+            profiles.put(type, named);
+        }
+    }
+
+    /** The Spring profiles a test class activates, its superclasses' and outer classes' first, as Spring adds them. */
+    public List<String> profilesOf(final String testClass) {
+        final List<String> running = new ArrayList<>(types.runningWith(testClass));
+        Collections.reverse(running);
+        return running.stream().flatMap(type -> profiles.getOrDefault(type, List.of()).stream()).distinct().toList();
     }
 
     void mocks(final MethodKey code, final Set<String> types) {

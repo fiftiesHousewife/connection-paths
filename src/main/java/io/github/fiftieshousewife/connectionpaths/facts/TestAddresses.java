@@ -15,8 +15,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-// Where a test would connect, from the settings on the test classpath: to a host; on this machine; nowhere, as no
-// setting the test runs with gives the address; or to something only known at run time.
+// Where a test would connect, from the settings on the test classpath and its profiles': to a host; on this machine;
+// nowhere, as no setting the test runs with gives the address; or to something only known at run time.
 final class TestAddresses {
 
     static final String HOST = "host";
@@ -27,13 +27,13 @@ final class TestAddresses {
     private final Map<String, Address> byPoint;
     private final Map<String, List<Address>> everyCallOf;
     private final Set<String> listening;
-    private final SettingsFiles settings;
+    private final TestSettings settings;
     private final ArgumentTracer arguments;
     private final TestModel tests;
     private final ClientsWithoutAnAddress bareClients;
 
     TestAddresses(final SourceModel model, final SettingsFiles settings) {
-        this.settings = settings.onTheTestClasspath();
+        this.settings = new TestSettings(model.tests(), settings);
         this.arguments = new ArgumentTracer(model);
         this.tests = model.tests();
         this.bareClients = new ClientsWithoutAnAddress(model);
@@ -72,7 +72,8 @@ final class TestAddresses {
         return IntStream.range(0, Math.min(2, chain.size() - 1))
             .mapToObj(step -> arguments.atTheTestsCall(chain.get(step), chain.get(step + 1), kind))
             .flatMap(Optional::stream)
-            .map(settings::withValue).map(address -> ForTests.of(classify(address, kind), address))
+            .map(settings.of(chain.get(0).type())::withValue)
+            .map(address -> ForTests.of(classify(address, kind), address))
             .filter(found -> HOST.equals(found.grade()) || LOCAL.equals(found.grade())).findFirst();
     }
 
@@ -82,7 +83,7 @@ final class TestAddresses {
         if (listening.contains(point) || address.isRelativePath() && servesOnAPort(chain.get(0).type())) {
             return new ForTests(LOCAL, null);
         }
-        final Address withValue = settings.withValue(address);
+        final Address withValue = settings.of(chain.get(0).type()).withValue(address);
         return ForTests.of(classify(withValue, kind), withValue);
     }
 
@@ -91,7 +92,7 @@ final class TestAddresses {
     List<Address> givenAlong(final List<MethodKey> chain, final String kind) {
         return everyCallOf.getOrDefault(chain.get(chain.size() - 1) + " " + kind, List.of()).stream()
             .filter(atThePoint -> ArgumentTracer.parameterOf(atThePoint).isPresent())
-            .map(atThePoint -> settings.withValue(alongTheChain(chain, atThePoint))).toList();
+            .map(atThePoint -> settings.of(chain.get(0).type()).withValue(alongTheChain(chain, atThePoint))).toList();
     }
 
     private Address alongTheChain(final List<MethodKey> chain, final Address atThePoint) {
